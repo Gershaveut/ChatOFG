@@ -49,7 +49,8 @@ fun Chat(chat: AbstractChat) {
 				val chatBoxModifier =
 					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 				
-				if (previousMessage != null && message.sendTime.date != previousMessage!!.sendTime.date) {
+				// Message Data
+				if (previousMessage == null || message.sendTime.date != previousMessage!!.sendTime.date) {
 					val data = message.sendTime.date
 					
 					val dataText =
