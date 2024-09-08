@@ -20,6 +20,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,38 +84,13 @@ val chats = listOf(
 @Preview
 fun App() {
     MaterialTheme {
-        val screenSize = remember { mutableStateOf(Pair(-1, -1)) }
-
-        Layout(
-            content = {
-                Menu(screenSize)
-            },
-            measurePolicy = { measurables, constraints ->
-                val width = constraints.maxWidth
-                val height = constraints.maxHeight
-
-                screenSize.value = Pair(width, height)
-
-                val placeables = measurables.map { measurable ->
-                    measurable.measure(constraints)
-                }
-
-                layout(width, height) {
-                    var yPosition = 0
-
-                    placeables.forEach { placeable ->
-                        placeable.placeRelative(x = 0, y = yPosition)
-                        yPosition += placeable.height
-                    }
-                }
-            }
-        )
+                Menu()
     }
 }
 
 @Composable
 @Preview
-fun Menu(screenSize: MutableState<Pair<Int, Int>>) {
+fun Menu() {
     val openChat: MutableState<AbstractChat?> = remember { mutableStateOf(null) }
 
     Column {
@@ -211,7 +189,7 @@ fun Menu(screenSize: MutableState<Pair<Int, Int>>) {
                 },
             )
 
-            ChatScreen(screenSize, openChat.value!!)
+            ChatScreen(openChat.value!!)
 
             if (showInfo.value) {
                 Dialog(onDismissRequest = {
@@ -246,9 +224,10 @@ fun Menu(screenSize: MutableState<Pair<Int, Int>>) {
     }
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
-fun ChatScreen(screenSize: MutableState<Pair<Int, Int>>, chat: AbstractChat) {
+fun ChatScreen(chat: AbstractChat) {
     Column {
         // Message
         LazyColumn(modifier = Modifier.weight(15f)) {
@@ -313,7 +292,7 @@ fun ChatScreen(screenSize: MutableState<Pair<Int, Int>>, chat: AbstractChat) {
                 } else {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = if (screenSize.value.first > 600) Arrangement.Start else Arrangement.End
+                        horizontalArrangement = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
                     ) {
                         Box(
                             modifier = chatBoxModifier

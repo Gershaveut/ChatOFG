@@ -57,6 +57,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(projects.shared)
             implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+            implementation("dev.chrisbanes.material3:material3-window-size-class-multiplatform:0.5.0")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
