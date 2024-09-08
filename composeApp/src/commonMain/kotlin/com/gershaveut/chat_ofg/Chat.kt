@@ -19,6 +19,7 @@ import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -179,12 +180,13 @@ fun Message(message: Message) {
 			Text(
 				message.sendTime.time.toString(),
 				color = Color.Gray,
-				fontSize = 10.sp,
-				modifier = Modifier
-					.padding(end = 5.dp)
+				fontSize = 10.sp
 			)
 			
-			MessageStatusIcon(message.messageStatus)
+			if (message.owner == clientUser)
+				Row ( modifier = Modifier.padding(horizontal = 5.dp) ) {
+					MessageStatusIcon(message.messageStatus)
+				}
 		}
 	}
 }
@@ -192,7 +194,7 @@ fun Message(message: Message) {
 @Composable
 fun MessageStatusIcon(messageStatus: MessageStatus) {
 	when (messageStatus) {
-		MessageStatus.UnSend -> Icon(Icons.Outlined.Build, "UnSend")
+		MessageStatus.UnSend -> Text("?", color = Color.Gray, fontSize = 10.sp)
 		MessageStatus.UnRead -> Text("!", color = Color.Gray, fontSize = 10.sp)
 		MessageStatus.Read -> Text("!!", color = Color.Magenta, fontSize = 10.sp)
 	}
