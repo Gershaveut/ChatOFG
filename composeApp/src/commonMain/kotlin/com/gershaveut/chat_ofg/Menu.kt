@@ -171,7 +171,7 @@ fun ChatRow(chat: AbstractChat) {
 			)
 			
 			val unread =
-				chat.messages.count { it.messageStatus == MessageStatus.UnRead }
+				chat.messages.count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
 			
 			if (unread > 0) {
 				Text(
