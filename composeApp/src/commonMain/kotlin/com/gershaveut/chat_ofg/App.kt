@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -96,7 +98,6 @@ val chats = listOf(
 )
 
 @Composable
-@Preview
 fun App() {
 	MaterialTheme {
 		Menu()
@@ -104,7 +105,6 @@ fun App() {
 }
 
 @Composable
-@Preview
 fun Menu() {
 	val openChat: MutableState<AbstractChat?> = remember { mutableStateOf(null) }
 	
@@ -124,7 +124,10 @@ fun Menu() {
 				items(chats) { chat ->
 					Row(
 						modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-							chat.messages.map { if ( it.messageStatus == MessageStatus.UnRead ) it.messageStatus = MessageStatus.Read }
+							chat.messages.map {
+								if (it.owner != clientUser && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
+									MessageStatus.Read
+							}
 							
 							openChat.value = chat
 						}
@@ -140,6 +143,8 @@ fun Menu() {
 							Text(chat.name.toCharArray()[0].toString().uppercase())
 						}
 						
+						val lastMessage = chat.messages.last()
+						
 						// Info
 						Column {
 							// Row Name and time
@@ -150,11 +155,17 @@ fun Menu() {
 							) {
 								Text(chat.name, textAlign = TextAlign.Start)
 								
-								Text(
-									cdtToString(chat.messages.last().sendTime),
-									fontSize = 10.sp,
-									color = Color.Gray
-								)
+								Row {
+									if (lastMessage.owner == clientUser)
+										MessageStatusIcon(lastMessage.messageStatus)
+									
+									Text(
+										cdtToString(lastMessage.sendTime),
+										fontSize = 10.sp,
+										color = Color.Gray,
+										modifier = Modifier.padding(start = 5.dp)
+									)
+								}
 							}
 							
 							// Row Last Text and New Message
@@ -164,13 +175,14 @@ fun Menu() {
 								horizontalArrangement = Arrangement.SpaceBetween
 							) {
 								Text(
-									chat.messages.last().text,
+									lastMessage.text,
 									textAlign = TextAlign.Start,
 									fontSize = 12.sp,
 									color = Color.Gray
 								)
 								
-								val unread = chat.messages.count { it.messageStatus == MessageStatus.UnRead }
+								val unread =
+									chat.messages.count { it.messageStatus == MessageStatus.UnRead }
 								
 								if (unread > 0) {
 									Text(
@@ -240,7 +252,6 @@ fun Menu() {
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-@Preview
 @Composable
 fun ChatScreen(chat: AbstractChat) {
 	Column {
@@ -249,50 +260,6 @@ fun ChatScreen(chat: AbstractChat) {
 			var previousMessage: Message? = null
 			
 			items(chat.messages) { message ->
-				@Composable
-				fun messageContent(message: Message) {
-					Column(horizontalAlignment = Alignment.CenterHorizontally) {
-						Text(
-							message.owner.displayName,
-							color = Color(41, 150, 201),
-							fontSize = 15.sp,
-							modifier = Modifier
-								.padding(top = 10.dp, start = 10.dp, end = 10.dp)
-								.align(Alignment.Start)
-						)
-						
-						/*
-						if (message.id != null) {
-							Image(ImageBitmap.imageResource(message.id!!), null)
-						}
-						*/
-						
-						Text(
-							message.text, modifier = Modifier
-								.padding(
-									top = 10.dp,
-									start = 10.dp,
-									bottom = 5.dp,
-									end = 10.dp
-								)
-								.align(Alignment.Start)
-						)
-						
-						Text(
-							message.sendTime.time.toString(),
-							color = Color.Gray,
-							fontSize = 10.sp,
-							modifier = Modifier
-								.padding(
-									start = 10.dp,
-									bottom = 10.dp,
-									end = 10.dp
-								)
-								.align(Alignment.End)
-						)
-					}
-				}
-				
 				val chatBoxModifier =
 					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 				
@@ -381,5 +348,59 @@ fun ChatScreen(chat: AbstractChat) {
 				Icon(Icons.AutoMirrored.Outlined.Send, null)
 			}
 		}
+	}
+}
+
+@Composable
+fun messageContent(message: Message) {
+	Column(horizontalAlignment = Alignment.CenterHorizontally) {
+		Text(
+			message.owner.displayName,
+			color = Color(41, 150, 201),
+			fontSize = 15.sp,
+			modifier = Modifier
+				.padding(top = 10.dp, start = 10.dp, end = 10.dp)
+				.align(Alignment.Start)
+		)
+		
+		/*
+		if (message.id != null) {
+			Image(ImageBitmap.imageResource(message.id!!), null)
+		}
+		*/
+		
+		Text(
+			message.text, modifier = Modifier
+				.padding(
+					top = 10.dp,
+					start = 10.dp,
+					bottom = 5.dp,
+					end = 10.dp
+				).align(Alignment.Start)
+		)
+		
+		Row ( Modifier.align(Alignment.End).padding(
+			bottom = 10.dp,
+			end = 10.dp
+		) ) {
+			Text(
+				message.sendTime.time.toString(),
+				color = Color.Gray,
+				fontSize = 10.sp,
+				modifier = Modifier
+					.padding(end = 5.dp)
+			)
+			
+			MessageStatusIcon(message.messageStatus)
+		}
+	}
+}
+
+@Composable
+private fun MessageStatusIcon(messageStatus: MessageStatus) {
+	when (messageStatus) {
+		MessageStatus.UnSend -> Icon(Icons.Outlined.Build, "UnSend")
+		MessageStatus.UnRead -> Text("!", color = Color.Gray, fontSize = 10.sp)
+		MessageStatus.Read -> Text("!!", color = Color.Magenta, fontSize = 10.sp)
 	}
 }
