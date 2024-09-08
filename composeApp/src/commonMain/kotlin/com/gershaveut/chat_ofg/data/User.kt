@@ -2,9 +2,12 @@ package com.gershaveut.chat_ofg.data
 
 import kotlinx.datetime.LocalDateTime
 
+@Suppress("EqualsOrHashCode")
 class User(
 	var name: String,
 	var displayName: String = name,
 	var discription: String? = null,
 	var lastLogin: LocalDateTime
-)
+) {
+	override fun equals(other: Any?): Boolean = other is User && name == other.name
+}
