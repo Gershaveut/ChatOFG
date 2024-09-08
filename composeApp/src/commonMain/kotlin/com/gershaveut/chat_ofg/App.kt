@@ -43,6 +43,7 @@ import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.AbstractChat
 import com.gershaveut.chat_ofg.data.Group
 import com.gershaveut.chat_ofg.data.Message
+import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.PrivateChat
 import com.gershaveut.chat_ofg.data.User
 import kotlinx.datetime.Clock
@@ -123,7 +124,7 @@ fun Menu() {
 				items(chats) { chat ->
 					Row(
 						modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-							chat.messages.map { it.read = true }
+							chat.messages.map { if ( it.messageStatus == MessageStatus.UnRead ) it.messageStatus = MessageStatus.Read }
 							
 							openChat.value = chat
 						}
@@ -169,7 +170,7 @@ fun Menu() {
 									color = Color.Gray
 								)
 								
-								val unread = chat.messages.count { !it.read }
+								val unread = chat.messages.count { it.messageStatus == MessageStatus.UnRead }
 								
 								if (unread > 0) {
 									Text(
@@ -371,7 +372,7 @@ fun ChatScreen(chat: AbstractChat) {
 							clientUser,
 							message.value,
 							Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-							true
+							MessageStatus.UnSend
 						)
 					)
 				},

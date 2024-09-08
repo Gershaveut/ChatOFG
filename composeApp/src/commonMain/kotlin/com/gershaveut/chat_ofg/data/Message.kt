@@ -6,6 +6,6 @@ class Message(
 	val owner: User,
 	var text: String,
 	val sendTime: LocalDateTime,
-	var read: Boolean = false,
+	var messageStatus: MessageStatus = MessageStatus.UnRead,
 	var modified: Boolean = false
 )
