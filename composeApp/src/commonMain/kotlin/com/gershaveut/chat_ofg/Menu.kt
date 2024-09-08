@@ -63,70 +63,7 @@ fun Menu() {
 							openChat.value = chat
 						}
 					) {
-						// Image box
-						Box(
-							contentAlignment = Alignment.Center,
-							modifier = Modifier.background(
-								color = Color.LightGray,
-								shape = CircleShape
-							).size(45.dp)
-						) {
-							Text(chat.name.toCharArray()[0].toString().uppercase())
-						}
-						
-						val lastMessage = chat.messages.last()
-						
-						// Info
-						Column {
-							// Row Name and time
-							Row(
-								modifier = Modifier.fillMaxWidth(),
-								verticalAlignment = Alignment.CenterVertically,
-								horizontalArrangement = Arrangement.SpaceBetween
-							) {
-								Text(chat.name, textAlign = TextAlign.Start)
-								
-								Row {
-									if (lastMessage.owner == clientUser)
-										MessageStatusIcon(lastMessage.messageStatus)
-									
-									Text(
-										cdtToString(lastMessage.sendTime),
-										fontSize = 10.sp,
-										color = Color.Gray,
-										modifier = Modifier.padding(start = 5.dp)
-									)
-								}
-							}
-							
-							// Row Last Text and New Message
-							Row(
-								modifier = Modifier.fillMaxWidth(),
-								verticalAlignment = Alignment.CenterVertically,
-								horizontalArrangement = Arrangement.SpaceBetween
-							) {
-								Text(
-									lastMessage.text,
-									textAlign = TextAlign.Start,
-									fontSize = 12.sp,
-									color = Color.Gray
-								)
-								
-								val unread =
-									chat.messages.count { it.messageStatus == MessageStatus.UnRead }
-								
-								if (unread > 0) {
-									Text(
-										unread.toString(),
-										textAlign = TextAlign.Center,
-										modifier = Modifier.background(
-											color = Color.Cyan,
-											shape = CircleShape
-										).size(25.dp)
-									)
-								}
-							}
-						}
+						ChatRow(chat)
 					}
 				}
 			}
@@ -147,7 +84,7 @@ fun Menu() {
 				},
 			)
 			
-			ChatScreen(openChat.value!!)
+			Chat(openChat.value!!)
 			
 			if (showInfo.value) {
 				Dialog(onDismissRequest = {
@@ -177,6 +114,74 @@ fun Menu() {
 						}
 					}
 				}
+			}
+		}
+	}
+}
+
+@Composable
+fun ChatRow(chat: AbstractChat) {
+	// Image box
+	Box(
+		contentAlignment = Alignment.Center,
+		modifier = Modifier.background(
+			color = Color.LightGray,
+			shape = CircleShape
+		).size(45.dp)
+	) {
+		Text(chat.name.toCharArray()[0].toString().uppercase())
+	}
+	
+	val lastMessage = chat.messages.last()
+	
+	// Info
+	Column {
+		// Row Name and time
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Text(chat.name, textAlign = TextAlign.Start)
+			
+			Row {
+				if (lastMessage.owner == clientUser)
+					MessageStatusIcon(lastMessage.messageStatus)
+				
+				Text(
+					cdtToString(lastMessage.sendTime),
+					fontSize = 10.sp,
+					color = Color.Gray,
+					modifier = Modifier.padding(start = 5.dp)
+				)
+			}
+		}
+		
+		// Row Last Text and New Message
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Text(
+				lastMessage.text,
+				textAlign = TextAlign.Start,
+				fontSize = 12.sp,
+				color = Color.Gray
+			)
+			
+			val unread =
+				chat.messages.count { it.messageStatus == MessageStatus.UnRead }
+			
+			if (unread > 0) {
+				Text(
+					unread.toString(),
+					textAlign = TextAlign.Center,
+					modifier = Modifier.background(
+						color = Color.Cyan,
+						shape = CircleShape
+					).size(25.dp)
+				)
 			}
 		}
 	}

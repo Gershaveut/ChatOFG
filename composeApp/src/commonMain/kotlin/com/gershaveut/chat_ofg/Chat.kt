@@ -39,7 +39,7 @@ import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun ChatScreen(chat: AbstractChat) {
+fun Chat(chat: AbstractChat) {
 	Column {
 		// Message
 		LazyColumn(modifier = Modifier.weight(15f)) {
@@ -84,7 +84,7 @@ fun ChatScreen(chat: AbstractChat) {
 								shape = RoundedCornerShape(10.dp)
 							)
 					) {
-						messageContent(message)
+						Message(message)
 					}
 				} else {
 					Row(
@@ -98,47 +98,51 @@ fun ChatScreen(chat: AbstractChat) {
 									shape = RoundedCornerShape(10.dp)
 								)
 						) {
-							messageContent(message)
+							Message(message)
 						}
 					}
 				}
 			}
 		}
 		
-		// Chat box
-		Row {
-			val message = remember { mutableStateOf("") }
-			
-			TextField(
-				message.value, { text ->
-					message.value = text
-				},
-				modifier = Modifier
-					.weight(1f)
-					.fillMaxWidth(),
-				placeholder = { Text("Print here...") }
-			)
-			IconButton(
-				{
-					chat.messages.add(
-						Message(
-							clientUser,
-							message.value,
-							Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-							MessageStatus.UnSend
-						)
+		SendRow(chat)
+	}
+}
+
+@Composable
+fun SendRow(chat: AbstractChat) {
+	Row {
+		val message = remember { mutableStateOf("") }
+		
+		TextField(
+			message.value, { text ->
+				message.value = text
+			},
+			modifier = Modifier
+				.weight(1f)
+				.fillMaxWidth(),
+			placeholder = { Text("Print here...") }
+		)
+		IconButton(
+			{
+				chat.messages.add(
+					Message(
+						clientUser,
+						message.value,
+						Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+						MessageStatus.UnSend
 					)
-				},
-				modifier = Modifier.size(50.dp)
-			) {
-				Icon(Icons.AutoMirrored.Outlined.Send, null)
-			}
+				)
+			},
+			modifier = Modifier.size(50.dp)
+		) {
+			Icon(Icons.AutoMirrored.Outlined.Send, null)
 		}
 	}
 }
 
 @Composable
-fun messageContent(message: Message) {
+fun Message(message: Message) {
 	Column(horizontalAlignment = Alignment.CenterHorizontally) {
 		Text(
 			message.owner.displayName,
