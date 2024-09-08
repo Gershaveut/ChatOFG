@@ -22,18 +22,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.AbstractChat
 import com.gershaveut.chat_ofg.data.MessageStatus
+import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun Menu() {
@@ -109,12 +112,74 @@ fun Menu() {
 									}
 								}
 							)
-							
-							openChat.value!!.ShowInfo()
+
+							val chat = openChat.value!!
+
+							ShowInfo(chat.name, chat.sign, chat.description, chat.createTime)
 						}
 					}
 				}
 			}
+		}
+	}
+}
+
+@Composable
+fun ShowInfo(name: String, sign: String, description: String?, createTime: LocalDateTime) {
+	Column(modifier = Modifier.padding(top = 5.dp, start = 5.dp)) {
+		Row(modifier = Modifier.padding(bottom = 10.dp)) {
+			Box(
+				contentAlignment = Alignment.Center,
+				modifier = Modifier.background(
+					color = Colors.BACKGROUND_SECONDARY,
+					shape = CircleShape
+				).size(60.dp)
+			) {
+				Text(name.toCharArray()[0].toString().uppercase())
+			}
+
+			Column {
+				Text(
+					name,
+					textAlign = TextAlign.Start,
+					modifier = Modifier.padding(start = 5.dp)
+				)
+
+				Text(
+					sign,
+					textAlign = TextAlign.Start,
+					fontSize = 12.sp,
+					color = Colors.BACKGROUND_VARIANT,
+					modifier = Modifier.padding(5.dp)
+				)
+			}
+		}
+
+		InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
+
+		InfoRow(Icons.Outlined.Info, "Creation Time", cdtToString(createTime))
+	}
+}
+
+@Composable
+private fun InfoRow(icon: ImageVector, contentDescription: String, text: String) {
+	Row {
+		Column {
+			Row(verticalAlignment = Alignment.CenterVertically) {
+				Icon(
+					icon,
+					contentDescription = contentDescription
+				)
+
+				Text(contentDescription, modifier = Modifier.padding(start = 5.dp))
+			}
+
+			Text(
+				text,
+				fontSize = 12.sp,
+				color = Colors.BACKGROUND_VARIANT,
+				modifier = Modifier.padding(5.dp)
+			)
 		}
 	}
 }
