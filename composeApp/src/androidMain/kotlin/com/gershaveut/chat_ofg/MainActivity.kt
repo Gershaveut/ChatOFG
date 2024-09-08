@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -23,7 +24,23 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    Surface( modifier = Modifier.size(500.dp, 750.dp) ) {
+    Surface( modifier = Modifier.sizeIn(500.dp, 750.dp) ) {
         App()
+    }
+}
+
+@Preview
+@Composable
+fun AppAndroidPreviewChat() {
+    Surface( modifier = Modifier.sizeIn(500.dp, 750.dp) ) {
+        ChatScreen(chats[2])
+    }
+}
+
+@Preview
+@Composable
+fun AppAndroidPreviewChatInfo() {
+    Surface( modifier = Modifier.sizeIn(250.dp, 500.dp) ) {
+        chats[2].ShowInfo()
     }
 }

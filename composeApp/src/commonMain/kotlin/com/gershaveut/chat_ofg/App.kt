@@ -43,9 +43,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+val clientDataTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
 val clientUser = User(
     "DEV",
-    lastLogin = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+    lastLogin = clientDataTime
 )
 
 val users = listOf(
@@ -64,18 +66,18 @@ val chats = listOf(
         arrayListOf(
             Message(clientUser, "This is a group check", LocalDateTime(2024, 6, 15, 14, 40)),
             Message(users[1], "Check passed", LocalDateTime(2024, 6, 15, 15, 0)),
-            Message(users[0], "Check passed", LocalDateTime(2024, 6, 15, 15, 1)),
+            Message(users[0], "Check passed", LocalDateTime(2024, 6, 16, 15, 1)),
         ),
     ),
     Chat(
         users[0], LocalDateTime(2024, 6, 14, 12, 35), arrayListOf(
             Message(users[0], "Everything works!", LocalDateTime(2024, 6, 14, 12, 40)),
-            Message(clientUser, "Great", LocalDateTime(2024, 6, 14, 13, 0)),
+            Message(clientUser, "Great", LocalDateTime(2024, 7, 14, 13, 0)),
         )
     ), Chat(
         users[1], LocalDateTime(2024, 6, 13, 6, 0), arrayListOf(
             Message(clientUser, "Will everything be ready soon?", LocalDateTime(2024, 6, 13, 6, 15)),
-            Message(users[1], "Yes!", LocalDateTime(2024, 6, 13, 19, 30)),
+            Message(users[1], "Yes!", LocalDateTime(2025, 6, 13, 19, 30)),
         )
     )
 )
@@ -136,7 +138,7 @@ fun Menu() {
                                 Text(chat.name, textAlign = TextAlign.Start)
 
                                 Text(
-                                    chat.messages.last().sendTime.toString(),
+                                    cdtToString(chat.messages.last().sendTime),
                                     fontSize = 10.sp,
                                     color = Color.Gray
                                 )
@@ -231,6 +233,8 @@ fun ChatScreen(chat: AbstractChat) {
     Column {
         // Message
         LazyColumn(modifier = Modifier.weight(15f)) {
+            var previousMessage: Message? = null
+            
             items(chat.messages) { message ->
                 @Composable
                 fun messageContent(message: Message) {
@@ -279,6 +283,30 @@ fun ChatScreen(chat: AbstractChat) {
                 val chatBoxModifier =
                     Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 
+                if (previousMessage != null && message.sendTime.date != previousMessage!!.sendTime.date) {
+                    val data = message.sendTime.date
+                    
+                    val dataText =
+                        if (data.year == clientDataTime.year)
+                            "${data.dayOfMonth} ${data.month.name}"
+                        else
+                            cdToString(data)
+                    
+                    Row( horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth() ) {
+                        Box(
+                            modifier = Modifier.padding(5.dp)
+                            .background(
+                                color = Color(0, 0, 0, 50),
+                                shape = RoundedCornerShape(15.dp)
+                            )
+                        ) {
+                            Text(dataText, modifier = Modifier.padding(10.dp, 5.dp))
+                        }
+                    }
+                }
+                
+                previousMessage = message
+                
                 if (message.owner != clientUser) {
                     Box(
                         modifier = chatBoxModifier

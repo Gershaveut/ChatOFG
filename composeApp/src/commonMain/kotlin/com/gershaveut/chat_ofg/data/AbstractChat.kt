@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -16,9 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gershaveut.chat_ofg.cdtToString
 import kotlinx.datetime.LocalDateTime
 
 abstract class AbstractChat(
@@ -30,8 +33,8 @@ abstract class AbstractChat(
 ) {
     @Composable
     fun ShowInfo() {
-        Column {
-            InfoRow {
+        Column ( modifier =  Modifier.padding(top = 5.dp, start = 5.dp) ) {
+            Row ( modifier = Modifier.padding(bottom = 10.dp) ) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier.background(
@@ -43,55 +46,39 @@ abstract class AbstractChat(
                 }
 
                 Column {
-                    Text(name, textAlign = TextAlign.Start)
+                    Text(name, textAlign = TextAlign.Start, modifier = Modifier.padding(start = 5.dp))
 
                     Text(
                         sign,
                         textAlign = TextAlign.Start,
                         fontSize = 12.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.padding(5.dp)
                     )
                 }
             }
-
-            InfoRow {
-                Column {
-                    Row {
-                        Icon(
-                            Icons.Outlined.Info,
-                            contentDescription = "Description"
-                        )
-
-                        Text("Description")
-                    }
-
-                    Text(description ?: "No Description", fontSize = 10.sp, color = Color.Gray)
-                }
-            }
-
-            InfoRow {
-                Column {
-                    Row {
-                        Icon(
-                            Icons.Outlined.Info,
-                            contentDescription = "Creation Time"
-                        )
-
-                        Text("Creation Time")
-                    }
-
-                    Text(createTime.toString(), fontSize = 10.sp, color = Color.Gray)
-                }
-            }
+            
+            InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
+            
+            InfoRow(Icons.Outlined.Info, "Creation Time", cdtToString(createTime))
         }
     }
 }
 
 @Composable
-private fun InfoRow(content: @Composable () -> Unit) {
-    Surface {
+private fun InfoRow(icon: ImageVector, contentDescription: String, text: String) {
         Row {
-            content()
+            Column {
+                Row ( verticalAlignment = Alignment.CenterVertically ) {
+                    Icon(
+                        icon,
+                        contentDescription = contentDescription
+                    )
+                    
+                    Text(contentDescription, modifier = Modifier.padding(start = 5.dp))
+                }
+                
+                Text(text, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(5.dp))
+            }
         }
-    }
 }
