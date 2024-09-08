@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
@@ -27,7 +28,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -125,7 +125,7 @@ fun ChatRow(chat: AbstractChat) {
 	Box(
 		contentAlignment = Alignment.Center,
 		modifier = Modifier.background(
-			color = Color.LightGray,
+			color = Colors.BACKGROUND_SECONDARY,
 			shape = CircleShape
 		).size(45.dp)
 	) {
@@ -151,7 +151,7 @@ fun ChatRow(chat: AbstractChat) {
 				Text(
 					cdtToString(lastMessage.sendTime),
 					fontSize = 10.sp,
-					color = Color.Gray,
+					color = Colors.BACKGROUND_VARIANT,
 					modifier = Modifier.padding(start = 5.dp)
 				)
 			}
@@ -167,7 +167,7 @@ fun ChatRow(chat: AbstractChat) {
 				lastMessage.text,
 				textAlign = TextAlign.Start,
 				fontSize = 12.sp,
-				color = Color.Gray
+				color = Colors.BACKGROUND_VARIANT
 			)
 			
 			val unread =
@@ -178,7 +178,7 @@ fun ChatRow(chat: AbstractChat) {
 					unread.toString(),
 					textAlign = TextAlign.Center,
 					modifier = Modifier.background(
-						color = Color.Cyan,
+						color = MaterialTheme.colors.secondary,
 						shape = CircleShape
 					).size(25.dp)
 				)

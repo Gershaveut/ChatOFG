@@ -14,11 +14,11 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gershaveut.chat_ofg.Colors
 import com.gershaveut.chat_ofg.cdtToString
 import kotlinx.datetime.LocalDateTime
 
@@ -36,7 +36,7 @@ abstract class AbstractChat(
 				Box(
 					contentAlignment = Alignment.Center,
 					modifier = Modifier.background(
-						color = Color.LightGray,
+						color = Colors.BACKGROUND_SECONDARY,
 						shape = CircleShape
 					).size(60.dp)
 				) {
@@ -54,7 +54,7 @@ abstract class AbstractChat(
 						sign,
 						textAlign = TextAlign.Start,
 						fontSize = 12.sp,
-						color = Color.Gray,
+						color = Colors.BACKGROUND_VARIANT,
 						modifier = Modifier.padding(5.dp)
 					)
 				}
@@ -80,7 +80,7 @@ private fun InfoRow(icon: ImageVector, contentDescription: String, text: String)
 				Text(contentDescription, modifier = Modifier.padding(start = 5.dp))
 			}
 			
-			Text(text, fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(5.dp))
+			Text(text, fontSize = 12.sp, color = Colors.BACKGROUND_VARIANT, modifier = Modifier.padding(5.dp))
 		}
 	}
 }

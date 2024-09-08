@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
@@ -28,7 +29,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.AbstractChat
@@ -67,7 +67,7 @@ fun Chat(chat: AbstractChat) {
 						Box(
 							modifier = Modifier.padding(5.dp)
 								.background(
-									color = Color(0, 0, 0, 50),
+									color = Colors.BACKGROUND_SECONDARY,
 									shape = RoundedCornerShape(15.dp)
 								)
 						) {
@@ -82,7 +82,7 @@ fun Chat(chat: AbstractChat) {
 					Box(
 						modifier = chatBoxModifier
 							.background(
-								color = Color(238, 238, 238),
+								color = Colors.OTHERS_MESSAGE,
 								shape = RoundedCornerShape(10.dp)
 							)
 					) {
@@ -96,7 +96,7 @@ fun Chat(chat: AbstractChat) {
 						Box(
 							modifier = chatBoxModifier
 								.background(
-									color = Color(199, 225, 252),
+									color = Colors.MY_MESSAGE,
 									shape = RoundedCornerShape(10.dp)
 								)
 						) {
@@ -148,7 +148,7 @@ fun Message(message: Message) {
 	Column(horizontalAlignment = Alignment.CenterHorizontally) {
 		Text(
 			message.owner.displayName,
-			color = Color(41, 150, 201),
+			color = MaterialTheme.colors.secondaryVariant,
 			fontSize = 15.sp,
 			modifier = Modifier
 				.padding(top = 10.dp, start = 10.dp, end = 10.dp)
@@ -179,7 +179,7 @@ fun Message(message: Message) {
 		) {
 			Text(
 				message.sendTime.time.toString(),
-				color = Color.Gray,
+				color = Colors.BACKGROUND_VARIANT,
 				fontSize = 10.sp
 			)
 			
@@ -194,8 +194,8 @@ fun Message(message: Message) {
 @Composable
 fun MessageStatusIcon(messageStatus: MessageStatus) {
 	when (messageStatus) {
-		MessageStatus.UnSend -> Text("?", color = Color.Gray, fontSize = 10.sp)
-		MessageStatus.UnRead -> Text("!", color = Color.Gray, fontSize = 10.sp)
-		MessageStatus.Read -> Text("!!", color = Color.Magenta, fontSize = 10.sp)
+		MessageStatus.UnSend -> Text("?", color = Colors.BACKGROUND_VARIANT, fontSize = 10.sp)
+		MessageStatus.UnRead -> Text("!", color = Colors.BACKGROUND_VARIANT, fontSize = 10.sp)
+		MessageStatus.Read -> Text("!!", color = MaterialTheme.colors.primaryVariant, fontSize = 10.sp)
 	}
 }
