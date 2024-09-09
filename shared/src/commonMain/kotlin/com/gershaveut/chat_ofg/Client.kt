@@ -1,6 +1,7 @@
 package com.gershaveut.chat_ofg
 
-import com.gershaveut.chat_ofg.data.AbstractChat
+import com.gershaveut.chat_ofg.data.Group
+import com.gershaveut.chat_ofg.data.PrivateChat
 import com.gershaveut.chat_ofg.data.User
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -20,7 +21,9 @@ val clientUser = User(
 )
 
 var users: MutableList<User> = mutableListOf()
-var chats: MutableList<AbstractChat> = mutableListOf()
+
+var groups: MutableList<Group> = mutableListOf()
+var privateChats: MutableList<PrivateChat> = mutableListOf()
 
 val client = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -29,5 +32,13 @@ val client = HttpClient(CIO) {
 }
 
 suspend fun getUsers() {
-    users = client.get("http://localhost:8080/users/").body()
+    users = client.get("$DOMAIN/users").body()
+}
+
+suspend fun getGroups() {
+    groups = client.get("$DOMAIN/groups").body()
+}
+
+suspend fun getPrivateChats() {
+    privateChats = client.get("$DOMAIN/private-chats").body()
 }

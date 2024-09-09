@@ -34,13 +34,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.gershaveut.chat_ofg.data.AbstractChat
+import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.MessageStatus
+import com.gershaveut.chat_ofg.data.PrivateChat
+import com.gershaveut.chat_ofg.data.User
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun Menu() {
-	val openChat: MutableState<AbstractChat?> = remember { mutableStateOf(null) }
+	val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
 	
 	Column {
 		if (openChat.value == null) {
@@ -53,12 +58,17 @@ fun Menu() {
 					}) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
 				},
 			)
-			
+
+			val chats = ArrayList<Chat>()
+
+			chats.addAll(privateChats)
+			chats.addAll(groups)
+
 			LazyColumn {
 				items(chats) { chat ->
 					Row(
 						modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-							chat.messages.map {
+							chat.getMessagesChat().map {
 								if (it.owner != clientUser && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
 									MessageStatus.Read
 							}
@@ -77,7 +87,7 @@ fun Menu() {
 			TopAppBar(
 				title = {
 					Text(
-						openChat.value!!.name,
+						openChat.value!!.getNameChat(),
 						modifier = Modifier.clickable { showInfo.value = true })
 				},
 				navigationIcon = {
@@ -115,7 +125,7 @@ fun Menu() {
 
 							val chat = openChat.value!!
 
-							ShowInfo(chat.name, chat.sign, chat.description, chat.createTime)
+							ShowInfo(chat.getNameChat(), chat.getSignChat(), chat.getDescriptionChat(), chat.getCreateTimeChat())
 						}
 					}
 				}
@@ -185,7 +195,7 @@ private fun InfoRow(icon: ImageVector, contentDescription: String, text: String)
 }
 
 @Composable
-fun ChatRow(chat: AbstractChat) {
+fun ChatRow(chat: Chat) {
 	// Image box
 	Box(
 		contentAlignment = Alignment.Center,
@@ -194,10 +204,10 @@ fun ChatRow(chat: AbstractChat) {
 			shape = CircleShape
 		).size(45.dp)
 	) {
-		Text(chat.name.toCharArray()[0].toString().uppercase())
+		Text(chat.getNameChat().toCharArray()[0].toString().uppercase())
 	}
 	
-	val lastMessage = chat.messages.last()
+	val lastMessage = chat.getMessagesChat().last()
 	
 	// Info
 	Column {
@@ -207,7 +217,7 @@ fun ChatRow(chat: AbstractChat) {
 			verticalAlignment = Alignment.CenterVertically,
 			horizontalArrangement = Arrangement.SpaceBetween
 		) {
-			Text(chat.name, textAlign = TextAlign.Start)
+			Text(chat.getNameChat(), textAlign = TextAlign.Start)
 			
 			Row {
 				if (lastMessage.owner == clientUser)
@@ -236,7 +246,7 @@ fun ChatRow(chat: AbstractChat) {
 			)
 			
 			val unread =
-				chat.messages.count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
+				chat.getMessagesChat().count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
 			
 			if (unread > 0) {
 				Text(

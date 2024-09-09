@@ -12,7 +12,7 @@ object Data {
         User("Designer", lastLogin = LocalDateTime(2024, 6, 15, 15, 30), discription = "Working!")
     )
 
-    val chats = mutableListOf(
+    val groups = mutableListOf(
         Group(
             mutableListOf(
                 users[0],
@@ -25,6 +25,9 @@ object Data {
                 Message(users[0], "Check passed", LocalDateTime(2024, 6, 16, 15, 1)),
             ),
         ),
+    )
+
+    val privateChats = mutableListOf(
         PrivateChat(
             users[0], LocalDateTime(2024, 6, 14, 12, 35), mutableListOf(
                 Message(users[0], "Everything works!", LocalDateTime(2024, 6, 14, 12, 40)),

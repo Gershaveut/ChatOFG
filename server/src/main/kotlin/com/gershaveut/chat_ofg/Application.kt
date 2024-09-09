@@ -20,7 +20,13 @@ fun Application.module() {
 
     routing {
         users()
-        chats()
+        user()
+
+        groups()
+        group()
+
+        privateChats()
+        privateChat()
     }
 }
 
@@ -30,8 +36,32 @@ fun Routing.users() {
     }
 }
 
-fun Routing.chats() {
-    get("/chats") {
-        call.respond(Data.chats)
+fun Routing.user() {
+    get("/user/{name}") {
+        call.respond(Data.users.find { it.name == call.parameters["name"].toString() }!!)
+    }
+}
+
+fun Routing.groups() {
+    get("/groups") {
+        call.respond(Data.groups)
+    }
+}
+
+fun Routing.group() {
+    get("/group/{name}") {
+        call.respond(Data.groups.find { it.name == call.parameters["name"].toString() }!!)
+    }
+}
+
+fun Routing.privateChats() {
+    get("/private-chats") {
+        call.respond(Data.privateChats)
+    }
+}
+
+fun Routing.privateChat() {
+    get("/private-chat/{name}") {
+        call.respond(Data.privateChats.find { it.user.name == call.parameters["name"].toString() }!!)
     }
 }
