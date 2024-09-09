@@ -25,8 +25,10 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -59,10 +61,7 @@ fun Menu() {
 				},
 			)
 
-			val chats = ArrayList<Chat>()
-
-			chats.addAll(privateChats)
-			chats.addAll(groups)
+			val chats by remember { mutableStateOf(chats) }
 
 			LazyColumn {
 				items(chats) { chat ->

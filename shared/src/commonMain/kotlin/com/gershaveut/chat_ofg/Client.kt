@@ -1,5 +1,6 @@
 package com.gershaveut.chat_ofg
 
+import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Group
 import com.gershaveut.chat_ofg.data.PrivateChat
 import com.gershaveut.chat_ofg.data.User
@@ -20,10 +21,7 @@ val clientUser = User(
     lastLogin = clientDataTime
 )
 
-var users: MutableList<User> = mutableListOf()
-
-var groups: MutableList<Group> = mutableListOf()
-var privateChats: MutableList<PrivateChat> = mutableListOf()
+var chats: MutableList<Chat> = mutableListOf()
 
 val client = HttpClient(CIO) {
     install(ContentNegotiation) {
@@ -31,14 +29,8 @@ val client = HttpClient(CIO) {
     }
 }
 
-suspend fun getUsers() {
-    users = client.get("$DOMAIN/users").body()
-}
+suspend fun getUsers() : MutableList<User> = client.get("$DOMAIN/users").body()
 
-suspend fun getGroups() {
-    groups = client.get("$DOMAIN/groups").body()
-}
+suspend fun getGroups() : MutableList<Group> = client.get("$DOMAIN/groups").body()
 
-suspend fun getPrivateChats() {
-    privateChats = client.get("$DOMAIN/private-chats").body()
-}
+suspend fun getPrivateChats() : MutableList<PrivateChat> = client.get("$DOMAIN/private-chats").body()
