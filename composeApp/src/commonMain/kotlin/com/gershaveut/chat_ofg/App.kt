@@ -7,15 +7,21 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlin.native.concurrent.ThreadLocal
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
 	MaterialTheme {
-		GlobalScope.launch {
-			chats.addAll(getGroups())
-			chats.addAll(getPrivateChats())
-		}
+		getChats()
 
 		Menu()
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun getChats() {
+	chats.clear()
+
+	GlobalScope.launch {
+		chats.addAll(getGroups())
+		chats.addAll(getPrivateChats())
 	}
 }

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -59,12 +60,19 @@ fun Menu() {
 					
 					}) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
 				},
+				actions = {
+					IconButton( {
+						getChats()
+					} ) {
+						Icon(Icons.Filled.Refresh, "Refresh")
+					}
+				}
 			)
 
 			val chats by remember { mutableStateOf(chats) }
 
 			LazyColumn {
-				items(chats) { chat ->
+				items(chats, { it.getNameChat() }) { chat ->
 					Row(
 						modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
 							chat.getMessagesChat().map {
