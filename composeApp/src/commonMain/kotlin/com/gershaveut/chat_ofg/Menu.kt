@@ -149,7 +149,7 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Local
 				contentAlignment = Alignment.Center,
 				modifier = Modifier.background(
 					color = Colors.BACKGROUND_SECONDARY,
-					shape = CircleShape
+					shape = MaterialTheme.shapes.small
 				).size(60.dp)
 			) {
 				Text(name.toCharArray()[0].toString().uppercase())
@@ -208,7 +208,7 @@ fun ChatRow(chat: Chat) {
 		contentAlignment = Alignment.Center,
 		modifier = Modifier.background(
 			color = Colors.BACKGROUND_SECONDARY,
-			shape = CircleShape
+			shape = MaterialTheme.shapes.small
 		).size(45.dp)
 	) {
 		Text(chat.getNameChat().toCharArray()[0].toString().uppercase())
@@ -261,7 +261,7 @@ fun ChatRow(chat: Chat) {
 					textAlign = TextAlign.Center,
 					modifier = Modifier.background(
 						color = MaterialTheme.colors.secondary,
-						shape = CircleShape
+						shape = MaterialTheme.shapes.small
 					).size(25.dp)
 				)
 			}

@@ -66,7 +66,7 @@ fun Chat(chat: Chat) {
 							modifier = Modifier.padding(5.dp)
 								.background(
 									color = Colors.BACKGROUND_SECONDARY,
-									shape = RoundedCornerShape(15.dp)
+									shape = MaterialTheme.shapes.medium
 								)
 						) {
 							Text(dataText, modifier = Modifier.padding(10.dp, 5.dp))
@@ -81,7 +81,7 @@ fun Chat(chat: Chat) {
 						modifier = chatBoxModifier
 							.background(
 								color = Colors.OTHERS_MESSAGE,
-								shape = RoundedCornerShape(10.dp)
+								shape = MaterialTheme.shapes.medium
 							)
 					) {
 						Message(message)
@@ -95,7 +95,7 @@ fun Chat(chat: Chat) {
 							modifier = chatBoxModifier
 								.background(
 									color = Colors.MY_MESSAGE,
-									shape = RoundedCornerShape(10.dp)
+									shape = MaterialTheme.shapes.medium
 								)
 						) {
 							Message(message)
