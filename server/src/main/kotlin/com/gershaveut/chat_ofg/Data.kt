@@ -9,9 +9,10 @@ import kotlinx.datetime.LocalDateTime
 object Data {
     val users = mutableListOf(
         User("Tester", lastLogin = LocalDateTime(2024, 7, 14, 12, 40), discription = "Testings..."),
-        User("Designer", lastLogin = LocalDateTime(2024, 6, 15, 15, 30), discription = "Working!")
+        User("Designer", lastLogin = LocalDateTime(2024, 6, 15, 15, 30), discription = "Working!"),
+        User("User 1", lastLogin = LocalDateTime(2020, 3, 12, 15, 30))
     )
-
+    
     val groups = mutableListOf(
         Group(
             mutableListOf(

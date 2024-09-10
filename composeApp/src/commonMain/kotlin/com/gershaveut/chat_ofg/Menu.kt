@@ -37,16 +37,13 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.PrivateChat
 import com.gershaveut.chat_ofg.data.User
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
+import kotlinx.coroutines.*
 import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun Menu() {
 	val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
-	
+
 	Column {
 		if (openChat.value == null) {
 			var createChat by remember { mutableStateOf(false) }
@@ -56,12 +53,12 @@ fun Menu() {
 				title = { Text("ChatOFG") },
 				navigationIcon = {
 					IconButton({
-					
+
 					}) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
 				},
 				actions = {
 					IconButton( {
-						loadChats()
+						refreshChats()
 					} ) {
 						Icon(Icons.Filled.Refresh, "Refresh")
 					}
@@ -110,7 +107,7 @@ fun Menu() {
 		} else {
 			// Chat
 			val showInfo = remember { mutableStateOf(false) }
-			
+
 			TopAppBar(
 				title = {
 					Text(
@@ -123,7 +120,7 @@ fun Menu() {
 					}) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
 				},
 			)
-			
+
 			Chat(openChat.value!!)
 
 			if (showInfo.value) {
@@ -235,72 +232,76 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 
 @Composable
 fun ChatRow(chat: Chat) {
-	// Image box
-	UserAvatar(chat.getNameChat())
-	
-	val lastMessage = chat.getMessagesChat().last()
-	
-	// Info
-	Column {
-		// Row Name and time
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.SpaceBetween
-		) {
-			Text(chat.getNameChat(), textAlign = TextAlign.Start)
-			
-			Row {
-				if (lastMessage.owner == clientUser)
-					MessageStatusIcon(lastMessage.messageStatus)
-				
-				Text(
-					cdtToString(lastMessage.sendTime),
-					fontSize = 10.sp,
-					color = Colors.BACKGROUND_VARIANT,
-					modifier = Modifier.padding(start = 5.dp)
-				)
+	Row ( modifier = Modifier.padding(5.dp) ) {
+
+		// Image box
+		UserAvatar(chat.getNameChat())
+
+		val lastMessage = chat.getMessagesChat().last()
+
+		// Info
+		Column {
+			// Row Name and time
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.SpaceBetween
+			) {
+				Text(chat.getNameChat(), textAlign = TextAlign.Start)
+
+				Row {
+					if (lastMessage.owner == clientUser)
+						MessageStatusIcon(lastMessage.messageStatus)
+
+					Text(
+						cdtToString(lastMessage.sendTime),
+						fontSize = 10.sp,
+						color = Colors.BACKGROUND_VARIANT,
+						modifier = Modifier.padding(start = 5.dp)
+					)
+				}
 			}
-		}
-		
-		// Row Last Text and New Message
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.SpaceBetween
-		) {
-			Text(
-				lastMessage.text,
-				textAlign = TextAlign.Start,
-				fontSize = 12.sp,
-				color = Colors.BACKGROUND_VARIANT
-			)
-			
-			val unread =
-				chat.getMessagesChat().count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
-			
-			if (unread > 0) {
+
+			// Row Last Text and New Message
+			Row(
+				modifier = Modifier.fillMaxWidth(),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.SpaceBetween
+			) {
 				Text(
-					unread.toString(),
-					textAlign = TextAlign.Center,
-					modifier = Modifier.background(
-						color = MaterialTheme.colors.secondary,
-						shape = MaterialTheme.shapes.small
-					).size(25.dp)
+					lastMessage.text,
+					textAlign = TextAlign.Start,
+					fontSize = 12.sp,
+					color = Colors.BACKGROUND_VARIANT
 				)
+
+				val unread =
+					chat.getMessagesChat().count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
+
+				if (unread > 0) {
+					Text(
+						unread.toString(),
+						textAlign = TextAlign.Center,
+						modifier = Modifier.background(
+							color = MaterialTheme.colors.secondary,
+							shape = MaterialTheme.shapes.small
+						).size(25.dp)
+					)
+				}
 			}
 		}
 	}
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun UserRow(user: User) {
 	Row( verticalAlignment = Alignment.CenterVertically , modifier = Modifier.padding(5.dp).fillMaxWidth().clickable {
-		loadUsers()
+		refreshUsers()
 
-		GlobalScope.launch {
+		scope.launch {
 			createPrivateChat(PrivateChat(user, clientDataTime))
-			loadChats()
+			refreshChats()
 		}
 	} ) {
 		UserAvatar(user.name)
