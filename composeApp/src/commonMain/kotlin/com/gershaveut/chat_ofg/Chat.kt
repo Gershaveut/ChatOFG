@@ -19,8 +19,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
-import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -31,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gershaveut.chat_ofg.data.AbstractChat
+import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
 import kotlinx.datetime.Clock
@@ -40,13 +38,13 @@ import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Chat(chat: AbstractChat) {
+fun Chat(chat: Chat) {
 	Column {
 		// Message
 		LazyColumn(modifier = Modifier.weight(15f)) {
 			var previousMessage: Message? = null
 			
-			items(chat.messages) { message ->
+			items(chat.getMessagesChat()) { message ->
 				val chatBoxModifier =
 					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 				
@@ -112,7 +110,7 @@ fun Chat(chat: AbstractChat) {
 }
 
 @Composable
-fun SendRow(chat: AbstractChat) {
+fun SendRow(chat: Chat) {
 	Row {
 		val message = remember { mutableStateOf("") }
 		
@@ -127,14 +125,7 @@ fun SendRow(chat: AbstractChat) {
 		)
 		IconButton(
 			{
-				chat.messages.add(
-					Message(
-						clientUser,
-						message.value,
-						Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-						MessageStatus.UnSend
-					)
-				)
+				TODO("Message send")
 			},
 			modifier = Modifier.size(50.dp)
 		) {
