@@ -5,23 +5,30 @@ import androidx.compose.runtime.Composable
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlin.native.concurrent.ThreadLocal
 
 @Composable
 fun App() {
 	MaterialTheme {
-		getChats()
+		loadChats()
+		loadUsers()
 
 		Menu()
 	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun getChats() {
+fun loadChats() {
 	chats.clear()
 
 	GlobalScope.launch {
 		chats.addAll(getGroups())
 		chats.addAll(getPrivateChats())
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun loadUsers() {
+	GlobalScope.launch {
+		users = getUsers()
 	}
 }

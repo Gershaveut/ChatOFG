@@ -296,7 +296,12 @@ fun ChatRow(chat: Chat) {
 @Composable
 fun UserRow(user: User) {
 	Row( verticalAlignment = Alignment.CenterVertically , modifier = Modifier.padding(5.dp).fillMaxWidth().clickable {
+		loadUsers()
 
+		GlobalScope.launch {
+			createPrivateChat(PrivateChat(user, clientDataTime))
+			loadChats()
+		}
 	} ) {
 		UserAvatar(user.name)
 
