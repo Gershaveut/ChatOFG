@@ -11,7 +11,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.datetime.*
 
 object Client {
-    fun getDataTime() : LocalDateTime {
+    fun getDataTime(): LocalDateTime {
         val current = Clock.System.now().toLocalDateTime(TimeZone.UTC)
         val currentTime = current.time
 
@@ -40,20 +40,22 @@ object Client {
 
     suspend fun createPrivateChat(privateChat: PrivateChat, onCreated: ((Chat) -> Unit)? = null) {
         if (client.post("$DOMAIN/private-chat") {
-            contentType(ContentType.Application.Json)
-            setBody(privateChat)
-        }.status == HttpStatusCode.Created) {
+                contentType(ContentType.Application.Json)
+                setBody(privateChat)
+            }.status == HttpStatusCode.Created) {
             onCreated?.let { it(privateChat) }
+            chats.add(privateChat)
         }
     }
 
     suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
         if (client.post("$DOMAIN/chat") {
-            contentType(ContentType.Application.Json)
-            setBody(message)
+                contentType(ContentType.Application.Json)
+                setBody(message)
                 parameter("chatName", chat.getNameChat())
-        }.status == HttpStatusCode.Created) {
+            }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
+            chat.getMessagesChat().add(message)
         }
     }
 }

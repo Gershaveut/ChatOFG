@@ -12,12 +12,12 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun App() {
-	refreshChats()
-	refreshUsers()
+    refreshChats()
+    refreshUsers()
 
-	MaterialTheme {
-		Menu()
-	}
+    MaterialTheme {
+        Menu()
+    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
@@ -25,34 +25,33 @@ val scope = GlobalScope
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshChats() {
-	scope.launch {
-		val tempChats = mutableSetOf<Chat>()
+    scope.launch {
+        val tempChats = mutableSetOf<Chat>()
 
-		tempChats.addAll(Client.getGroups())
-		tempChats.addAll(Client.getPrivateChats())
+        tempChats.addAll(Client.getGroups())
+        tempChats.addAll(Client.getPrivateChats())
 
-		Client.chats = tempChats
-	}
+        Client.chats = tempChats
+    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshUsers() {
-	scope.launch {
-		Client.users = Client.getUsers()
-	}
+    scope.launch {
+        Client.users = Client.getUsers()
+    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
-	scope.launch {
-		Client.sendMessage(message, chat, onCreated)
-	}
+    scope.launch {
+        Client.sendMessage(message, chat, onCreated)
+    }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun createChat(scope: GlobalScope, user: User, onCreated: ((Chat) -> Unit)? = null) {
-	scope.launch {
-		Client.createPrivateChat(PrivateChat(user, Client.getDataTime()), onCreated)
-		refreshChats()
-	}
+fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
+    scope.launch {
+        Client.createPrivateChat(PrivateChat(user, Client.getDataTime()), onCreated)
+    }
 }

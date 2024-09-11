@@ -2,13 +2,7 @@ package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
@@ -109,9 +103,14 @@ fun Menu() {
 
             TopAppBar(
                 title = {
-                    Text(
-                        openChat.value!!.getNameChat(),
-                        modifier = Modifier.clickable { showInfo.value = true })
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxSize()
+                            .clickable { showInfo.value = true }) {
+
+                        Text(
+                            openChat.value!!.getNameChat()
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton({
@@ -250,7 +249,7 @@ fun ChatRow(chat: Chat) {
         }
 
         // Info
-        Column {
+        Column(modifier = Modifier.padding(start = 5.dp)) {
             // Row Name and time
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -303,11 +302,10 @@ fun ChatRow(chat: Chat) {
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun UserRow(user: User, openChat: MutableState<Chat?>) {
     Row(modifier = Modifier.fillMaxWidth().clickable {
-        createChat(scope, user) { chat ->
+        createChat(user) { chat ->
             openChat.value = chat
         }
     }) {

@@ -13,10 +13,11 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-val chats get() = mutableSetOf<Chat>().apply {
-    addAll(Data.privateChats)
-    addAll(Data.groups)
-}
+val chats
+    get() = mutableSetOf<Chat>().apply {
+        addAll(Data.privateChats)
+        addAll(Data.groups)
+    }
 
 fun main() {
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
@@ -91,7 +92,8 @@ fun Routing.privateChat() {
 
 fun Routing.message() {
     post("/chat") {
-        chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!.getMessagesChat().add(call.receive<Message>())
+        chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!.getMessagesChat()
+            .add(call.receive<Message>())
         call.respondText("Sent message", status = HttpStatusCode.Created)
     }
 }

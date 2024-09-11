@@ -33,160 +33,162 @@ import com.gershaveut.chat_ofg.data.MessageStatus
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun Chat(chat: Chat) {
-	Column {
-		// Message
-		LazyColumn(modifier = Modifier.weight(15f)) {
-			var previousMessage: Message? = null
+    Column {
+        // Message
+        LazyColumn(modifier = Modifier.weight(15f)) {
+            var previousMessage: Message? = null
 
-			items(chat.getMessagesChat()) { message ->
-				val chatBoxModifier =
-					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
-				
-				// Message Data
-				if (previousMessage == null || message.sendTime.date != previousMessage!!.sendTime.date) {
-					val data = message.sendTime.date
-					
-					val dataText =
-						if (data.year == Client.getDataTime().year)
-							"${data.dayOfMonth} ${data.month.name}"
-						else
-							cdToString(data)
-					
-					Row(
-						horizontalArrangement = Arrangement.Center,
-						modifier = Modifier.fillMaxWidth()
-					) {
-						Box(
-							modifier = Modifier.padding(5.dp)
-								.background(
-									color = Colors.BACKGROUND_SECONDARY,
-									shape = MaterialTheme.shapes.medium
-								)
-						) {
-							Text(dataText, modifier = Modifier.padding(10.dp, 5.dp))
-						}
-					}
-				}
-				
-				previousMessage = message
-				
-				if (message.owner != Client.user) {
-					Box(
-						modifier = chatBoxModifier
-							.background(
-								color = Colors.OTHERS_MESSAGE,
-								shape = MaterialTheme.shapes.medium
-							)
-					) {
-						Message(message)
-					}
-				} else {
-					Row(
-						modifier = Modifier.fillMaxWidth(),
-						horizontalArrangement = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
-					) {
-						Box(
-							modifier = chatBoxModifier
-								.background(
-									color = Colors.MY_MESSAGE,
-									shape = MaterialTheme.shapes.medium
-								)
-						) {
-							Message(message)
-						}
-					}
-				}
-			}
-		}
-		
-		SendRow(chat)
-	}
+            items(chat.getMessagesChat()) { message ->
+                val chatBoxModifier =
+                    Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
+
+                // Message Data
+                if (previousMessage == null || message.sendTime.date != previousMessage!!.sendTime.date) {
+                    val data = message.sendTime.date
+
+                    val dataText =
+                        if (data.year == Client.getDataTime().year)
+                            "${data.dayOfMonth} ${data.month.name}"
+                        else
+                            cdToString(data)
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(5.dp)
+                                .background(
+                                    color = Colors.BACKGROUND_SECONDARY,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                        ) {
+                            Text(dataText, modifier = Modifier.padding(10.dp, 5.dp))
+                        }
+                    }
+                }
+
+                previousMessage = message
+
+                if (message.owner != Client.user) {
+                    Box(
+                        modifier = chatBoxModifier
+                            .background(
+                                color = Colors.OTHERS_MESSAGE,
+                                shape = MaterialTheme.shapes.medium
+                            )
+                    ) {
+                        Message(message)
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
+                    ) {
+                        Box(
+                            modifier = chatBoxModifier
+                                .background(
+                                    color = Colors.MY_MESSAGE,
+                                    shape = MaterialTheme.shapes.medium
+                                )
+                        ) {
+                            Message(message)
+                        }
+                    }
+                }
+            }
+        }
+
+        SendRow(chat)
+    }
 }
 
 @Composable
 fun SendRow(chat: Chat) {
-	Row {
-		var messageText by remember { mutableStateOf("") }
-		
-		TextField(
-			messageText, { text ->
-				messageText = text
-			},
-			modifier = Modifier
-				.weight(1f)
-				.fillMaxWidth(),
-			placeholder = { Text("Print here...") }
-		)
-		IconButton(
-			{
-				val message = Message(Client.user, messageText, Client.getDataTime(), MessageStatus.UnSend)
+    Row {
+        var messageText by remember { mutableStateOf("") }
 
-				sendMessage(message, chat) {
-					message.messageStatus = MessageStatus.UnRead
-				}
-				chat.getMessagesChat().add(message)
-				messageText = ""
-			},
-			modifier = Modifier.size(50.dp)
-		) {
-			Icon(Icons.AutoMirrored.Outlined.Send, null)
-		}
-	}
+        TextField(
+            messageText, { text ->
+                messageText = text
+            },
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            placeholder = { Text("Print here...") }
+        )
+        IconButton(
+            {
+                val message = Message(Client.user, messageText, Client.getDataTime(), MessageStatus.UnSend)
+
+                sendMessage(message, chat) {
+                    it.messageStatus = MessageStatus.UnRead
+                }
+
+                messageText = ""
+            },
+            modifier = Modifier.size(50.dp)
+        ) {
+            Icon(Icons.AutoMirrored.Outlined.Send, null)
+        }
+    }
 }
 
 @Composable
 fun Message(message: Message) {
-	Column(horizontalAlignment = Alignment.CenterHorizontally) {
-		Text(
-			message.owner.displayName,
-			color = MaterialTheme.colors.secondaryVariant,
-			fontSize = 15.sp,
-			modifier = Modifier
-				.padding(top = 10.dp, start = 10.dp, end = 10.dp)
-				.align(Alignment.Start)
-		)
-		
-		/*
-		if (message.id != null) {
-			Image(ImageBitmap.imageResource(message.id!!), null)
-		}
-		*/
-		
-		Text(
-			message.text, modifier = Modifier
-				.padding(
-					top = 10.dp,
-					start = 10.dp,
-					bottom = 5.dp,
-					end = 10.dp
-				).align(Alignment.Start)
-		)
-		
-		Row(
-			Modifier.align(Alignment.End).padding(
-				bottom = 10.dp,
-				end = 10.dp
-			)
-		) {
-			Text(
-				message.sendTime.time.toString(),
-				color = Colors.BACKGROUND_VARIANT,
-				fontSize = 10.sp
-			)
-			
-			if (message.owner == Client.user)
-				Row ( modifier = Modifier.padding(horizontal = 5.dp) ) {
-					MessageStatusIcon(message.messageStatus)
-				}
-		}
-	}
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            message.owner.displayName,
+            color = MaterialTheme.colors.secondaryVariant,
+            fontSize = 15.sp,
+            modifier = Modifier
+                .padding(top = 10.dp, start = 10.dp, end = 10.dp)
+                .align(Alignment.Start)
+        )
+
+        /*
+        if (message.id != null) {
+            Image(ImageBitmap.imageResource(message.id!!), null)
+        }
+        */
+
+        Text(
+            message.text, modifier = Modifier
+                .padding(
+                    top = 10.dp,
+                    start = 10.dp,
+                    bottom = 5.dp,
+                    end = 10.dp
+                ).align(Alignment.Start)
+        )
+
+        Row(
+            Modifier.align(Alignment.End).padding(
+                bottom = 10.dp,
+                end = 10.dp
+            )
+        ) {
+            Text(
+                message.sendTime.time.toString(),
+                color = Colors.BACKGROUND_VARIANT,
+                fontSize = 10.sp
+            )
+
+            if (message.owner == Client.user)
+                Row(modifier = Modifier.padding(horizontal = 5.dp)) {
+                    MessageStatusIcon(message.messageStatus)
+                }
+        }
+    }
 }
 
 @Composable
 fun MessageStatusIcon(messageStatus: MessageStatus) {
-	when (messageStatus) {
-		MessageStatus.UnSend -> Text("?", color = Colors.BACKGROUND_VARIANT, fontSize = 10.sp)
-		MessageStatus.UnRead -> Text("!", color = Colors.BACKGROUND_VARIANT, fontSize = 10.sp)
-		MessageStatus.Read -> Text("!!", color = MaterialTheme.colors.primaryVariant, fontSize = 10.sp)
-	}
+    val size = 10.sp
+
+    when (messageStatus) {
+        MessageStatus.UnSend -> Text("?", color = Colors.BACKGROUND_VARIANT, fontSize = size)
+        MessageStatus.UnRead -> Text("!", color = Colors.BACKGROUND_VARIANT, fontSize = size)
+        MessageStatus.Read -> Text("!!", color = MaterialTheme.colors.primaryVariant, fontSize = size)
+    }
 }
