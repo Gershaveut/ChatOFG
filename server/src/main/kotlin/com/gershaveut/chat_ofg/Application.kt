@@ -43,6 +43,12 @@ fun Application.module() {
     }
 }
 
+fun Routing.auth() {
+    post("/auth") {
+
+    }
+}
+
 fun Routing.users() {
     get("/users") {
         call.respond(Data.users)
