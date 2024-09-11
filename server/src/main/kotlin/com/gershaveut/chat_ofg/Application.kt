@@ -13,7 +13,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-val chats get() = mutableListOf<Chat>().apply {
+val chats get() = mutableSetOf<Chat>().apply {
     addAll(Data.privateChats)
     addAll(Data.groups)
 }
@@ -78,13 +78,19 @@ fun Routing.privateChat() {
     }
 
     post("/private-chat") {
-        Data.privateChats.add(call.receive<PrivateChat>())
-        call.respondText("Created chat", status = HttpStatusCode.Created)
+        val privateChat = call.receive<PrivateChat>()
+
+        if (Data.privateChats.any { it.getNameChat() == privateChat.getNameChat() }) {
+            call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
+        } else {
+            Data.privateChats.add(privateChat)
+            call.respondText("Created chat", status = HttpStatusCode.Created)
+        }
     }
 }
 
 fun Routing.message() {
-    post("/chat/{chatName}") {
+    post("/chat") {
         chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!.getMessagesChat().add(call.receive<Message>())
         call.respondText("Sent message", status = HttpStatusCode.Created)
     }

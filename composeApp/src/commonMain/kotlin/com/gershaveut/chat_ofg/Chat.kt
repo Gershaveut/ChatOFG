@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -30,9 +29,6 @@ import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -41,7 +37,7 @@ fun Chat(chat: Chat) {
 		// Message
 		LazyColumn(modifier = Modifier.weight(15f)) {
 			var previousMessage: Message? = null
-			
+
 			items(chat.getMessagesChat()) { message ->
 				val chatBoxModifier =
 					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
@@ -51,7 +47,7 @@ fun Chat(chat: Chat) {
 					val data = message.sendTime.date
 					
 					val dataText =
-						if (data.year == Client.dataTime.year)
+						if (data.year == Client.getDataTime().year)
 							"${data.dayOfMonth} ${data.month.name}"
 						else
 							cdToString(data)
@@ -123,7 +119,7 @@ fun SendRow(chat: Chat) {
 		)
 		IconButton(
 			{
-				val message = Message(Client.user, messageText, Client.dataTime, MessageStatus.UnSend)
+				val message = Message(Client.user, messageText, Client.getDataTime(), MessageStatus.UnSend)
 
 				sendMessage(message, chat) {
 					message.messageStatus = MessageStatus.UnRead

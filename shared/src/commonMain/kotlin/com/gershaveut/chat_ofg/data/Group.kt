@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Group(
-    var users: MutableList<User>,
+    var users: MutableSet<User>,
     var name: String,
     var createTime: LocalDateTime,
     var messages: MutableList<Message>,

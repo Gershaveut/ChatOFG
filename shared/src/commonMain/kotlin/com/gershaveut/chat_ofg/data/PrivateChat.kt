@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PrivateChat(var user: User, var createTime: LocalDateTime, var messages: MutableList<Message> = mutableListOf()) : Chat {
 	override fun getNameChat(): String = user.displayName
-	override fun getSignChat(): String = cdtToString(createTime)
+	override fun getSignChat(): String = "Last login: " + cdtToString(user.lastLogin)
 	override fun getCreateTimeChat(): LocalDateTime = createTime
 	override fun getMessagesChat(): MutableList<Message> = messages
 	override fun getDescriptionChat(): String? = user.discription
