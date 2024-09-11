@@ -2,11 +2,8 @@ package com.gershaveut.chat_ofg
 
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.gershaveut.chat_ofg.data.Chat
-import com.gershaveut.chat_ofg.data.PrivateChat
+import com.gershaveut.chat_ofg.data.Message
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -29,16 +26,23 @@ fun refreshChats() {
 	scope.launch {
 		val tempChats: MutableList<Chat> = mutableListOf()
 
-		tempChats.addAll(getGroups())
-		tempChats.addAll(getPrivateChats())
+		tempChats.addAll(Client.getGroups())
+		tempChats.addAll(Client.getPrivateChats())
 
-		chats = tempChats
+		Client.chats = tempChats
 	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshUsers() {
-	GlobalScope.launch {
-		users = getUsers()
+	scope.launch {
+		Client.users = Client.getUsers()
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun sendMessage(message: Message, chat: Chat, onCreated: () -> Unit) {
+	scope.launch {
+		Client.sendMessage(message, chat, onCreated)
 	}
 }

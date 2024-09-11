@@ -32,7 +32,7 @@ fun AppAndroidPreview() {
 @Composable
 fun AppAndroidPreviewChat() {
     Surface( modifier = Modifier.sizeIn(500.dp, 750.dp) ) {
-        Chat(chats[2])
+        //Chat(clientChats[2])
     }
 }
 
@@ -40,6 +40,6 @@ fun AppAndroidPreviewChat() {
 @Composable
 fun AppAndroidPreviewChatInfo() {
     Surface( modifier = Modifier.sizeIn(250.dp, 500.dp) ) {
-        chats[2].ShowInfo()
+        //clientChats[2].ShowInfo()
     }
 }

@@ -75,11 +75,11 @@ fun Menu() {
 				floatingActionButtonPosition = FabPosition.End
 			) {
 				LazyColumn {
-					items(chats, { it.getNameChat() }) { chat ->
+					items(Client.chats, { it.getNameChat() }) { chat ->
 						Row(
 							modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
 								chat.getMessagesChat().map {
-									if (it.owner != clientUser && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
+									if (it.owner != Client.user && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
 										MessageStatus.Read
 								}
 
@@ -97,7 +97,7 @@ fun Menu() {
 					createChat = false
 				}) {
 					LazyColumn {
-						items(users, { it.name }) { user ->
+						items(Client.users, { it.name }) { user ->
 							UserRow(user)
 						}
 					}
@@ -250,7 +250,7 @@ fun ChatRow(chat: Chat) {
 				Text(chat.getNameChat(), textAlign = TextAlign.Start)
 
 				Row {
-					if (lastMessage.owner == clientUser)
+					if (lastMessage.owner == Client.user)
 						MessageStatusIcon(lastMessage.messageStatus)
 
 					Text(
@@ -276,7 +276,7 @@ fun ChatRow(chat: Chat) {
 				)
 
 				val unread =
-					chat.getMessagesChat().count { it.owner != clientUser && it.messageStatus == MessageStatus.UnRead }
+					chat.getMessagesChat().count { it.owner != Client.user && it.messageStatus == MessageStatus.UnRead }
 
 				if (unread > 0) {
 					Text(
@@ -300,7 +300,7 @@ fun UserRow(user: User) {
 		refreshUsers()
 
 		scope.launch {
-			createPrivateChat(PrivateChat(user, clientDataTime))
+			Client.createPrivateChat(PrivateChat(user, Client.dataTime))
 			refreshChats()
 		}
 	} ) {

@@ -22,9 +22,7 @@ import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -53,7 +51,7 @@ fun Chat(chat: Chat) {
 					val data = message.sendTime.date
 					
 					val dataText =
-						if (data.year == clientDataTime.year)
+						if (data.year == Client.dataTime.year)
 							"${data.dayOfMonth} ${data.month.name}"
 						else
 							cdToString(data)
@@ -76,7 +74,7 @@ fun Chat(chat: Chat) {
 				
 				previousMessage = message
 				
-				if (message.owner != clientUser) {
+				if (message.owner != Client.user) {
 					Box(
 						modifier = chatBoxModifier
 							.background(
@@ -112,11 +110,11 @@ fun Chat(chat: Chat) {
 @Composable
 fun SendRow(chat: Chat) {
 	Row {
-		val message = remember { mutableStateOf("") }
+		var messageText by remember { mutableStateOf("") }
 		
 		TextField(
-			message.value, { text ->
-				message.value = text
+			messageText, { text ->
+				messageText = text
 			},
 			modifier = Modifier
 				.weight(1f)
@@ -125,7 +123,13 @@ fun SendRow(chat: Chat) {
 		)
 		IconButton(
 			{
-				TODO("Message send")
+				val message = Message(Client.user, messageText, Client.dataTime, MessageStatus.UnSend)
+
+				sendMessage(message, chat) {
+					message.messageStatus = MessageStatus.UnRead
+				}
+				chat.getMessagesChat().add(message)
+				messageText = ""
 			},
 			modifier = Modifier.size(50.dp)
 		) {
@@ -174,7 +178,7 @@ fun Message(message: Message) {
 				fontSize = 10.sp
 			)
 			
-			if (message.owner == clientUser)
+			if (message.owner == Client.user)
 				Row ( modifier = Modifier.padding(horizontal = 5.dp) ) {
 					MessageStatusIcon(message.messageStatus)
 				}
