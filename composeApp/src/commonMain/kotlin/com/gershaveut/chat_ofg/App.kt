@@ -1,7 +1,7 @@
 package com.gershaveut.chat_ofg
 
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.PrivateChat
@@ -13,17 +13,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     MaterialTheme {
-        if (Client.user == null) {
+        var user by remember { mutableStateOf(Client.user) }
+
+        if (user == null) {
             Auth("Auth") { name, password ->
                 Client.authName = name
                 Client.authPassword = password
 
-                auth()
+                auth {
+                    user = Client.user
+                }
             }
         } else {
-            refreshChats()
-            refreshUsers()
-
             Menu()
         }
     }
@@ -33,14 +34,15 @@ fun App() {
 val scope = GlobalScope
 
 @OptIn(DelicateCoroutinesApi::class)
-fun auth() {
+fun auth(onAuth: () -> Unit) {
     scope.launch {
         Client.user = Client.auth()
+        onAuth()
     }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun refreshChats() {
+fun refreshChats(onRefresh: () -> Unit) {
     scope.launch {
         val tempChats = mutableSetOf<Chat>()
 
@@ -52,7 +54,7 @@ fun refreshChats() {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun refreshUsers() {
+fun refreshUsers(onRefresh: () -> Unit) {
     scope.launch {
         Client.users = Client.getUsers()
     }

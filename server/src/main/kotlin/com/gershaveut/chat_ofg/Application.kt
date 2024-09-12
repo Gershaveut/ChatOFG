@@ -35,7 +35,7 @@ fun Application.module() {
             validate { credentials ->
                 Data.users.find { it.name == credentials.name }?.let {
                     if (it.password == credentials.password) {
-                        UserIdPrincipal(credentials.name)
+                        return@validate UserIdPrincipal(credentials.name)
                     }
                 }
 
@@ -62,8 +62,8 @@ fun Application.module() {
 
 fun Routing.auth() {
     authenticate("auth-basic") {
-        post("/") {
-            call.respond(Data.privateChats.find { it.user.name == call.principal<UserIdPrincipal>()!!.name }!!)
+        get("/") {
+            call.respond(Data.users.find { it.name == call.principal<UserIdPrincipal>()!!.name }!!)
         }
     }
 }

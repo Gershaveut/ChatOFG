@@ -46,20 +46,18 @@ fun Menu() {
                     IconButton({
 
                     }) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
-                },
-                actions = {
-                    IconButton({
-                        refreshChats()
-                    }) {
-                        Icon(Icons.Filled.Refresh, "Refresh")
-                    }
                 }
             )
+
+            var users by remember { mutableStateOf(Client.users) }
 
             Scaffold(
                 floatingActionButton = {
                     FloatingActionButton({
-                        refreshUsers()
+                        refreshUsers {
+                            users = Client.users
+                        }
+
                         createChat = true
                     }) {
                         Icon(Icons.Filled.Add, contentDescription = "Create Chat")
@@ -67,8 +65,14 @@ fun Menu() {
                 },
                 floatingActionButtonPosition = FabPosition.End
             ) {
+                var chats by remember { mutableStateOf(Client.chats) }
+
+                refreshChats {
+                    chats = Client.chats
+                }
+
                 LazyColumn {
-                    items(Client.chats.toList(), { it.getNameChat() }) { chat ->
+                    items(chats.toList(), { it.getNameChat() }) { chat ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
                                 chat.getMessagesChat().map {
