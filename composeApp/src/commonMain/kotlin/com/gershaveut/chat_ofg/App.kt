@@ -44,7 +44,7 @@ fun auth(onAuth: () -> Unit) {
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshChats(onRefresh: () -> Unit) {
     scope.launch {
-        val tempChats = mutableSetOf<Chat>()
+        val tempChats = mutableListOf<Chat>()
 
         tempChats.addAll(Client.getGroups())
         tempChats.addAll(Client.getPrivateChats())

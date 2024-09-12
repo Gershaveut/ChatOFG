@@ -72,7 +72,7 @@ fun Menu() {
                 }
 
                 LazyColumn {
-                    items(chats.toList(), { it.getNameChat() }) { chat ->
+                    items(chats, { it.getNameChat() }) { chat ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
                                 chat.getMessagesChat().map {
@@ -94,7 +94,7 @@ fun Menu() {
                     createChat = false
                 }) {
                     LazyColumn {
-                        items(Client.users.toList(), { it.name }) { user ->
+                        items(users, { it.name }) { user ->
                             UserRow(user, openChat)
                         }
                     }

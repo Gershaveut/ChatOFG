@@ -25,8 +25,8 @@ object Client {
     var authName: String? = null
     var authPassword: String? = null
 
-    var users = mutableSetOf<User>()
-    var chats = mutableSetOf<Chat>()
+    var users = mutableListOf<User>()
+    var chats = mutableListOf<Chat>()
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -45,11 +45,11 @@ object Client {
 
     suspend fun auth() : User = client.get("$DOMAIN/").body()
 
-    suspend fun getUsers(): MutableSet<User> = client.get("$DOMAIN/users").body()
+    suspend fun getUsers(): MutableList<User> = client.get("$DOMAIN/users").body()
 
-    suspend fun getGroups(): MutableSet<Group> = client.get("$DOMAIN/groups").body()
+    suspend fun getGroups(): MutableList<Group> = client.get("$DOMAIN/groups").body()
 
-    suspend fun getPrivateChats(): MutableSet<PrivateChat> = client.get("$DOMAIN/private-chats").body()
+    suspend fun getPrivateChats(): MutableList<PrivateChat> = client.get("$DOMAIN/private-chats").body()
 
     suspend fun createPrivateChat(privateChat: PrivateChat, onCreated: ((Chat) -> Unit)? = null) {
         if (client.post("$DOMAIN/private-chat") {
