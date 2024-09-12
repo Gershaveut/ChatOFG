@@ -4,6 +4,8 @@ import com.gershaveut.chat_ofg.data.*
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -18,10 +20,10 @@ object Client {
         return LocalDateTime(current.date, LocalTime(currentTime.hour, currentTime.minute))
     }
 
-    val user = User(
-        "DEV",
-        lastLogin = getDataTime()
-    )
+    var user: User? = null
+
+    var authName: String? = null
+    var authPassword: String? = null
 
     var users = mutableSetOf<User>()
     var chats = mutableSetOf<Chat>()
@@ -30,7 +32,18 @@ object Client {
         install(ContentNegotiation) {
             json()
         }
+
+        install(Auth) {
+            basic {
+                credentials {
+                    BasicAuthCredentials(username = authName!!, password = authPassword!!)
+                }
+                realm = "User Access"
+            }
+        }
     }
+
+    suspend fun auth() : User = client.get("$DOMAIN/").body()
 
     suspend fun getUsers(): MutableSet<User> = client.get("$DOMAIN/users").body()
 

@@ -236,11 +236,16 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
+        var chatName = chat.getNameChat()
+
+        if (chat is PrivateChat && chat.creater != Client.user) {
+            chatName = chat.creater.displayName
+        }
 
         // Image box
-        UserAvatar(chat.getNameChat())
+        UserAvatar(chatName)
 
-        var lastMessage = Message(Client.user, "Chat created", Client.getDataTime())
+        var lastMessage = Message(Client.user!!, "Chat created", Client.getDataTime())
 
         try {
             lastMessage = chat.getMessagesChat().last()
@@ -256,7 +261,7 @@ fun ChatRow(chat: Chat) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(chat.getNameChat(), textAlign = TextAlign.Start)
+                Text(chatName, textAlign = TextAlign.Start)
 
                 Row {
                     if (lastMessage.owner == Client.user)

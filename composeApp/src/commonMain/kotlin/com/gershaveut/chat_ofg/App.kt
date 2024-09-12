@@ -12,16 +12,32 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun App() {
-    refreshChats()
-    refreshUsers()
-
     MaterialTheme {
-        Menu()
+        if (Client.user == null) {
+            Auth("Auth") { name, password ->
+                Client.authName = name
+                Client.authPassword = password
+
+                auth()
+            }
+        } else {
+            refreshChats()
+            refreshUsers()
+
+            Menu()
+        }
     }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 val scope = GlobalScope
+
+@OptIn(DelicateCoroutinesApi::class)
+fun auth() {
+    scope.launch {
+        Client.user = Client.auth()
+    }
+}
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshChats() {
@@ -52,6 +68,6 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 @OptIn(DelicateCoroutinesApi::class)
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
-        Client.createPrivateChat(PrivateChat(user, Client.getDataTime()), onCreated)
+        Client.createPrivateChat(PrivateChat(Client.user!!, user, Client.getDataTime()), onCreated)
     }
 }

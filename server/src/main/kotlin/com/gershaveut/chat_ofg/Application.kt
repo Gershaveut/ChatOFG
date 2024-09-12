@@ -6,6 +6,7 @@ import com.gershaveut.chat_ofg.data.PrivateChat
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -28,8 +29,24 @@ fun Application.module() {
     install(ContentNegotiation) {
         json()
     }
+    install(Authentication) {
+        basic("auth-basic") {
+            realm = "User Access"
+            validate { credentials ->
+                Data.users.find { it.name == credentials.name }?.let {
+                    if (it.password == credentials.password) {
+                        UserIdPrincipal(credentials.name)
+                    }
+                }
+
+                null
+            }
+        }
+    }
 
     routing {
+        auth()
+
         users()
         user()
 
@@ -44,8 +61,10 @@ fun Application.module() {
 }
 
 fun Routing.auth() {
-    post("/auth") {
-
+    authenticate("auth-basic") {
+        post("/") {
+            call.respond(Data.privateChats.find { it.user.name == call.principal<UserIdPrincipal>()!!.name }!!)
+        }
     }
 }
 
@@ -80,8 +99,16 @@ fun Routing.privateChats() {
 }
 
 fun Routing.privateChat() {
-    get("/private-chat/{name}") {
-        call.respond(Data.privateChats.find { it.user.name == call.parameters["name"].toString() }!!)
+    authenticate("auth-basic") {
+        get("/private-chat/{name}") {
+            val chat = Data.privateChats.find { it.user.name == call.parameters["name"].toString() }!!
+
+            if (chat.creater.name == call.principal<UserIdPrincipal>()!!.name || chat.user.name == call.principal<UserIdPrincipal>()!!.name) {
+                call.respond(chat)
+            } else {
+                call.respondText("Chat not found", status = HttpStatusCode.NotFound)
+            }
+        }
     }
 
     post("/private-chat") {

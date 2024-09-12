@@ -119,7 +119,7 @@ fun SendRow(chat: Chat) {
         )
         IconButton(
             {
-                val message = Message(Client.user, messageText, Client.getDataTime(), MessageStatus.UnSend)
+                val message = Message(Client.user!!, messageText, Client.getDataTime(), MessageStatus.UnSend)
 
                 sendMessage(message, chat) {
                     it.messageStatus = MessageStatus.UnRead

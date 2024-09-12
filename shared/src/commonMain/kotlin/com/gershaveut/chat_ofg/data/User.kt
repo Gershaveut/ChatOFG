@@ -9,7 +9,8 @@ data class User(
 	var name: String,
 	var displayName: String = name,
 	var discription: String? = null,
-	var lastLogin: LocalDateTime
+	var lastLogin: LocalDateTime,
+	var password: String
 ) {
 	override fun equals(other: Any?): Boolean = other is User && name == other.name
 }

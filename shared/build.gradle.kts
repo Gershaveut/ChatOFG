@@ -41,6 +41,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.cio)
+            implementation(libs.ktor.client.auth)
         }
     }
 }
