@@ -50,6 +50,8 @@ fun refreshChats(onRefresh: () -> Unit) {
         tempChats.addAll(Client.getPrivateChats())
 
         Client.chats = tempChats
+
+        onRefresh()
     }
 }
 
@@ -57,6 +59,8 @@ fun refreshChats(onRefresh: () -> Unit) {
 fun refreshUsers(onRefresh: () -> Unit) {
     scope.launch {
         Client.users = Client.getUsers()
+
+        onRefresh()
     }
 }
 
