@@ -72,7 +72,7 @@ fun Menu() {
                 }
 
                 LazyColumn {
-                    items(chats, { it.getNameChat() }) { chat ->
+                    items(chats, { it.getNameChat(Client.user!!) }) { chat ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
                                 chat.getMessagesChat().map {
@@ -112,7 +112,7 @@ fun Menu() {
                             .clickable { showInfo.value = true }) {
 
                         Text(
-                            openChat.value!!.getNameChat()
+                            openChat.value!!.getNameChat(Client.user!!)
                         )
                     }
                 },
@@ -132,9 +132,9 @@ fun Menu() {
                     val chat = openChat.value!!
 
                     ShowInfo(
-                        chat.getNameChat(),
-                        chat.getSignChat(),
-                        chat.getDescriptionChat(),
+                        chat.getNameChat(Client.user!!),
+                        chat.getSignChat(Client.user!!),
+                        chat.getDescriptionChat(Client.user!!),
                         chat.getCreateTimeChat()
                     )
                 }
@@ -240,11 +240,7 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
-        var chatName = chat.getNameChat()
-
-        if (chat is PrivateChat && chat.creater != Client.user) {
-            chatName = chat.creater.displayName
-        }
+        var chatName = chat.getNameChat(Client.user!!)
 
         // Image box
         UserAvatar(chatName)
