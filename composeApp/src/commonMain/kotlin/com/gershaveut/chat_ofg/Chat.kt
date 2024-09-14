@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -29,16 +30,25 @@ import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, DelicateCoroutinesApi::class)
 @Composable
 fun Chat(chat: Chat) {
     Column {
         // Message
-        LazyColumn(modifier = Modifier.weight(15f)) {
+        val messagesState = rememberLazyListState()
+
+        val messages = remember { mutableStateListOf<Message>() }
+
+        messages.addAll(chat.getMessagesChat())
+
+        LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
             var previousMessage: Message? = null
 
-            items(chat.getMessagesChat()) { message ->
+            items(messages) { message ->
                 val chatBoxModifier =
                     Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 
@@ -99,12 +109,20 @@ fun Chat(chat: Chat) {
             }
         }
 
-        SendRow(chat)
+        val scope =  rememberCoroutineScope()
+
+        SendRow(chat) {
+            messages.add(it)
+
+            scope.launch {
+                messagesState.animateScrollToItem(messages.count() - 1)
+            }
+        }
     }
 }
 
 @Composable
-fun SendRow(chat: Chat) {
+fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
     Row {
         var messageText by remember { mutableStateOf("") }
 
@@ -120,6 +138,7 @@ fun SendRow(chat: Chat) {
         IconButton(
             {
                 val message = Message(Client.user!!, messageText, Client.getDataTime(), MessageStatus.UnSend)
+                onSend(message)
 
                 sendMessage(message, chat) {
                     it.messageStatus = MessageStatus.UnRead

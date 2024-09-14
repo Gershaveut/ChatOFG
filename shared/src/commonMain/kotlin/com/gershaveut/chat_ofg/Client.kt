@@ -68,7 +68,6 @@ object Client {
                 parameter("chatName", chat.getNameChat())
             }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
-            chat.getMessagesChat().add(message)
         }
     }
 }
