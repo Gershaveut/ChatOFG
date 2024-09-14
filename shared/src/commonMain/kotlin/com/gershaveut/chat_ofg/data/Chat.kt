@@ -8,4 +8,7 @@ interface Chat {
 	fun getCreateTimeChat(): LocalDateTime
 	fun getMessagesChat(): MutableList<Message>
 	fun getDescriptionChat(): String?
+	fun getMembers() : List<String>
+
+	fun isMember(name: String) : Boolean = getMembers().any { it == name }
 }

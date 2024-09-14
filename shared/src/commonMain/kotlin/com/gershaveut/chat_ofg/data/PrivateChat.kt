@@ -11,4 +11,5 @@ data class PrivateChat(var creater: User, var user: User, var createTime: LocalD
 	override fun getCreateTimeChat(): LocalDateTime = createTime
 	override fun getMessagesChat(): MutableList<Message> = messages
 	override fun getDescriptionChat(): String? = user.discription
+	override fun getMembers(): List<String> = listOf(creater.name, user.name)
 }

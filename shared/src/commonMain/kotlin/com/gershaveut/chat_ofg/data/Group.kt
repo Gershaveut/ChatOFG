@@ -16,4 +16,5 @@ data class Group(
     override fun getCreateTimeChat(): LocalDateTime = createTime
     override fun getMessagesChat(): MutableList<Message> = messages
     override fun getDescriptionChat(): String? = description
+    override fun getMembers(): List<String> = users.map { it.name }
 }

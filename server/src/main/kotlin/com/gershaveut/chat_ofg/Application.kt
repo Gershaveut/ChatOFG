@@ -45,69 +45,73 @@ fun Application.module() {
     }
 
     routing {
-        auth()
+        authenticate("auth-basic") {
+            auth()
 
-        users()
-        user()
+            users()
+            user()
 
-        groups()
-        group()
+            groups()
+            group()
 
-        privateChats()
-        privateChat()
+            privateChats()
+            privateChat()
 
-        message()
-    }
-}
-
-fun Routing.auth() {
-    authenticate("auth-basic") {
-        get("/") {
-            call.respond(Data.users.find { it.name == call.principal<UserIdPrincipal>()!!.name }!!)
+            message()
         }
     }
 }
 
-fun Routing.users() {
+fun Route.auth() {
+    get("/") {
+        call.respond(Data.users.find { it.name == userName() }!!)
+    }
+}
+
+fun Route.users() {
     get("/users") {
         call.respond(Data.users)
     }
 }
 
-fun Routing.user() {
+fun Route.user() {
     get("/user/{name}") {
         call.respond(Data.users.find { it.name == call.parameters["name"].toString() }!!)
     }
 }
 
-fun Routing.groups() {
+fun Route.groups() {
     get("/groups") {
-        call.respond(Data.groups)
+        call.respond(Data.groups.filter { it.isMember(userName()) })
     }
 }
 
-fun Routing.group() {
+fun Route.group() {
     get("/group/{name}") {
-        call.respond(Data.groups.find { it.name == call.parameters["name"].toString() }!!)
+        val group = Data.groups.filter { it.isMember(userName()) }.find { it.getNameChat() == call.parameters["name"].toString() }!!
+
+        if (group.isMember(userName())) {
+            call.respond(group)
+        } else {
+            call.respondText("Group not found", status = HttpStatusCode.NotFound)
+        }
     }
 }
 
-fun Routing.privateChats() {
+fun Route.privateChats() {
     get("/private-chats") {
-        call.respond(Data.privateChats)
+        call.respond(Data.privateChats.filter { it.isMember(userName()) })
     }
 }
 
-fun Routing.privateChat() {
-    authenticate("auth-basic") {
-        get("/private-chat/{name}") {
-            val chat = Data.privateChats.find { it.user.name == call.parameters["name"].toString() }!!
+fun Route.privateChat() {
+    get("/private-chat/{name}") {
+        val chat = Data.privateChats.filter { it.isMember(userName()) }.find { it.getNameChat() == call.parameters["name"].toString() }!!
 
-            if (chat.creater.name == call.principal<UserIdPrincipal>()!!.name || chat.user.name == call.principal<UserIdPrincipal>()!!.name) {
-                call.respond(chat)
-            } else {
-                call.respondText("Chat not found", status = HttpStatusCode.NotFound)
-            }
+        if (chat.isMember(userName())) {
+            call.respond(chat)
+        } else {
+            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
         }
     }
 
@@ -123,10 +127,15 @@ fun Routing.privateChat() {
     }
 }
 
-fun Routing.message() {
+fun Route.message() {
     post("/chat") {
-        chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!.getMessagesChat()
-            .add(call.receive<Message>())
-        call.respondText("Sent message", status = HttpStatusCode.Created)
+        val chat = chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!
+
+        if (chat.isMember(userName())) {
+            chat.getMessagesChat().add(call.receive<Message>())
+            call.respondText("Sent message", status = HttpStatusCode.Created)
+        } else {
+            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
+        }
     }
 }

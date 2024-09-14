@@ -18,7 +18,8 @@ object Data {
         Group(
             mutableSetOf(
                 users.find { it.name == "Tester" }!!,
-                users.find { it.name == "Designer" }!!
+                users.find { it.name == "Designer" }!!,
+                users.find { it.name == "DEV" }!!
             ),
             "Discussion",
             LocalDateTime(2024, 6, 10, 4, 55),
