@@ -10,14 +10,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,114 +23,145 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.*
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 @Composable
-fun Menu() {
-    val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
+fun Menu(user: MutableState<User?>) {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
 
-    Column {
-        if (openChat.value == null) {
-            var createChat by remember { mutableStateOf(false) }
+    ModalDrawer( {
+        Column ( modifier = Modifier.padding(5.dp) ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                UserAvatar(Client.user!!.name, 60.dp)
+                Text(Client.user!!.name, modifier = Modifier.padding(start = 5.dp))
+            }
 
-            // Menu
-            TopAppBar(
-                title = { Text("ChatOFG") },
-                navigationIcon = {
-                    IconButton({
-
-                    }) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
-                }
-            )
-
-            var users by remember { mutableStateOf(Client.users) }
-
-            Scaffold(
-                floatingActionButton = {
-                    FloatingActionButton({
-                        refreshUsers {
-                            users = Client.users
-                        }
-
-                        createChat = true
-                    }) {
-                        Icon(Icons.Filled.Add, contentDescription = "Create Chat")
-                    }
+            Column {
+                Button( {
+                    user.value = null
                 },
-                floatingActionButtonPosition = FabPosition.End
-            ) {
-                var chats by remember { mutableStateOf(Client.chats) }
-
-                refreshChats {
-                    chats = Client.chats
+                    modifier = Modifier.fillMaxWidth()
+                    ) {
+                    Row( verticalAlignment = Alignment.CenterVertically ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Exit")
+                        Text("Exit", modifier = Modifier.padding(start = 5.dp))
+                    }
                 }
+            }
+        }
+    },
+        drawerState = drawerState
+    ) {
+        val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
 
-                LazyColumn {
-                    items(chats, { it.getNameChat() }) { chat ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-                                chat.getMessagesChat().map {
-                                    if (it.owner != Client.user && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
-                                        MessageStatus.Read
-                                }
+        Column {
+            if (openChat.value == null) {
+                var createChat by remember { mutableStateOf(false) }
 
-                                openChat.value = chat
+                val scope = rememberCoroutineScope()
+
+                // Menu
+                TopAppBar(
+                    title = { Text("ChatOFG") },
+                    navigationIcon = {
+                        IconButton({
+                            scope.launch {
+                                drawerState.open()
                             }
-                        ) {
-                            ChatRow(chat)
-                        }
+                        }) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
                     }
-                }
-            }
+                )
 
-            if (createChat) {
-                ChatDialog("Create Chat", {
-                    createChat = false
-                }) {
+                var users by remember { mutableStateOf(Client.users) }
+
+                Scaffold(
+                    floatingActionButton = {
+                        FloatingActionButton({
+                            refreshUsers {
+                                users = Client.users
+                            }
+
+                            createChat = true
+                        }) {
+                            Icon(Icons.Filled.Add, contentDescription = "Create Chat")
+                        }
+                    },
+                    floatingActionButtonPosition = FabPosition.End
+                ) {
+                    var chats by remember { mutableStateOf(Client.chats) }
+
+                    refreshChats {
+                        chats = Client.chats
+                    }
+
                     LazyColumn {
-                        items(users.filter { it != Client.user }, { it.name }) { user ->
-                            UserRow(user, openChat)
+                        items(chats, { it.getNameChat() }) { chat ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
+                                    chat.getMessagesChat().map {
+                                        if (it.owner != Client.user && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
+                                            MessageStatus.Read
+                                    }
+
+                                    openChat.value = chat
+                                }
+                            ) {
+                                ChatRow(chat)
+                            }
                         }
                     }
                 }
-            }
 
-        } else {
-            // Chat
-            val showInfo = remember { mutableStateOf(false) }
+                if (createChat) {
+                    ChatDialog("Create Chat", {
+                        createChat = false
+                    }) {
+                        LazyColumn {
+                            items(users.filter { it != Client.user }, { it.name }) { user ->
+                                UserRow(user, openChat)
+                            }
+                        }
+                    }
+                }
 
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxSize()
-                            .clickable { showInfo.value = true }) {
+            } else {
+                // Chat
+                val showInfo = remember { mutableStateOf(false) }
 
-                        Text(
-                            openChat.value!!.getNameChat(Client.user!!)
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxSize()
+                                .clickable { showInfo.value = true }) {
+
+                            Text(
+                                openChat.value!!.getNameChat(Client.user!!)
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton({
+                            openChat.value = null
+                        }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                    },
+                )
+
+                Chat(openChat.value!!)
+
+                if (showInfo.value) {
+                    ChatDialog("Info", {
+                        showInfo.value = false
+                    }) {
+                        val chat = openChat.value!!
+
+                        ShowInfo(
+                            chat.getNameChat(Client.user!!),
+                            chat.getSignChat(Client.user!!),
+                            chat.getDescriptionChat(Client.user!!),
+                            chat.getCreateTimeChat()
                         )
                     }
-                },
-                navigationIcon = {
-                    IconButton({
-                        openChat.value = null
-                    }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
-                },
-            )
-
-            Chat(openChat.value!!)
-
-            if (showInfo.value) {
-                ChatDialog("Info", {
-                    showInfo.value = false
-                }) {
-                    val chat = openChat.value!!
-
-                    ShowInfo(
-                        chat.getNameChat(Client.user!!),
-                        chat.getSignChat(Client.user!!),
-                        chat.getDescriptionChat(Client.user!!),
-                        chat.getCreateTimeChat()
-                    )
                 }
             }
         }

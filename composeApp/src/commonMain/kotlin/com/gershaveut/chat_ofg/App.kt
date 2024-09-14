@@ -13,19 +13,19 @@ import kotlinx.coroutines.launch
 @Composable
 fun App() {
     MaterialTheme {
-        var user by remember { mutableStateOf(Client.user) }
+        val user = remember { mutableStateOf(Client.user) }
 
-        if (user == null) {
+        if (user.value == null) {
             Auth("Auth") { name, password ->
                 Client.authName = name
                 Client.authPassword = password
 
                 auth {
-                    user = Client.user
+                    user.value = Client.user
                 }
             }
         } else {
-            Menu()
+            Menu(user)
         }
     }
 }
