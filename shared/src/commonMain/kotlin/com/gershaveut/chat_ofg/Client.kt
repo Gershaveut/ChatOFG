@@ -13,13 +13,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.datetime.*
 
 object Client {
-    fun getDataTime(): LocalDateTime {
-        val current = Clock.System.now().toLocalDateTime(TimeZone.UTC)
-        val currentTime = current.time
-
-        return LocalDateTime(current.date, LocalTime(currentTime.hour, currentTime.minute))
-    }
-
     var user: User? = null
 
     var authName: String? = null

@@ -74,6 +74,6 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 @OptIn(DelicateCoroutinesApi::class)
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
-        Client.createPrivateChat(PrivateChat(Client.user!!, user, Client.getDataTime()), onCreated)
+        Client.createPrivateChat(PrivateChat(Client.user!!, user, getCurrentDataTime()), onCreated)
     }
 }

@@ -3,6 +3,7 @@ package com.gershaveut.chat_ofg
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.PrivateChat
+import com.gershaveut.chat_ofg.data.User
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
@@ -13,6 +14,7 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.util.pipeline.*
 
 val chats
     get() = mutableSetOf<Chat>().apply {
@@ -35,11 +37,16 @@ fun Application.module() {
             validate { credentials ->
                 Data.users.find { it.name == credentials.name }?.let {
                     if (it.password == credentials.password) {
+                        it.lastLogin = getCurrentDataTime()
+
                         return@validate UserIdPrincipal(credentials.name)
+                    } else {
+                        return@validate null
                     }
                 }
 
-                null
+                Data.users.add(User(credentials.name, password = credentials.password, lastLogin = getCurrentDataTime()))
+                return@validate UserIdPrincipal(credentials.name)
             }
         }
     }
@@ -82,7 +89,7 @@ fun Route.user() {
 
 fun Route.groups() {
     get("/groups") {
-        call.respond(Data.groups.filter { it.isMember(userName()) })
+        call.respond(userGroups())
     }
 }
 
@@ -100,13 +107,13 @@ fun Route.group() {
 
 fun Route.privateChats() {
     get("/private-chats") {
-        call.respond(Data.privateChats.filter { it.isMember(userName()) })
+        call.respond(userPrivateChats())
     }
 }
 
 fun Route.privateChat() {
     get("/private-chat/{name}") {
-        val chat = Data.privateChats.filter { it.isMember(userName()) }.find { it.getNameChat() == call.parameters["name"].toString() }!!
+        val chat = userPrivateChats().find { it.getNameChat() == call.parameters["name"].toString() }!!
 
         if (chat.isMember(userName())) {
             call.respond(chat)
@@ -118,7 +125,7 @@ fun Route.privateChat() {
     post("/private-chat") {
         val privateChat = call.receive<PrivateChat>()
 
-        if (Data.privateChats.any { it.getNameChat() == privateChat.getNameChat() }) {
+        if (userPrivateChats().any { it.getNameChat() == privateChat.getNameChat() }) {
             call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
         } else {
             Data.privateChats.add(privateChat)

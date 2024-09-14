@@ -32,7 +32,6 @@ import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, DelicateCoroutinesApi::class)
 @Composable
@@ -57,10 +56,10 @@ fun Chat(chat: Chat) {
                     val data = message.sendTime.date
 
                     val dataText =
-                        if (data.year == Client.getDataTime().year)
+                        if (data.year == getCurrentDataTime().year)
                             "${data.dayOfMonth} ${data.month.name}"
                         else
-                            cdToString(data)
+                           data.customToString()
 
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -137,7 +136,7 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
         )
         IconButton(
             {
-                val message = Message(Client.user!!, messageText, Client.getDataTime(), MessageStatus.UnSend)
+                val message = Message(Client.user!!, messageText, getCurrentDataTime(), MessageStatus.UnSend)
                 onSend(message)
 
                 sendMessage(message, chat) {

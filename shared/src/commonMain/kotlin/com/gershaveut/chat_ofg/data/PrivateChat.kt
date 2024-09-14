@@ -1,32 +1,32 @@
 package com.gershaveut.chat_ofg.data
 
-import com.gershaveut.chat_ofg.cdtToString
+import com.gershaveut.chat_ofg.customToString
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class PrivateChat(var creater: User, var user: User, var createTime: LocalDateTime, var messages: MutableList<Message> = mutableListOf()) : Chat {
 	override fun getNameChat(): String = user.displayName
-	override fun getNameChat(user: User): String {
-		return if (creater == user) {
+	override fun getNameChat(clientUser: User): String {
+		return if (creater == clientUser) {
 			user.displayName
 		} else {
 			creater.displayName
 		}
 	}
-	override fun getSignChat(): String = "Last login: " + cdtToString(user.lastLogin)
-	override fun getSignChat(user: User): String {
-		return "Last login: " + if (creater == user) {
-			cdtToString(user.lastLogin)
+	override fun getSignChat(): String = "Last login: " + user.lastLogin.customToString()
+	override fun getSignChat(clientUser: User): String {
+		return "Last login: " + if (creater == clientUser) {
+			user.lastLogin.customToString()
 		} else {
-			cdtToString(creater.lastLogin)
+			creater.lastLogin.customToString()
 		}
 	}
 	override fun getCreateTimeChat(): LocalDateTime = createTime
 	override fun getMessagesChat(): MutableList<Message> = messages
 	override fun getDescriptionChat(): String? = user.discription
-	override fun getDescriptionChat(user: User): String? {
-		return if (creater == user) {
+	override fun getDescriptionChat(clientUser: User): String? {
+		return if (creater == clientUser) {
 			user.discription
 		} else {
 			creater.discription

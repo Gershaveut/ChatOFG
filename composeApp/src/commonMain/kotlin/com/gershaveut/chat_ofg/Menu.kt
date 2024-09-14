@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -28,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.*
-import kotlinx.coroutines.*
 import kotlinx.datetime.LocalDateTime
 
 @Composable
@@ -72,7 +70,7 @@ fun Menu() {
                 }
 
                 LazyColumn {
-                    items(chats, { it.getNameChat(Client.user!!) }) { chat ->
+                    items(chats, { it.getNameChat() }) { chat ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
                                 chat.getMessagesChat().map {
@@ -94,7 +92,7 @@ fun Menu() {
                     createChat = false
                 }) {
                     LazyColumn {
-                        items(users, { it.name }) { user ->
+                        items(users.filter { it != Client.user }, { it.name }) { user ->
                             UserRow(user, openChat)
                         }
                     }
@@ -197,7 +195,7 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Local
 
         InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
 
-        InfoRow(Icons.Outlined.Info, "Creation Time", cdtToString(createTime))
+        InfoRow(Icons.Outlined.Info, "Creation Time", createTime.customToString())
     }
 }
 
@@ -240,12 +238,12 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
-        var chatName = chat.getNameChat(Client.user!!)
+        val chatName = chat.getNameChat()
 
         // Image box
         UserAvatar(chatName)
 
-        var lastMessage = Message(Client.user!!, "Chat created", Client.getDataTime())
+        var lastMessage = Message(Client.user!!, "Chat created", getCurrentDataTime())
 
         try {
             lastMessage = chat.getMessagesChat().last()
@@ -268,7 +266,7 @@ fun ChatRow(chat: Chat) {
                         MessageStatusIcon(lastMessage.messageStatus)
 
                     Text(
-                        cdtToString(lastMessage.sendTime),
+                        lastMessage.sendTime.customToString(),
                         fontSize = 10.sp,
                         color = Colors.BACKGROUND_VARIANT,
                         modifier = Modifier.padding(start = 5.dp)

@@ -1,7 +1,13 @@
 package com.gershaveut.chat_ofg
 
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.*
 
-fun cdtToString(dataTime: LocalDateTime): String = (cdToString(dataTime.date) + ' ' + dataTime.time)
-fun cdToString(dataTime: LocalDate): String = dataTime.toString().replace('-', '.')
+fun LocalDateTime.customToString() = this.date.customToString() + ' ' + this.time
+fun LocalDate.customToString() = this.toString().replace('-', '.')
+
+fun getCurrentDataTime(): LocalDateTime {
+    val current = Clock.System.now().toLocalDateTime(TimeZone.UTC)
+    val currentTime = current.time
+
+    return LocalDateTime(current.date, LocalTime(currentTime.hour, currentTime.minute))
+}
