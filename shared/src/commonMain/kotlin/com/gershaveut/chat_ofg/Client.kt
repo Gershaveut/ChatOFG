@@ -7,9 +7,11 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.websocket.*
 import kotlinx.datetime.*
 
 object Client {
@@ -21,7 +23,10 @@ object Client {
     var users = mutableListOf<User>()
     var chats = mutableListOf<Chat>()
 
+    lateinit var onSync: () -> Unit
+
     private val client = HttpClient(CIO) {
+        install(WebSockets)
         install(ContentNegotiation) {
             json()
         }
@@ -62,5 +67,33 @@ object Client {
             }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
         }
+    }
+
+    suspend fun handleConnection() {
+        client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 8080, path = "/echo") {
+            while(true) {
+                val userName = incoming.receive() as? Frame.Text ?: continue
+
+                if (user == null)
+                    continue
+
+                if (userName.readText() == user!!.name) {
+                    sync()
+                }
+            }
+        }
+    }
+
+    suspend fun sync() {
+        val tempChats = mutableListOf<Chat>()
+
+        tempChats.addAll(getGroups())
+        tempChats.addAll(getPrivateChats())
+
+        chats = tempChats
+
+        users = getUsers()
+
+        onSync()
     }
 }

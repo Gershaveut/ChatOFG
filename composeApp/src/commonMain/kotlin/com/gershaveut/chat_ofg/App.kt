@@ -8,10 +8,22 @@ import com.gershaveut.chat_ofg.data.PrivateChat
 import com.gershaveut.chat_ofg.data.User
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
+val syncResponseFlow = MutableSharedFlow<String>()
+val sharedFlow = syncResponseFlow.asSharedFlow()
+
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
+    Client.onSync = {
+        scope.launch {
+            syncResponseFlow.emit("")
+        }
+    }
+
     MaterialTheme {
         val user = remember { mutableStateOf(Client.user) }
 
@@ -25,6 +37,10 @@ fun App() {
                 }
             }
         } else {
+            scope.launch {
+                Client.handleConnection()
+            }
+
             Menu(user)
         }
     }
@@ -75,5 +91,14 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
         Client.createPrivateChat(PrivateChat(Client.user!!, user, getCurrentDataTime()), onCreated)
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun sync(onSync: () -> Unit) {
+    scope.launch {
+        sharedFlow.collect {
+            onSync()
+        }
     }
 }

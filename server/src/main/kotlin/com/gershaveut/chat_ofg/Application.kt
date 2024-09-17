@@ -14,7 +14,13 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import io.ktor.util.pipeline.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 
 val chats
     get() = mutableSetOf<Chat>().apply {
@@ -22,12 +28,16 @@ val chats
         addAll(Data.groups)
     }
 
+val messageResponseFlow = MutableSharedFlow<String>()
+val sharedFlow = messageResponseFlow.asSharedFlow()
+
 fun main() {
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
 fun Application.module() {
+    install(WebSockets)
     install(ContentNegotiation) {
         json()
     }
@@ -52,6 +62,19 @@ fun Application.module() {
     }
 
     routing {
+        webSocket("/echo") {
+            launch {
+                sharedFlow.collect { message ->
+                    send(message)
+                }
+            }
+
+            for (frame in incoming) {
+                frame as? Frame.Text ?: continue
+                frame.readText()
+            }
+        }
+
         authenticate("auth-basic") {
             auth()
 
@@ -67,6 +90,10 @@ fun Application.module() {
             message()
         }
     }
+}
+
+suspend fun sync(userName: String) {
+    messageResponseFlow.emit(userName)
 }
 
 fun Route.auth() {
@@ -130,6 +157,8 @@ fun Route.privateChat() {
         } else {
             Data.privateChats.add(privateChat)
             call.respondText("Created chat", status = HttpStatusCode.Created)
+
+            sync(privateChat.user.name)
         }
     }
 }
@@ -141,6 +170,10 @@ fun Route.message() {
         if (chat.isMember(userName())) {
             chat.getMessagesChat().add(call.receive<Message>())
             call.respondText("Sent message", status = HttpStatusCode.Created)
+
+            chat.getMembers().forEach {
+                sync(it)
+            }
         } else {
             call.respondText("Chat not found", status = HttpStatusCode.NotFound)
         }

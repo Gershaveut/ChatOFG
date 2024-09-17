@@ -91,6 +91,11 @@ fun Menu(user: MutableState<User?>) {
                 ) {
                     var chats by remember { mutableStateOf(Client.chats) }
 
+
+                    sync {
+                        chats = Client.chats
+                    }
+
                     refreshChats {
                         chats = Client.chats
                     }

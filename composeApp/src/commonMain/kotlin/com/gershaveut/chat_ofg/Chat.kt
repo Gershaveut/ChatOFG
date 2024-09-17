@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
@@ -23,6 +24,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,10 +32,11 @@ import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun Chat(chat: Chat) {
     Column {
@@ -42,7 +45,22 @@ fun Chat(chat: Chat) {
 
         val messages = remember { mutableStateListOf<Message>() }
 
+        val scope = rememberCoroutineScope()
+
+        fun scroll() {
+            scope.launch {
+                messagesState.animateScrollToItem(messages.count() - 1)
+            }
+        }
+
         messages.addAll(chat.getMessagesChat())
+
+        sync {
+            messages.clear()
+            messages.addAll(Client.chats.find { it.getNameChat() == chat.getNameChat() }!!.getMessagesChat())
+
+            scroll()
+        }
 
         LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
             var previousMessage: Message? = null
@@ -108,14 +126,10 @@ fun Chat(chat: Chat) {
             }
         }
 
-        val scope =  rememberCoroutineScope()
-
         SendRow(chat) {
             messages.add(it)
 
-            scope.launch {
-                messagesState.animateScrollToItem(messages.count() - 1)
-            }
+            scroll()
         }
     }
 }

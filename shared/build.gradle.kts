@@ -42,6 +42,7 @@ kotlin {
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.auth)
+            implementation(libs.ktor.client.websockets)
         }
     }
 }
