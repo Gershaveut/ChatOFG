@@ -101,13 +101,10 @@ fun Menu(user: MutableState<User?>) {
                     }
 
                     LazyColumn {
-                        items(chats, { it.getNameChat() }) { chat ->
+                        items(chats, { it.getNameChat(Client.user!!) }) { chat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-                                    chat.getMessagesChat().map {
-                                        if (it.owner != Client.user && it.messageStatus == MessageStatus.UnRead) it.messageStatus =
-                                            MessageStatus.Read
-                                    }
+                                    readMessages(chat)
 
                                     openChat.value = chat
                                 }
@@ -270,7 +267,7 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
-        val chatName = chat.getNameChat()
+        val chatName = chat.getNameChat(Client.user!!)
 
         // Image box
         UserAvatar(chatName)

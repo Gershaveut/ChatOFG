@@ -49,7 +49,8 @@ fun Chat(chat: Chat) {
 
         fun scroll() {
             scope.launch {
-                messagesState.animateScrollToItem(messages.count() - 1)
+                if (messages.isNotEmpty())
+                    messagesState.animateScrollToItem(messages.count() - 1)
             }
         }
 
@@ -58,6 +59,8 @@ fun Chat(chat: Chat) {
         sync {
             messages.clear()
             messages.addAll(Client.chats.find { it.getNameChat() == chat.getNameChat() }!!.getMessagesChat())
+
+            readMessages(chat)
 
             scroll()
         }
@@ -150,14 +153,14 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
         )
         IconButton(
             {
-                val message = Message(Client.user!!, messageText, getCurrentDataTime(), MessageStatus.UnSend)
-                onSend(message)
+                if (messageText.isNotEmpty()) {
+                    val message = Message(Client.user!!, messageText, getCurrentDataTime(), MessageStatus.UnSend)
+                    onSend(message)
 
-                sendMessage(message, chat) {
-                    it.messageStatus = MessageStatus.UnRead
+                    sendMessage(message, chat)
+
+                    messageText = ""
                 }
-
-                messageText = ""
             },
             modifier = Modifier.size(50.dp)
         ) {

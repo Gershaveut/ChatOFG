@@ -2,10 +2,7 @@ package com.gershaveut.chat_ofg
 
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.*
-import com.gershaveut.chat_ofg.data.Chat
-import com.gershaveut.chat_ofg.data.Message
-import com.gershaveut.chat_ofg.data.PrivateChat
-import com.gershaveut.chat_ofg.data.User
+import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -91,6 +88,18 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
         Client.createPrivateChat(PrivateChat(Client.user!!, user, getCurrentDataTime()), onCreated)
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun readMessages(chat: Chat) {
+    chat.getMessagesChat().forEach {
+        if (it.owner.name != Client.user!!.name)
+            it.messageStatus = MessageStatus.Read
+    }
+
+    scope.launch {
+        Client.readMessages(chat)
     }
 }
 

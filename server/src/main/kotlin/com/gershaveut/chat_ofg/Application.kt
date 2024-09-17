@@ -1,9 +1,6 @@
 package com.gershaveut.chat_ofg
 
-import com.gershaveut.chat_ofg.data.Chat
-import com.gershaveut.chat_ofg.data.Message
-import com.gershaveut.chat_ofg.data.PrivateChat
-import com.gershaveut.chat_ofg.data.User
+import com.gershaveut.chat_ofg.data.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.*
@@ -168,13 +165,33 @@ fun Route.message() {
         val chat = chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!
 
         if (chat.isMember(userName())) {
-            chat.getMessagesChat().add(call.receive<Message>())
+            chat.getMessagesChat().add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
             call.respondText("Sent message", status = HttpStatusCode.Created)
 
             chat.getMembers().forEach {
                 sync(it)
             }
         } else {
+            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
+        }
+    }
+
+    post("/chat/read") {
+        val chat = chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!
+
+        if (chat.isMember(userName())) {
+            chat.getMessagesChat().forEach {
+                if (it.owner.name != userName()) {
+                    it.messageStatus = MessageStatus.Read
+                }
+            }
+            call.respondText("Messages read", status = HttpStatusCode.Accepted)
+
+            chat.getMembers().forEach {
+                sync(it)
+            }
+        }
+        else {
             call.respondText("Chat not found", status = HttpStatusCode.NotFound)
         }
     }

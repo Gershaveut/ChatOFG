@@ -69,6 +69,12 @@ object Client {
         }
     }
 
+    suspend fun readMessages(chat: Chat) {
+        client.post("$DOMAIN/chat/read") {
+            parameter("chatName", chat.getNameChat())
+        }
+    }
+
     suspend fun handleConnection() {
         client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 8080, path = "/echo") {
             while(true) {
