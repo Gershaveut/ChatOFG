@@ -23,7 +23,7 @@ object Client {
     var users = mutableListOf<User>()
     var chats = mutableListOf<Chat>()
 
-    lateinit var onSync: () -> Unit
+    var onSync: (() -> Unit)? = null
 
     private val client = HttpClient(CIO) {
         install(WebSockets)
@@ -83,9 +83,8 @@ object Client {
                 if (user == null)
                     continue
 
-                if (userName.readText() == user!!.name) {
+                if (userName.readText() == user!!.name)
                     sync()
-                }
             }
         }
     }
@@ -100,6 +99,6 @@ object Client {
 
         users = getUsers()
 
-        onSync()
+        onSync?.invoke()
     }
 }

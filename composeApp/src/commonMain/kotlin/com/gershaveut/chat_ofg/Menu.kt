@@ -91,7 +91,6 @@ fun Menu(user: MutableState<User?>) {
                 ) {
                     var chats by remember { mutableStateOf(Client.chats) }
 
-
                     sync {
                         chats = Client.chats
                     }
@@ -104,7 +103,8 @@ fun Menu(user: MutableState<User?>) {
                         items(chats, { it.getNameChat(Client.user!!) }) { chat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-                                    readMessages(chat)
+                                    if (chat.getMessagesChat().any { it.owner != Client.user && it.messageStatus == MessageStatus.UnRead })
+                                        readMessages(chat)
 
                                     openChat.value = chat
                                 }

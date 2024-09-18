@@ -52,27 +52,34 @@ fun Application.module() {
                     }
                 }
 
-                Data.users.add(User(credentials.name, password = credentials.password, lastLogin = getCurrentDataTime()))
+                Data.users.add(
+                    User(
+                        credentials.name,
+                        password = credentials.password,
+                        lastLogin = getCurrentDataTime()
+                    )
+                )
                 return@validate UserIdPrincipal(credentials.name)
             }
         }
     }
 
     routing {
-        webSocket("/echo") {
-            launch {
-                sharedFlow.collect { message ->
-                    send(message)
+        authenticate("auth-basic") {
+            webSocket("/echo") {
+                launch {
+                    sharedFlow.collect { message ->
+                        if (call.principal<UserIdPrincipal>()!!.name == message)
+                            send(message)
+                    }
+                }
+
+                for (frame in incoming) {
+                    frame as? Frame.Text ?: continue
+                    frame.readText()
                 }
             }
 
-            for (frame in incoming) {
-                frame as? Frame.Text ?: continue
-                frame.readText()
-            }
-        }
-
-        authenticate("auth-basic") {
             auth()
 
             users()
@@ -119,7 +126,8 @@ fun Route.groups() {
 
 fun Route.group() {
     get("/group/{name}") {
-        val group = Data.groups.filter { it.isMember(userName()) }.find { it.getNameChat() == call.parameters["name"].toString() }!!
+        val group = Data.groups.filter { it.isMember(userName()) }
+            .find { it.getNameChat() == call.parameters["name"].toString() }!!
 
         if (group.isMember(userName())) {
             call.respond(group)
@@ -188,10 +196,10 @@ fun Route.message() {
             call.respondText("Messages read", status = HttpStatusCode.Accepted)
 
             chat.getMembers().forEach {
-                sync(it)
+                if (it != userName())
+                    sync(it)
             }
-        }
-        else {
+        } else {
             call.respondText("Chat not found", status = HttpStatusCode.NotFound)
         }
     }

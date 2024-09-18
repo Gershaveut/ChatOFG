@@ -9,10 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
@@ -60,27 +57,26 @@ fun Chat(chat: Chat) {
             messages.clear()
             messages.addAll(Client.chats.find { it.getNameChat() == chat.getNameChat() }!!.getMessagesChat())
 
-            readMessages(chat)
-
-            scroll()
+            if (messages.last().messageStatus == MessageStatus.UnRead) {
+                readMessages(chat)
+                scroll()
+            }
         }
 
         LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-            var previousMessage: Message? = null
-
-            items(messages) { message ->
+            itemsIndexed(messages) { index, message ->
                 val chatBoxModifier =
                     Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 
                 // Message Data
-                if (previousMessage == null || message.sendTime.date != previousMessage!!.sendTime.date) {
+                if (index == 0 || message.sendTime.date != messages[index - 1].sendTime.date) {
                     val data = message.sendTime.date
 
                     val dataText =
                         if (data.year == getCurrentDataTime().year)
                             "${data.dayOfMonth} ${data.month.name}"
                         else
-                           data.customToString()
+                            data.customToString()
 
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -97,8 +93,6 @@ fun Chat(chat: Chat) {
                         }
                     }
                 }
-
-                previousMessage = message
 
                 if (message.owner != Client.user) {
                     Box(
