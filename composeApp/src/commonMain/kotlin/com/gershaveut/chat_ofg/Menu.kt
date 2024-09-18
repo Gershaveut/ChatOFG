@@ -10,8 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 @Composable
-fun Menu(user: MutableState<User?>) {
+fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
 
     ModalDrawer( {
@@ -38,15 +38,11 @@ fun Menu(user: MutableState<User?>) {
             }
 
             Column {
-                Button( {
+                MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
                     user.value = null
-                },
-                    modifier = Modifier.fillMaxWidth()
-                    ) {
-                    Row( verticalAlignment = Alignment.CenterVertically ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Exit")
-                        Text("Exit", modifier = Modifier.padding(start = 5.dp))
-                    }
+                }
+                MenuButton("Settings", Icons.Filled.Settings) {
+                    openSettings.value = true
                 }
             }
         }
@@ -166,6 +162,21 @@ fun Menu(user: MutableState<User?>) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MenuButton(name: String, icon: ImageVector, onClick: () -> Unit) {
+    Button(
+        {
+            onClick()
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = name)
+            Text(name, modifier = Modifier.padding(start = 5.dp))
         }
     }
 }

@@ -22,23 +22,28 @@ fun App() {
     }
 
     MaterialTheme {
+        val openSettings = remember { mutableStateOf(false) }
         val user = remember { mutableStateOf(Client.user) }
 
-        if (user.value == null) {
-            Auth("Auth") { name, password ->
-                Client.authName = name
-                Client.authPassword = password
-
-                auth {
-                    user.value = Client.user
-                }
-            }
+        if (openSettings.value) {
+            Settings(openSettings)
         } else {
-            scope.launch {
-                Client.handleConnection()
-            }
+            if (user.value == null) {
+                Auth("Auth", openSettings) { name, password ->
+                    Client.authName = name
+                    Client.authPassword = password
 
-            Menu(user)
+                    auth {
+                        user.value = Client.user
+                    }
+                }
+            } else {
+                scope.launch {
+                    Client.handleConnection()
+                }
+
+                Menu(user, openSettings)
+            }
         }
     }
 }

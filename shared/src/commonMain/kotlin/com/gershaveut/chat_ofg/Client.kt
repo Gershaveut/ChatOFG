@@ -12,9 +12,11 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.websocket.*
-import kotlinx.datetime.*
 
 object Client {
+    var host = HOST_DEFAULT
+    private val domain get() = "http://$host:$SERVER_PORT"
+
     var user: User? = null
 
     var authName: String? = null
@@ -41,16 +43,16 @@ object Client {
         }
     }
 
-    suspend fun auth() : User = client.get("$DOMAIN/").body()
+    suspend fun auth() : User = client.get("$domain/").body()
 
-    suspend fun getUsers(): MutableList<User> = client.get("$DOMAIN/users").body()
+    suspend fun getUsers(): MutableList<User> = client.get("$domain/users").body()
 
-    suspend fun getGroups(): MutableList<Group> = client.get("$DOMAIN/groups").body()
+    suspend fun getGroups(): MutableList<Group> = client.get("$domain/groups").body()
 
-    suspend fun getPrivateChats(): MutableList<PrivateChat> = client.get("$DOMAIN/private-chats").body()
+    suspend fun getPrivateChats(): MutableList<PrivateChat> = client.get("$domain/private-chats").body()
 
     suspend fun createPrivateChat(privateChat: PrivateChat, onCreated: ((Chat) -> Unit)? = null) {
-        if (client.post("$DOMAIN/private-chat") {
+        if (client.post("$domain/private-chat") {
                 contentType(ContentType.Application.Json)
                 setBody(privateChat)
             }.status == HttpStatusCode.Created) {
@@ -60,7 +62,7 @@ object Client {
     }
 
     suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
-        if (client.post("$DOMAIN/chat") {
+        if (client.post("$domain/chat") {
                 contentType(ContentType.Application.Json)
                 setBody(message)
                 parameter("chatName", chat.getNameChat())
@@ -70,13 +72,13 @@ object Client {
     }
 
     suspend fun readMessages(chat: Chat) {
-        client.post("$DOMAIN/chat/read") {
+        client.post("$domain/chat/read") {
             parameter("chatName", chat.getNameChat())
         }
     }
 
     suspend fun handleConnection() {
-        client.webSocket(method = HttpMethod.Get, host = "127.0.0.1", port = 8080, path = "/echo") {
+        client.webSocket(method = HttpMethod.Get, host = host, port = SERVER_PORT, path = "/echo") {
             while(true) {
                 val userName = incoming.receive() as? Frame.Text ?: continue
 
