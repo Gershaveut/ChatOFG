@@ -1,17 +1,15 @@
 package com.gershaveut.chat_ofg.data
 
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Clock
+import kotlinx.serialization.Serializable
 
-interface Chat {
-	fun getNameChat(): String
-	fun getNameChat(clientUser: User): String = getNameChat()
-	fun getSignChat(): String
-	fun getSignChat(clientUser: User): String = getSignChat()
-	fun getCreateTimeChat(): LocalDateTime
-	fun getMessagesChat(): MutableList<Message>
-	fun getDescriptionChat(): String?
-	fun getDescriptionChat(clientUser: User): String? = getDescriptionChat()
-	fun getMembers() : List<String>
-
-	fun isMember(name: String) : Boolean = getMembers().any { it == name }
+@Serializable
+data class Chat(
+	var members: Map<String, Boolean>,
+	var name: String? = null,
+	var messages: MutableList<Message> = mutableListOf(),
+	var createTime: Long = Clock.System.now().epochSeconds,
+	var description: String? = null,
+) {
+	constructor(creator: User, user: User) : this(mapOf(creator.name to true,user.name to true))
 }

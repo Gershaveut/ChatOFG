@@ -1,13 +1,14 @@
 package com.gershaveut.chat_ofg.data
 
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class Message(
-    val owner: User,
+    val creator: User,
     var text: String,
-    val sendTime: LocalDateTime,
+    val sendTime: Long = Clock.System.now().epochSeconds,
     var messageStatus: MessageStatus = MessageStatus.UnRead,
     var modified: Boolean = false
 )

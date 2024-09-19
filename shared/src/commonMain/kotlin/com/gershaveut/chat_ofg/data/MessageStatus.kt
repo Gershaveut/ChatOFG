@@ -4,7 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class MessageStatus {
-	UnSend,
-	UnRead,
-	Read
+    UnSend,
+    UnRead,
+    Read
 }

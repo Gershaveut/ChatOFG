@@ -302,7 +302,7 @@ fun ChatRow(chat: Chat) {
                 Text(chatName, textAlign = TextAlign.Start)
 
                 Row {
-                    if (lastMessage.owner == Client.user)
+                    if (lastMessage.creator == Client.user)
                         MessageStatusIcon(lastMessage.messageStatus)
 
                     Text(

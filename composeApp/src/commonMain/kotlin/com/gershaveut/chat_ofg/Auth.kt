@@ -10,11 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Auth(type: String, openSettings: MutableState<Boolean>, onConfirm: (name: String, password: String) -> Unit) {
+fun Auth(type: String, openSettings: MutableState<Boolean>, onConfirm: () -> Unit) {
     Scaffold(topBar = {
         IconButton({
             openSettings.value = true

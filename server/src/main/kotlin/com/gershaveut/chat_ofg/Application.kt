@@ -14,16 +14,12 @@ import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
-val chats
-    get() = mutableSetOf<Chat>().apply {
-        addAll(Data.privateChats)
-        addAll(Data.groups)
-    }
+val users = mutableListOf<User>()
 
 val messageResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = messageResponseFlow.asSharedFlow()
@@ -42,9 +38,9 @@ fun Application.module() {
         basic("auth-basic") {
             realm = "User Access"
             validate { credentials ->
-                Data.users.find { it.name == credentials.name }?.let {
+                users.find { it.name == credentials.name }?.let {
                     if (it.password == credentials.password) {
-                        it.lastLogin = getCurrentDataTime()
+                        it.lastLoginTime = Clock.System.now().epochSeconds
 
                         return@validate UserIdPrincipal(credentials.name)
                     } else {
@@ -52,11 +48,10 @@ fun Application.module() {
                     }
                 }
 
-                Data.users.add(
+                users.add(
                     User(
                         credentials.name,
-                        password = credentials.password,
-                        lastLogin = getCurrentDataTime()
+                        credentials.password
                     )
                 )
                 return@validate UserIdPrincipal(credentials.name)
@@ -85,15 +80,13 @@ fun Application.module() {
             users()
             user()
 
-            groups()
-            group()
-
-            privateChats()
-            privateChat()
-
-            message()
+            chats()
         }
     }
+}
+
+suspend fun sync(user: User) {
+    messageResponseFlow.emit(user.name)
 }
 
 suspend fun sync(userName: String) {
@@ -102,105 +95,76 @@ suspend fun sync(userName: String) {
 
 fun Route.auth() {
     get("/") {
-        call.respond(Data.users.find { it.name == userName() }!!)
+        call.respond(user())
     }
 }
 
 fun Route.users() {
     get("/users") {
-        call.respond(Data.users)
+        call.respond(users)
     }
 }
 
 fun Route.user() {
     get("/user/{name}") {
-        call.respond(Data.users.find { it.name == call.parameters["name"].toString() }!!)
+        call.respond(users.find { it.name == call.parameters["name"].toString() }!!)
     }
 }
 
-fun Route.groups() {
-    get("/groups") {
-        call.respond(userGroups())
+fun Route.chats() {
+    get("/chats") {
+        call.respond(user().chats)
     }
 }
 
-fun Route.group() {
-    get("/group/{name}") {
-        val group = Data.groups.filter { it.isMember(userName()) }
-            .find { it.getNameChat() == call.parameters["name"].toString() }!!
+fun Route.chat() {
+    get("/chat/{chatName}") {
+        val chat = findChat()
 
-        if (group.isMember(userName())) {
-            call.respond(group)
-        } else {
-            call.respondText("Group not found", status = HttpStatusCode.NotFound)
-        }
-    }
-}
-
-fun Route.privateChats() {
-    get("/private-chats") {
-        call.respond(userPrivateChats())
-    }
-}
-
-fun Route.privateChat() {
-    get("/private-chat/{name}") {
-        val chat = userPrivateChats().find { it.getNameChat() == call.parameters["name"].toString() }!!
-
-        if (chat.isMember(userName())) {
-            call.respond(chat)
-        } else {
-            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
-        }
+        call.respond(chat)
     }
 
-    post("/private-chat") {
-        val privateChat = call.receive<PrivateChat>()
+    post("/chat") {
+        val chat = call.receive<Chat>()
 
-        if (userPrivateChats().any { it.getNameChat() == privateChat.getNameChat() }) {
+        if (user().chats.any { it.name == chat.name }) {
             call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
         } else {
-            Data.privateChats.add(privateChat)
-            call.respondText("Created chat", status = HttpStatusCode.Created)
+            chat.members.forEach { name ->
+                users.find { it.name == name.key }?.let {
+                    it.chats.add(chat)
+                    sync(it)
+                }
+            }
 
-            sync(privateChat.user.name)
+            call.respondText("Created chat", status = HttpStatusCode.Created)
         }
     }
-}
 
-fun Route.message() {
-    post("/chat") {
-        val chat = chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!
+    post("/chat/message") {
+        val chat = findChat()
 
-        if (chat.isMember(userName())) {
-            chat.getMessagesChat().add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
-            call.respondText("Sent message", status = HttpStatusCode.Created)
+        chat.messages.add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
+        call.respondText("Sent message", status = HttpStatusCode.Created)
 
-            chat.getMembers().forEach {
-                sync(it)
-            }
-        } else {
-            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
+        chat.members.forEach {
+            sync(it.key)
         }
     }
 
     post("/chat/read") {
-        val chat = chats.find { it.getNameChat() == call.parameters["chatName"].toString() }!!
+        val chat = findChat()
 
-        if (chat.isMember(userName())) {
-            chat.getMessagesChat().forEach {
-                if (it.owner.name != userName()) {
-                    it.messageStatus = MessageStatus.Read
-                }
+        chat.messages.forEach {
+            if (it.creator.name != userName()) {
+                it.messageStatus = MessageStatus.Read
             }
-            call.respondText("Messages read", status = HttpStatusCode.Accepted)
+        }
+        call.respondText("Messages read", status = HttpStatusCode.Accepted)
 
-            chat.getMembers().forEach {
-                if (it != userName())
-                    sync(it)
-            }
-        } else {
-            call.respondText("Chat not found", status = HttpStatusCode.NotFound)
+        chat.members.forEach {
+            if (it.key != userName())
+                sync(it.key)
         }
     }
 }

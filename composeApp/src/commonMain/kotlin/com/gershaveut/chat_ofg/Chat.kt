@@ -21,7 +21,6 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,8 +28,6 @@ import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -94,7 +91,7 @@ fun Chat(chat: Chat) {
                     }
                 }
 
-                if (message.owner != Client.user) {
+                if (message.creator != Client.user) {
                     Box(
                         modifier = chatBoxModifier
                             .background(
@@ -167,7 +164,7 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
 fun Message(message: Message) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            message.owner.displayName,
+            message.creator.displayName,
             color = MaterialTheme.colors.secondaryVariant,
             fontSize = 15.sp,
             modifier = Modifier
@@ -203,7 +200,7 @@ fun Message(message: Message) {
                 fontSize = 10.sp
             )
 
-            if (message.owner == Client.user)
+            if (message.creator == Client.user)
                 Row(modifier = Modifier.padding(horizontal = 5.dp)) {
                     MessageStatusIcon(message.messageStatus)
                 }

@@ -15,17 +15,18 @@ import io.ktor.websocket.*
 
 object Client {
     var host = HOST_DEFAULT
-    private val domain get() = "http://$host:$SERVER_PORT"
 
     var user: User? = null
-
-    var authName: String? = null
-    var authPassword: String? = null
 
     var users = mutableListOf<User>()
     var chats = mutableListOf<Chat>()
 
     var onSync: (() -> Unit)? = null
+
+    private var authName: String? = null
+    private var authPassword: String? = null
+
+    private val domain get() = "http://$host:$SERVER_PORT"
 
     private val client = HttpClient(CIO) {
         install(WebSockets)
@@ -43,43 +44,9 @@ object Client {
         }
     }
 
-    suspend fun auth() : User = client.get("$domain/").body()
-
-    suspend fun getUsers(): MutableList<User> = client.get("$domain/users").body()
-
-    suspend fun getGroups(): MutableList<Group> = client.get("$domain/groups").body()
-
-    suspend fun getPrivateChats(): MutableList<PrivateChat> = client.get("$domain/private-chats").body()
-
-    suspend fun createPrivateChat(privateChat: PrivateChat, onCreated: ((Chat) -> Unit)? = null) {
-        if (client.post("$domain/private-chat") {
-                contentType(ContentType.Application.Json)
-                setBody(privateChat)
-            }.status == HttpStatusCode.Created) {
-            onCreated?.let { it(privateChat) }
-            chats.add(privateChat)
-        }
-    }
-
-    suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
-        if (client.post("$domain/chat") {
-                contentType(ContentType.Application.Json)
-                setBody(message)
-                parameter("chatName", chat.getNameChat())
-            }.status == HttpStatusCode.Created) {
-            onCreated?.let { it(message) }
-        }
-    }
-
-    suspend fun readMessages(chat: Chat) {
-        client.post("$domain/chat/read") {
-            parameter("chatName", chat.getNameChat())
-        }
-    }
-
     suspend fun handleConnection() {
         client.webSocket(method = HttpMethod.Get, host = host, port = SERVER_PORT, path = "/echo") {
-            while(user != null) {
+            while (user != null) {
                 val userName = incoming.receive() as? Frame.Text ?: continue
 
                 if (user == null)
@@ -91,14 +58,45 @@ object Client {
         }
     }
 
+    suspend fun auth(name: String, password: String) {
+        authName = name
+        authPassword = password
+
+        user = client.get("$domain/").body()
+    }
+
+    suspend fun getUsers(): MutableList<User> = client.get("$domain/users").body()
+    suspend fun getChats(): MutableList<Chat> = client.get("$domain/chats").body()
+
+    suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
+        if (client.post("$domain/chat") {
+                contentType(ContentType.Application.Json)
+                setBody(chat)
+            }.status == HttpStatusCode.Created) {
+            onCreated?.let { it(chat) }
+        }
+    }
+
+    suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
+        chat.messages.add(message)
+
+        if (client.post("$domain/chat") {
+                contentType(ContentType.Application.Json)
+                setBody(message)
+                parameter("chatName", chat.name)
+            }.status == HttpStatusCode.Created) {
+            onCreated?.let { it(message) }
+        }
+    }
+
+    suspend fun readMessages(chat: Chat) {
+        client.post("$domain/chat/read") {
+            parameter("chatName", chat.name)
+        }
+    }
+
     suspend fun sync() {
-        val tempChats = mutableListOf<Chat>()
-
-        tempChats.addAll(getGroups())
-        tempChats.addAll(getPrivateChats())
-
-        chats = tempChats
-
+        chats = getChats()
         users = getUsers()
 
         onSync?.invoke()

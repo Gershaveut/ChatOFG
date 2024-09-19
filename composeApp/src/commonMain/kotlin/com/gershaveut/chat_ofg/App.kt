@@ -29,14 +29,7 @@ fun App() {
             Settings(openSettings)
         } else {
             if (user.value == null) {
-                Auth("Auth", openSettings) { name, password ->
-                    Client.authName = name
-                    Client.authPassword = password
-
-                    auth {
-                        user.value = Client.user
-                    }
-                }
+                Auth("Auth", openSettings)
             } else {
                 scope.launch {
                     Client.handleConnection()
@@ -52,22 +45,16 @@ fun App() {
 val scope = GlobalScope
 
 @OptIn(DelicateCoroutinesApi::class)
-fun auth(onAuth: () -> Unit) {
+fun auth(name: String, password: String) {
     scope.launch {
-        Client.user = Client.auth()
-        onAuth()
+        Client.auth(name, password)
     }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshChats(onRefresh: () -> Unit) {
     scope.launch {
-        val tempChats = mutableListOf<Chat>()
-
-        tempChats.addAll(Client.getGroups())
-        tempChats.addAll(Client.getPrivateChats())
-
-        Client.chats = tempChats
+        Client.chats = Client.getChats()
 
         onRefresh()
     }
