@@ -79,7 +79,7 @@ object Client {
 
     suspend fun handleConnection() {
         client.webSocket(method = HttpMethod.Get, host = host, port = SERVER_PORT, path = "/echo") {
-            while(true) {
+            while(user != null) {
                 val userName = incoming.receive() as? Frame.Text ?: continue
 
                 if (user == null)
