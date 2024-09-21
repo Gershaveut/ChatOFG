@@ -13,7 +13,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun Auth(type: String, openSettings: MutableState<Boolean>, onConfirm: () -> Unit) {
+fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) {
     Scaffold(topBar = {
         IconButton({
             openSettings.value = true
@@ -53,7 +53,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onConfirm: () -> Uni
 
             Button({
                 if (name.isNotEmpty() && password.isNotEmpty())
-                    onConfirm(name, password)
+                    auth(name, password, onAuth)
             }) {
                 Text("Confirm")
             }

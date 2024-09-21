@@ -68,6 +68,8 @@ object Client {
     suspend fun getUsers(): MutableList<User> = client.get("$domain/users").body()
     suspend fun getChats(): MutableList<Chat> = client.get("$domain/chats").body()
 
+    suspend fun getUser(name: String): User = client.get("$domain/user/$name").body()
+
     suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
         if (client.post("$domain/chat") {
                 contentType(ContentType.Application.Json)
@@ -83,15 +85,21 @@ object Client {
         if (client.post("$domain/chat") {
                 contentType(ContentType.Application.Json)
                 setBody(message)
-                parameter("chatName", chat.name)
+                parameter("chatName", chat.getName())
             }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
         }
     }
 
     suspend fun readMessages(chat: Chat) {
+        chat.messages.forEach {
+            if (it.creator.name != user!!.name) {
+                it.messageStatus = MessageStatus.Read
+            }
+        }
+
         client.post("$domain/chat/read") {
-            parameter("chatName", chat.name)
+            parameter("chatName", chat.getName())
         }
     }
 

@@ -29,7 +29,9 @@ fun App() {
             Settings(openSettings)
         } else {
             if (user.value == null) {
-                Auth("Auth", openSettings)
+                Auth("Auth", openSettings) {
+                    user.value = Client.user
+                }
             } else {
                 scope.launch {
                     Client.handleConnection()
@@ -45,9 +47,11 @@ fun App() {
 val scope = GlobalScope
 
 @OptIn(DelicateCoroutinesApi::class)
-fun auth(name: String, password: String) {
+fun auth(name: String, password: String, onAuth: () -> Unit) {
     scope.launch {
         Client.auth(name, password)
+
+        onAuth()
     }
 }
 
@@ -70,6 +74,13 @@ fun refreshUsers(onRefresh: () -> Unit) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun getUser(name: String, onGet: (User) -> Unit) {
+    scope.launch {
+        onGet(Client.getUser(name))
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
     scope.launch {
         Client.sendMessage(message, chat, onCreated)
@@ -79,17 +90,12 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 @OptIn(DelicateCoroutinesApi::class)
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
-        Client.createPrivateChat(PrivateChat(Client.user!!, user, getCurrentDataTime()), onCreated)
+        Client.createChat(Chat(Client.user!!, user), onCreated)
     }
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
-    chat.getMessagesChat().forEach {
-        if (it.owner.name != Client.user!!.name)
-            it.messageStatus = MessageStatus.Read
-    }
-
     scope.launch {
         Client.readMessages(chat)
     }

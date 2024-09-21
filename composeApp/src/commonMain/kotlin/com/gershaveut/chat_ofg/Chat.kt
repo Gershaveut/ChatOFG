@@ -29,6 +29,7 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -48,13 +49,13 @@ fun Chat(chat: Chat) {
             }
         }
 
-        messages.addAll(chat.getMessagesChat())
+        messages.addAll(chat.messages)
 
         sync {
             messages.clear()
-            messages.addAll(Client.chats.find { it.getNameChat() == chat.getNameChat() }!!.getMessagesChat())
+            messages.addAll(Client.chats.find { it.getName() == chat.getName() }!!.messages)
 
-            if (messages.last().messageStatus == MessageStatus.UnRead) {
+            if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead } && messages.last().messageStatus == MessageStatus.UnRead) {
                 readMessages(chat)
                 scroll()
             }
@@ -66,8 +67,8 @@ fun Chat(chat: Chat) {
                     Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 
                 // Message Data
-                if (index == 0 || message.sendTime.date != messages[index - 1].sendTime.date) {
-                    val data = message.sendTime.date
+                if (index == 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
+                    val data = message.sendTime.timeToLocalDateTime().date
 
                     val dataText =
                         if (data.year == getCurrentDataTime().year)
@@ -145,7 +146,7 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
         IconButton(
             {
                 if (messageText.isNotEmpty()) {
-                    val message = Message(Client.user!!, messageText, getCurrentDataTime(), MessageStatus.UnSend)
+                    val message = Message(Client.user!!, messageText, Clock.System.now().epochSeconds, MessageStatus.UnSend)
                     onSend(message)
 
                     sendMessage(message, chat)
@@ -195,7 +196,7 @@ fun Message(message: Message) {
             )
         ) {
             Text(
-                message.sendTime.time.toString(),
+                message.sendTime.timeToLocalDateTime().time.toString(),
                 color = Colors.BACKGROUND_VARIANT,
                 fontSize = 10.sp
             )

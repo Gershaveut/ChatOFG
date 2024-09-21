@@ -81,6 +81,7 @@ fun Application.module() {
             user()
 
             chats()
+            chat()
         }
     }
 }
@@ -127,7 +128,7 @@ fun Route.chat() {
     post("/chat") {
         val chat = call.receive<Chat>()
 
-        if (user().chats.any { it.name == chat.name }) {
+        if (user().chats.any { it.getName() == chat.getName() }) {
             call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
         } else {
             chat.members.forEach { name ->

@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
 
 @Composable
 fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
@@ -96,12 +95,9 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     }
 
                     LazyColumn {
-                        items(chats, { it.getNameChat(Client.user!!) }) { chat ->
+                        items(chats) { chat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-                                    if (chat.getMessagesChat().any { it.owner != Client.user && it.messageStatus == MessageStatus.UnRead })
-                                        readMessages(chat)
-
                                     openChat.value = chat
                                 }
                             ) {
@@ -134,7 +130,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                                 .clickable { showInfo.value = true }) {
 
                             Text(
-                                openChat.value!!.getNameChat(Client.user!!)
+                                openChat.value!!.getName()
                             )
                         }
                     },
@@ -153,12 +149,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     }) {
                         val chat = openChat.value!!
 
-                        ShowInfo(
-                            chat.getNameChat(Client.user!!),
-                            chat.getSignChat(Client.user!!),
-                            chat.getDescriptionChat(Client.user!!),
-                            chat.getCreateTimeChat()
-                        )
+                        ShowInfo(chat)
                     }
                 }
             }
@@ -211,17 +202,26 @@ fun ChatDialog(name: String, onDismissRequest: () -> Unit, content: @Composable 
 }
 
 @Composable
-fun ShowInfo(name: String, sign: String, description: String?, createTime: LocalDateTime) {
+fun ShowInfo(chat: Chat) {
     Column(modifier = Modifier.padding(top = 5.dp, start = 5.dp)) {
         Row(modifier = Modifier.padding(bottom = 10.dp)) {
-            UserAvatar(name, 60.dp)
+            UserAvatar(chat.getName(), 60.dp)
 
             Column {
                 Text(
-                    name,
+                    chat.getName(),
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(start = 5.dp)
                 )
+
+                var sign by remember { mutableStateOf(chat.getName()) }
+
+                if (chat.members.size > 2)
+                    sign = "Members: " + chat.members.size
+                else
+                    "...".also { getUser(chat.getName()) {
+                    sign = it.lastLoginTime.timeToLocalDateTime().customToString()
+                    } }
 
                 Text(
                     sign,
@@ -233,9 +233,9 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Local
             }
         }
 
-        InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
+        InfoRow(Icons.Outlined.Info, "Description", chat.description ?: "No Description")
 
-        InfoRow(Icons.Outlined.Info, "Creation Time", createTime.customToString())
+        InfoRow(Icons.Outlined.Info, "Creation Time", chat.createTime.timeToLocalDateTime().customToString())
     }
 }
 
@@ -278,15 +278,15 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
-        val chatName = chat.getNameChat(Client.user!!)
+        val chatName = chat.getName()
 
         // Image box
         UserAvatar(chatName)
 
-        var lastMessage = Message(Client.user!!, "Chat created", getCurrentDataTime())
+        var lastMessage = Message(Client.user!!, "Chat created", chat.createTime)
 
         try {
-            lastMessage = chat.getMessagesChat().last()
+            lastMessage = chat.messages.last()
         } catch (_: Exception) {
 
         }
@@ -306,7 +306,7 @@ fun ChatRow(chat: Chat) {
                         MessageStatusIcon(lastMessage.messageStatus)
 
                     Text(
-                        lastMessage.sendTime.customToString(),
+                        lastMessage.sendTime.timeToLocalDateTime().customToString(),
                         fontSize = 10.sp,
                         color = Colors.BACKGROUND_VARIANT,
                         modifier = Modifier.padding(start = 5.dp)
@@ -328,7 +328,7 @@ fun ChatRow(chat: Chat) {
                 )
 
                 val unread =
-                    chat.getMessagesChat().count { it.owner != Client.user && it.messageStatus == MessageStatus.UnRead }
+                    chat.messages.count { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead }
 
                 if (unread > 0) {
                     Text(
