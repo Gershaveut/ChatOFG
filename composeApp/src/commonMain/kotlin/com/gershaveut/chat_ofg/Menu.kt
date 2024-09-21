@@ -286,7 +286,7 @@ fun ChatRow(chat: Chat) {
         // Image box
         UserAvatar(chatName)
 
-        var lastMessage = Message(Client.user!!, "Chat created", chat.createTime)
+        var lastMessage = Message(Client.user!!.name, "Chat created", chat.createTime)
 
         try {
             lastMessage = chat.messages.last()

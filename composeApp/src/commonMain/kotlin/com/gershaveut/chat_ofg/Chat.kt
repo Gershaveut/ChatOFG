@@ -55,7 +55,7 @@ fun Chat(chat: Chat) {
             messages.clear()
             messages.addAll(Client.chats.find { it.getName() == chat.getName() }!!.messages)
 
-            if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead }) {
+            if (chat.messages.any { it.creator != Client.user!!.name && it.messageStatus == MessageStatus.UnRead }) {
                 readMessages(chat)
                 scroll()
             }
@@ -92,7 +92,7 @@ fun Chat(chat: Chat) {
                     }
                 }
 
-                if (message.creator != Client.user) {
+                if (message.creator != Client.user!!.name) {
                     Box(
                         modifier = chatBoxModifier
                             .background(
@@ -146,7 +146,7 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
         IconButton(
             {
                 if (messageText.isNotEmpty()) {
-                    val message = Message(Client.user!!, messageText, Clock.System.now().epochSeconds, MessageStatus.UnSend)
+                    val message = Message(Client.user!!.name, messageText, Clock.System.now().epochSeconds, MessageStatus.UnSend)
                     onSend(message)
 
                     sendMessage(message, chat)
@@ -165,7 +165,7 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
 fun Message(message: Message) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            message.creator.displayName,
+            message.creator,
             color = MaterialTheme.colors.secondaryVariant,
             fontSize = 15.sp,
             modifier = Modifier
@@ -201,7 +201,7 @@ fun Message(message: Message) {
                 fontSize = 10.sp
             )
 
-            if (message.creator == Client.user)
+            if (message.creator == Client.user!!.name)
                 Row(modifier = Modifier.padding(horizontal = 5.dp)) {
                     MessageStatusIcon(message.messageStatus)
                 }
