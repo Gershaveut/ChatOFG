@@ -55,7 +55,7 @@ fun Chat(chat: Chat) {
             messages.clear()
             messages.addAll(Client.chats.find { it.getName() == chat.getName() }!!.messages)
 
-            if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead } && messages.last().messageStatus == MessageStatus.UnRead) {
+            if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead }) {
                 readMessages(chat)
                 scroll()
             }
@@ -67,7 +67,7 @@ fun Chat(chat: Chat) {
                     Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
 
                 // Message Data
-                if (index == 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
+                if (index <= 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
                     val data = message.sendTime.timeToLocalDateTime().date
 
                     val dataText =

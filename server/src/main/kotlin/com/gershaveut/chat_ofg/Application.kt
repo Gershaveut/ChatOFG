@@ -12,7 +12,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -128,7 +127,7 @@ fun Route.chat() {
     post("/chat") {
         val chat = call.receive<Chat>()
 
-        if (user().chats.any { it.getName() == chat.getName() }) {
+        if (user().chats.any { it.id == chat.id }) {
             call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
         } else {
             chat.members.forEach { name ->

@@ -95,9 +95,12 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     }
 
                     LazyColumn {
-                        items(chats) { chat ->
+                        items(chats, { it.id }) { chat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
+                                    if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead })
+                                        readMessages(chat)
+
                                     openChat.value = chat
                                 }
                             ) {

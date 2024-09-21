@@ -82,10 +82,10 @@ object Client {
     suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
         chat.messages.add(message)
 
-        if (client.post("$domain/chat") {
+        if (client.post("$domain/chat/message") {
                 contentType(ContentType.Application.Json)
                 setBody(message)
-                parameter("chatName", chat.getName())
+                parameter("chatName", chat.id)
             }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
         }
@@ -99,7 +99,7 @@ object Client {
         }
 
         client.post("$domain/chat/read") {
-            parameter("chatName", chat.getName())
+            parameter("chatName", chat.id)
         }
     }
 
