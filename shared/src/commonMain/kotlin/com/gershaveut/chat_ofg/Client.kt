@@ -93,7 +93,7 @@ object Client {
 
     suspend fun readMessages(chat: Chat) {
         chat.messages.forEach {
-            if (it.creator.name != user!!.name) {
+            if (it.creator != user!!.name) {
                 it.messageStatus = MessageStatus.Read
             }
         }

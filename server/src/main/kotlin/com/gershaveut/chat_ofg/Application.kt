@@ -156,7 +156,7 @@ fun Route.chat() {
         val chat = findChat()
 
         chat.messages.forEach {
-            if (it.creator.name != userName()) {
+            if (it.creator != userName()) {
                 it.messageStatus = MessageStatus.Read
             }
         }

@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 val syncResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = syncResponseFlow.asSharedFlow()
 
+val clientUser get() = Client.user!!
+
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
@@ -90,7 +92,7 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 @OptIn(DelicateCoroutinesApi::class)
 fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
-        Client.createChat(Chat(Client.user!!, user), onCreated)
+        Client.createChat(Chat(clientUser, user), onCreated)
     }
 }
 

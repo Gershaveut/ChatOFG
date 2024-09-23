@@ -32,8 +32,8 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
     ModalDrawer( {
         Column ( modifier = Modifier.padding(5.dp) ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(Client.user!!.name, 60.dp)
-                Text(Client.user!!.name, modifier = Modifier.padding(start = 5.dp))
+                UserAvatar(clientUser.name, 60.dp)
+                Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
             }
 
             Column {
@@ -98,7 +98,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         items(chats, { it.id }) { chat ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-                                    if (chat.messages.any { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead })
+                                    if (chat.messages.any { it.creator != clientUser.name && it.messageStatus == MessageStatus.UnRead })
                                         readMessages(chat)
 
                                     openChat.value = chat
@@ -115,7 +115,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         createChat = false
                     }) {
                         LazyColumn {
-                            items(users.filter { it != Client.user }, { it.name }) { user ->
+                            items(users.filter { it != clientUser }, { it.name }) { user ->
                                 UserRow(user, openChat)
                             }
                         }
@@ -286,7 +286,7 @@ fun ChatRow(chat: Chat) {
         // Image box
         UserAvatar(chatName)
 
-        var lastMessage = Message(Client.user!!.name, "Chat created", chat.createTime)
+        var lastMessage = Message(clientUser.name, "Chat created", chat.createTime)
 
         try {
             lastMessage = chat.messages.last()
@@ -305,7 +305,7 @@ fun ChatRow(chat: Chat) {
                 Text(chatName, textAlign = TextAlign.Start)
 
                 Row {
-                    if (lastMessage.creator == Client.user)
+                    if (lastMessage.creator == clientUser.name)
                         MessageStatusIcon(lastMessage.messageStatus)
 
                     Text(
@@ -331,7 +331,7 @@ fun ChatRow(chat: Chat) {
                 )
 
                 val unread =
-                    chat.messages.count { it.creator != Client.user && it.messageStatus == MessageStatus.UnRead }
+                    chat.messages.count { it.creator != clientUser.name && it.messageStatus == MessageStatus.UnRead }
 
                 if (unread > 0) {
                     Text(
