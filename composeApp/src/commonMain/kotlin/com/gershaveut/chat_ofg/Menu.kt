@@ -28,24 +28,28 @@ import kotlinx.coroutines.launch
 @Composable
 fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val showInfo = remember { mutableStateOf(false) }
 
-    ModalDrawer( {
-        Column ( modifier = Modifier.padding(5.dp) ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                UserAvatar(clientUser.name, 60.dp)
-                Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
-            }
+    ModalDrawer(
+        {
+            Column(modifier = Modifier.padding(5.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    UserAvatar(clientUser.name, 60.dp)
+                    Text(clientUser.name, modifier = Modifier.padding(start = 5.dp).clickable {
+                        showInfo.value = true
+                    })
+                }
 
-            Column {
-                MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
-                    user.value = null
-                }
-                MenuButton("Settings", Icons.Filled.Settings) {
-                    openSettings.value = true
+                Column {
+                    MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
+                        user.value = null
+                    }
+                    MenuButton("Settings", Icons.Filled.Settings) {
+                        openSettings.value = true
+                    }
                 }
             }
-        }
-    },
+        },
         drawerState = drawerState
     ) {
         val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
@@ -124,8 +128,6 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
 
             } else {
                 // Chat
-                val showInfo = remember { mutableStateOf(false) }
-
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically,
@@ -150,9 +152,10 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     ChatDialog("Info", {
                         showInfo.value = false
                     }) {
-                        val chat = openChat.value!!
-
-                        ShowInfo(chat)
+                        if (openChat.value != null)
+                            ShowInfo(openChat.value!!)
+                        else
+                            ShowInfo(clientUser.name, "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(), clientUser.description, clientUser.createTime)
                     }
                 }
             }
@@ -205,26 +208,17 @@ fun ChatDialog(name: String, onDismissRequest: () -> Unit, content: @Composable 
 }
 
 @Composable
-fun ShowInfo(chat: Chat) {
+fun ShowInfo(name: String, sign: String, description: String?, createTime: Long) {
     Column(modifier = Modifier.padding(top = 5.dp, start = 5.dp)) {
         Row(modifier = Modifier.padding(bottom = 10.dp)) {
-            UserAvatar(chat.getName(), 60.dp)
+            UserAvatar(name, 60.dp)
 
             Column {
                 Text(
-                    chat.getName(),
+                    name,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.padding(start = 5.dp)
                 )
-
-                var sign by remember { mutableStateOf(chat.getName()) }
-
-                if (chat.members.size > 2)
-                    sign = "Members: " + chat.members.size
-                else
-                    "...".also { getUser(chat.getName()) {
-                    sign = it.lastLoginTime.timeToLocalDateTime().customToString()
-                    } }
 
                 Text(
                     sign,
@@ -236,10 +230,26 @@ fun ShowInfo(chat: Chat) {
             }
         }
 
-        InfoRow(Icons.Outlined.Info, "Description", chat.description ?: "No Description")
+        InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
 
-        InfoRow(Icons.Outlined.Info, "Creation Time", chat.createTime.timeToLocalDateTime().customToString())
+        InfoRow(Icons.Outlined.Info, "Creation Time", createTime.timeToLocalDateTime().customToString())
     }
+}
+
+@Composable
+fun ShowInfo(chat: Chat) {
+    var sign by remember { mutableStateOf("") }
+
+    sign = if (chat.members.size > 2)
+        "Members: " + chat.members.size
+    else
+        "...".also {
+            getUser(chat.getName()) {
+                sign = it.lastLoginTime.timeToLocalDateTime().customToString()
+            }
+        }
+
+    ShowInfo(chat.getName(), sign, chat.description, chat.createTime)
 }
 
 @Composable

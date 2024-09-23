@@ -12,6 +12,7 @@ data class User(
     var displayName: String = name,
     var description: String? = null,
     var lastLoginTime: Long = Clock.System.now().epochSeconds,
+    var createTime: Long = Clock.System.now().epochSeconds,
 ) {
     override fun equals(other: Any?): Boolean = other is User && name == other.name
 }
