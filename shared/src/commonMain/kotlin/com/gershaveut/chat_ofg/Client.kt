@@ -1,17 +1,16 @@
 package com.gershaveut.chat_ofg
 
 import com.gershaveut.chat_ofg.data.*
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import io.ktor.network.sockets.*
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.websocket.*
 
 object Client {
@@ -99,7 +98,7 @@ object Client {
         if (client.post("$domain/chat/message") {
                 contentType(ContentType.Application.Json)
                 setBody(message)
-                parameter("chatName", chat.id)
+                parameter("id", chat.id)
             }.status == HttpStatusCode.Created) {
             onCreated?.let { it(message) }
         }
@@ -113,7 +112,7 @@ object Client {
         }
 
         client.post("$domain/chat/read") {
-            parameter("chatName", chat.id)
+            parameter("id", chat.id)
         }
     }
 

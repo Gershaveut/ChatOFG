@@ -12,7 +12,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.gershaveut.chat_ofg.data.*
+import com.gershaveut.chat_ofg.data.Chat
+import com.gershaveut.chat_ofg.data.Message
+import com.gershaveut.chat_ofg.data.UserInfo
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -56,7 +58,8 @@ fun App() {
                 Scaffold(bottomBar = {
                     if (!connection) {
                         Row(
-                            Modifier.fillMaxWidth().height(35.dp).background(MaterialTheme.colors.error).padding(start = 5.dp),
+                            Modifier.fillMaxWidth().height(35.dp).background(MaterialTheme.colors.error)
+                                .padding(start = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text("Connection lost", color = MaterialTheme.colors.onError)

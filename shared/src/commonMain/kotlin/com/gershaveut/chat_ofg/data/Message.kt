@@ -1,7 +1,6 @@
 package com.gershaveut.chat_ofg.data
 
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -157,7 +157,12 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         if (openChat.value != null)
                             ShowInfo(openChat.value!!)
                         else
-                            ShowInfo(clientUser.name, "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(), clientUser.description, clientUser.createTime)
+                            ShowInfo(
+                                clientUser.name,
+                                "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
+                                clientUser.description,
+                                clientUser.createTime
+                            )
                     }
                 }
             }
@@ -167,7 +172,8 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
 
 @Composable
 private fun MenuButton(name: String, icon: ImageVector, onClick: () -> Unit) {
-    Button( {
+    Button(
+        {
             onClick()
         },
         modifier = Modifier.fillMaxWidth()

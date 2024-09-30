@@ -1,20 +1,11 @@
 package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.lazy.*
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -146,7 +137,8 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
         IconButton(
             {
                 if (messageText.isNotEmpty()) {
-                    val message = Message(clientUser.name, messageText, Clock.System.now().epochSeconds, MessageStatus.UnSend)
+                    val message =
+                        Message(clientUser.name, messageText, Clock.System.now().epochSeconds, MessageStatus.UnSend)
                     onSend(message)
 
                     sendMessage(message, chat)

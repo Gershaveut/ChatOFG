@@ -2,12 +2,12 @@ package com.gershaveut.chat_ofg
 
 import com.gershaveut.chat_ofg.data.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -19,7 +19,16 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
 val users = mutableListOf<User>()
-val usersInfo: List<UserInfo> get() = users.map { UserInfo(it.name, it.displayName, it.description, it.createTime, it.lastLoginTime) }
+val usersInfo: List<UserInfo>
+    get() = users.map {
+        UserInfo(
+            it.name,
+            it.displayName,
+            it.description,
+            it.createTime,
+            it.lastLoginTime
+        )
+    }
 
 val messageResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = messageResponseFlow.asSharedFlow()
@@ -127,7 +136,7 @@ fun Route.chats() {
 }
 
 fun Route.chat() {
-    get("/chat/{chatName}") {
+    get("/chat/{id}") {
         val chat = findChat()
 
         call.respond(chat)

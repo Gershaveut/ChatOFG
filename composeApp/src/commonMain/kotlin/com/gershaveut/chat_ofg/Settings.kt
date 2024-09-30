@@ -60,7 +60,11 @@ fun Settings(openSettings: MutableState<Boolean>) {
 @Composable
 fun Category(name: String, content: @Composable () -> Unit) {
     Column {
-        Row( Modifier.background(MaterialTheme.colors.secondary).height(50.dp).fillMaxWidth().padding(start = 10.dp), Arrangement.Center, Alignment.CenterVertically ) {
+        Row(
+            Modifier.background(MaterialTheme.colors.secondary).height(50.dp).fillMaxWidth().padding(start = 10.dp),
+            Arrangement.Center,
+            Alignment.CenterVertically
+        ) {
             Text(name, fontSize = 18.sp, color = MaterialTheme.colors.onSecondary)
         }
 
@@ -69,7 +73,13 @@ fun Category(name: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun Filed(name: String, value: String? = null, description: String? = null, defaultValue: String? = null, onValueChanged: (text: String) -> Unit,) {
+fun Filed(
+    name: String,
+    value: String? = null,
+    description: String? = null,
+    defaultValue: String? = null,
+    onValueChanged: (text: String) -> Unit,
+) {
     var textFiled by remember { mutableStateOf(if (value != defaultValue) value else "") }
 
     SettingsRow {
@@ -92,7 +102,7 @@ fun Filed(name: String, value: String? = null, description: String? = null, defa
 
 @Composable
 fun SettingInfo(name: String, description: String? = null) {
-    Column ( verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp) ) {
+    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp)) {
         Text(name)
 
         if (description != null)
@@ -102,7 +112,7 @@ fun SettingInfo(name: String, description: String? = null) {
 
 @Composable
 fun SettingsRow(content: @Composable () -> Unit) {
-    Row( modifier = Modifier.padding(5.dp) ) {
+    Row(modifier = Modifier.padding(5.dp)) {
         content()
     }
 }

@@ -17,7 +17,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) 
     Scaffold(topBar = {
         IconButton({
             openSettings.value = true
-        } ) {
+        }) {
             Icon(Icons.Filled.Settings, contentDescription = "Settings")
         }
     }) {

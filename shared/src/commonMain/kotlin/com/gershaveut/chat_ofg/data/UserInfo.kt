@@ -11,5 +11,5 @@ data class UserInfo(
     var lastLoginTime: Long = Clock.System.now().epochSeconds,
     val createTime: Long = Clock.System.now().epochSeconds,
 ) {
-    constructor(user: User): this(user.name, user.displayName, user.description, user.lastLoginTime, user.createTime)
+    constructor(user: User) : this(user.name, user.displayName, user.description, user.lastLoginTime, user.createTime)
 }
