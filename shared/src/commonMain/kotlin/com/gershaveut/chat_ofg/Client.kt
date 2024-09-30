@@ -10,6 +10,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.network.sockets.*
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.websocket.*
 
@@ -44,17 +45,24 @@ object Client {
         }
     }
 
-    suspend fun handleConnection() {
-        client.webSocket(method = HttpMethod.Get, host = host, port = SERVER_PORT, path = "/echo") {
-            while (user != null) {
-                val userName = incoming.receive() as? Frame.Text ?: continue
+    suspend fun handleConnection(onConnection: (Boolean) -> Unit) {
+        try {
+            client.webSocket(method = HttpMethod.Get, host = host, port = SERVER_PORT, path = "/echo") {
+                onConnection(true)
 
-                if (user == null)
-                    continue
+                while (user != null) {
+                    val userName = incoming.receive() as? Frame.Text ?: continue
 
-                if (userName.readText() == user!!.name)
-                    sync()
+                    if (user == null)
+                        continue
+
+                    if (userName.readText() == user!!.name)
+                        sync()
+                }
             }
+        } catch (_: Exception) {
+            onConnection(false)
+            handleConnection(onConnection)
         }
     }
 

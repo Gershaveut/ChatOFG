@@ -1,7 +1,17 @@
 package com.gershaveut.chat_ofg
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -27,6 +37,8 @@ fun App() {
         val openSettings = remember { mutableStateOf(false) }
         val user = remember { mutableStateOf(Client.user) }
 
+        var connection by remember { mutableStateOf(true) }
+
         if (openSettings.value) {
             Settings(openSettings)
         } else {
@@ -36,10 +48,23 @@ fun App() {
                 }
             } else {
                 scope.launch {
-                    Client.handleConnection()
+                    Client.handleConnection {
+                        connection = it
+                    }
                 }
 
-                Menu(user, openSettings)
+                Scaffold(bottomBar = {
+                    if (!connection) {
+                        Row(
+                            Modifier.fillMaxWidth().height(35.dp).background(MaterialTheme.colors.error).padding(start = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Connection lost", color = MaterialTheme.colors.onError)
+                        }
+                    }
+                }) {
+                    Menu(user, openSettings)
+                }
             }
         }
     }
