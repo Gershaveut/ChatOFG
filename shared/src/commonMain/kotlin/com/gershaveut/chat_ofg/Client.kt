@@ -67,8 +67,14 @@ object Client {
 
     suspend fun getUsers(): MutableList<UserInfo> = client.get("$domain/users").body()
     suspend fun getChats(): MutableList<Chat> = client.get("$domain/chats").body()
-
     suspend fun getUser(name: String): UserInfo = client.get("$domain/user/$name").body()
+
+    suspend fun updateUser() {
+        client.post("$domain/user/update") {
+            contentType(ContentType.Application.Json)
+            setBody(user!!)
+        }
+    }
 
     suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
         if (client.post("$domain/chat") {

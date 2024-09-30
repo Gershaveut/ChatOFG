@@ -83,6 +83,14 @@ fun getUser(name: String, onGet: (UserInfo) -> Unit) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun updateUser() {
+    scope.launch {
+        Client.updateUser()
+    }
+}
+
+
+@OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
     scope.launch {
         Client.sendMessage(message, chat, onCreated)

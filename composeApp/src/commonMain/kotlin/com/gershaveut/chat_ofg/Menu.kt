@@ -33,7 +33,9 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
     ModalDrawer(
         {
             Column(modifier = Modifier.padding(5.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                    showInfo.value = true
+                }) {
                     UserAvatar(clientUser.name, 60.dp)
                     Text(clientUser.name, modifier = Modifier.padding(start = 5.dp).clickable {
                         showInfo.value = true
@@ -165,8 +167,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
 
 @Composable
 private fun MenuButton(name: String, icon: ImageVector, onClick: () -> Unit) {
-    Button(
-        {
+    Button( {
             onClick()
         },
         modifier = Modifier.fillMaxWidth()
@@ -239,17 +240,28 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 @Composable
 fun ShowInfo(chat: Chat) {
     var sign by remember { mutableStateOf("") }
+    var description: String? by remember { mutableStateOf(null) }
 
-    sign = if (chat.members.size > 2)
-        "Members: " + chat.members.size
-    else
-        "...".also {
-            getUser(chat.getName()) {
-                sign = it.lastLoginTime.timeToLocalDateTime().customToString()
+    if (chat.members.size > 2) {
+        sign = "Members: " + chat.members.size
+        description = chat.description
+    } else {
+        if (sign == "") {
+            sign = "...".also {
+                getUser(chat.getName()) {
+                    sign = it.lastLoginTime.timeToLocalDateTime().customToString()
+                }
+            }
+
+            description = "...".also {
+                getUser(chat.getName()) {
+                    description = it.description
+                }
             }
         }
+    }
 
-    ShowInfo(chat.getName(), sign, chat.description, chat.createTime)
+    ShowInfo(chat.getName(), sign, description, chat.createTime)
 }
 
 @Composable
@@ -368,9 +380,9 @@ fun UserRow(user: UserInfo, openChat: MutableState<Chat?>) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(5.dp)
         ) {
-            UserAvatar(user.name)
+            UserAvatar(user.displayName)
 
-            Text(user.name, Modifier.padding(start = 5.dp))
+            Text(user.displayName, Modifier.padding(start = 5.dp))
         }
     }
 }

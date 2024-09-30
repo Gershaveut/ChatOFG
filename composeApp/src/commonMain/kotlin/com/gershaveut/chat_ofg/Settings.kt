@@ -1,13 +1,16 @@
 package com.gershaveut.chat_ofg
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gershaveut.chat_ofg.data.User
 
 @Composable
 fun Settings(openSettings: MutableState<Boolean>) {
@@ -26,22 +29,55 @@ fun Settings(openSettings: MutableState<Boolean>) {
         )
 
         Column {
-            Filed("Server", Client.host, "Server host", HOST_DEFAULT) { text ->
-                Client.host = text
+            if (Client.user != null) {
+                Category("User") {
+                    Filed("Display name", Client.user!!.displayName, defaultValue = Client.user!!.name) {
+                        Client.user!!.displayName = it
+
+                        updateUser()
+                    }
+                    Filed("Description", Client.user!!.description) {
+                        Client.user!!.description = it
+
+                        updateUser()
+                    }
+                    Filed("Password") {
+                        Client.user!!.password = it
+
+                        updateUser()
+                    }
+                }
+            }
+
+            Category("Application") {
+                Filed("Server", Client.host, "Server host", HOST_DEFAULT) {
+                    Client.host = it
+                }
             }
         }
     }
 }
 
 @Composable
-fun Filed(name: String, value: String, description: String? = null, defaultValue: String? = null, onValueChanged: (text: String) -> Unit,) {
+fun Category(name: String, content: @Composable () -> Unit) {
+    Column {
+        Row( Modifier.background(MaterialTheme.colors.secondary).height(50.dp).fillMaxWidth().padding(start = 10.dp), Arrangement.Center, Alignment.CenterVertically ) {
+            Text(name, fontSize = 18.sp, color = MaterialTheme.colors.onSecondary)
+        }
+
+        content()
+    }
+}
+
+@Composable
+fun Filed(name: String, value: String? = null, description: String? = null, defaultValue: String? = null, onValueChanged: (text: String) -> Unit,) {
     var textFiled by remember { mutableStateOf(if (value != defaultValue) value else "") }
 
     SettingsRow {
         SettingInfo(name, description)
 
         TextField(
-            textFiled, { text ->
+            textFiled ?: "", { text ->
                 textFiled = text
 
                 if (text.isNotEmpty())
@@ -57,7 +93,7 @@ fun Filed(name: String, value: String, description: String? = null, defaultValue
 
 @Composable
 fun SettingInfo(name: String, description: String? = null) {
-    Column ( verticalArrangement = Arrangement.Center, modifier = Modifier.padding(5.dp) ) {
+    Column ( verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp) ) {
         Text(name)
 
         if (description != null)

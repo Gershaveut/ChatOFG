@@ -86,10 +86,6 @@ fun Application.module() {
     }
 }
 
-suspend fun sync(user: User) {
-    messageResponseFlow.emit(user.name)
-}
-
 suspend fun sync(userName: String) {
     messageResponseFlow.emit(userName)
 }
@@ -109,6 +105,18 @@ fun Route.users() {
 fun Route.user() {
     get("/user/{name}") {
         call.respond(usersInfo.find { it.name == call.parameters["name"].toString() }!!)
+    }
+
+    post("/user/update") {
+        val user = call.receive<User>()
+
+        if (user.name == userName()) {
+            users[users.indexOf(users.find { it.name == user().name })] = user
+
+            call.respondText("User updated", status = HttpStatusCode.Accepted)
+        } else {
+            call.respondText("Wrong user name", status = HttpStatusCode.Conflict)
+        }
     }
 }
 
@@ -131,10 +139,10 @@ fun Route.chat() {
         if (user().chats.any { it.id == chat.id }) {
             call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
         } else {
-            chat.members.forEach { name ->
-                users.find { it.name == name.key }?.let {
+            chat.members.keys.forEach { user ->
+                users.find { it.name == user.name }?.let {
                     it.chats.add(chat)
-                    sync(it)
+                    sync(it.name)
                 }
             }
 
@@ -148,8 +156,8 @@ fun Route.chat() {
         chat.messages.add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
         call.respondText("Sent message", status = HttpStatusCode.Created)
 
-        chat.members.forEach {
-            sync(it.key)
+        chat.members.keys.forEach {
+            sync(it.name)
         }
     }
 
@@ -163,9 +171,9 @@ fun Route.chat() {
         }
         call.respondText("Messages read", status = HttpStatusCode.Accepted)
 
-        chat.members.forEach {
-            if (it.key != userName())
-                sync(it.key)
+        chat.members.keys.forEach {
+            if (it.name != userName())
+                sync(it.name)
         }
     }
 }
