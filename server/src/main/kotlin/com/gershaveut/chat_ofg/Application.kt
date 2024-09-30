@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
 val users = mutableListOf<User>()
+val usersInfo: List<UserInfo> get() = users.map { UserInfo(it.name, it.displayName, it.description, it.createTime, it.lastLoginTime) }
 
 val messageResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = messageResponseFlow.asSharedFlow()
@@ -49,8 +50,8 @@ fun Application.module() {
 
                 users.add(
                     User(
-                        credentials.name,
-                        credentials.password
+                        name = credentials.name,
+                        password = credentials.password
                     )
                 )
                 return@validate UserIdPrincipal(credentials.name)
@@ -101,13 +102,13 @@ fun Route.auth() {
 
 fun Route.users() {
     get("/users") {
-        call.respond(users)
+        call.respond(usersInfo)
     }
 }
 
 fun Route.user() {
     get("/user/{name}") {
-        call.respond(users.find { it.name == call.parameters["name"].toString() }!!)
+        call.respond(usersInfo.find { it.name == call.parameters["name"].toString() }!!)
     }
 }
 

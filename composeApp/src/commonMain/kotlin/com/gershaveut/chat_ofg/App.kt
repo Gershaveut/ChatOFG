@@ -76,7 +76,7 @@ fun refreshUsers(onRefresh: () -> Unit) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun getUser(name: String, onGet: (User) -> Unit) {
+fun getUser(name: String, onGet: (UserInfo) -> Unit) {
     scope.launch {
         onGet(Client.getUser(name))
     }
@@ -90,7 +90,7 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun createChat(user: User, onCreated: ((Chat) -> Unit)? = null) {
+fun createChat(user: UserInfo, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
         Client.createChat(Chat(clientUser, user), onCreated)
     }

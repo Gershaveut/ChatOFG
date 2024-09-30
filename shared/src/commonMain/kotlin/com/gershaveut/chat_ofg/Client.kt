@@ -18,7 +18,7 @@ object Client {
 
     var user: User? = null
 
-    var users = mutableListOf<User>()
+    var users = mutableListOf<UserInfo>()
     var chats = mutableListOf<Chat>()
 
     var onSync: (() -> Unit)? = null
@@ -65,10 +65,10 @@ object Client {
         user = client.get("$domain/").body()
     }
 
-    suspend fun getUsers(): MutableList<User> = client.get("$domain/users").body()
+    suspend fun getUsers(): MutableList<UserInfo> = client.get("$domain/users").body()
     suspend fun getChats(): MutableList<Chat> = client.get("$domain/chats").body()
 
-    suspend fun getUser(name: String): User = client.get("$domain/user/$name").body()
+    suspend fun getUser(name: String): UserInfo = client.get("$domain/user/$name").body()
 
     suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
         if (client.post("$domain/chat") {

@@ -14,7 +14,7 @@ data class Chat(
 	var createTime: Long = Clock.System.now().epochSeconds,
 	var description: String? = null,
 ) {
-	constructor(creator: User, user: User) : this(uuid4().toString(), mapOf(creator.name to true,user.name to true))
+	constructor(creator: User, user: UserInfo) : this(uuid4().toString(), mapOf(creator.name to true,user.name to true))
 
 	fun getName(user: User) : String {
 		return name ?: if (user.name == members.keys.first())

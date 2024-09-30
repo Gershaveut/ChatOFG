@@ -119,7 +119,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         createChat = false
                     }) {
                         LazyColumn {
-                            items(users.filter { it != clientUser }, { it.name }) { user ->
+                            items(users.filter { it.name != clientUser.name }, { it.name }) { user ->
                                 UserRow(user, openChat)
                             }
                         }
@@ -359,7 +359,7 @@ fun ChatRow(chat: Chat) {
 }
 
 @Composable
-fun UserRow(user: User, openChat: MutableState<Chat?>) {
+fun UserRow(user: UserInfo, openChat: MutableState<Chat?>) {
     Row(modifier = Modifier.fillMaxWidth().clickable {
         createChat(user) { chat ->
             openChat.value = chat
