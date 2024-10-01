@@ -73,6 +73,8 @@ fun App() {
     }
 }
 
+fun Chat.getNameClient() = this.getName(Client.user)
+
 @OptIn(DelicateCoroutinesApi::class)
 val scope = GlobalScope
 
@@ -126,9 +128,9 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun createChat(user: UserInfo, onCreated: ((Chat) -> Unit)? = null) {
+fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
-        Client.createChat(Chat(clientUser, user), onCreated)
+        Client.createChat(chat, onCreated)
     }
 }
 

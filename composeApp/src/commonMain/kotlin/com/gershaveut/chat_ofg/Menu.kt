@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -120,14 +121,29 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     ChatDialog("Create Chat", {
                         createChat = false
                     }) {
-                        LazyColumn {
-                            items(users.filter { it.name != clientUser.name }, { it.name }) { user ->
-                                UserRow(user, openChat)
+                        val members = remember { mutableStateOf(mutableListOf<UserInfo>()) }
+
+                        Scaffold(
+                            floatingActionButton = {
+                                FloatingActionButton({
+                                    createChat(
+                                        Chat(members = members.value.associateWith { false }.toMutableMap().apply { put(Client.user!!.toUserInfo(), true) })
+                                    ) { chat ->
+                                        openChat.value = chat
+                                    }
+                                }) {
+                                    Icon(Icons.Filled.Add, contentDescription = "Confirm")
+                                }
+                            }
+                        ) {
+                            LazyColumn {
+                                items(users.filter { it.name != clientUser.name }, { it.name }) { user ->
+                                    UserRow(user, members)
+                                }
                             }
                         }
                     }
                 }
-
             } else {
                 // Chat
                 TopAppBar(
@@ -135,9 +151,8 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         Row(verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxSize()
                                 .clickable { showInfo.value = true }) {
-
                             Text(
-                                openChat.value!!.getName()
+                                openChat.value!!.getNameClient()
                             )
                         }
                     },
@@ -148,7 +163,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     },
                 )
 
-                Chat(openChat.value!!)
+                OpenChat(openChat.value!!)
 
                 if (showInfo.value) {
                     ChatDialog("Info", {
@@ -254,20 +269,20 @@ fun ShowInfo(chat: Chat) {
     } else {
         if (sign == "") {
             sign = "...".also {
-                getUser(chat.getName()) {
+                getUser(chat.getNameClient()) {
                     sign = it.lastLoginTime.timeToLocalDateTime().customToString()
                 }
             }
 
             description = "...".also {
-                getUser(chat.getName()) {
+                getUser(chat.getNameClient()) {
                     description = it.description
                 }
             }
         }
     }
 
-    ShowInfo(chat.getName(), sign, description, chat.createTime)
+    ShowInfo(chat.getNameClient(), sign, description, chat.createTime)
 }
 
 @Composable
@@ -309,7 +324,7 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 @Composable
 fun ChatRow(chat: Chat) {
     Row(modifier = Modifier.padding(5.dp)) {
-        val chatName = chat.getName()
+        val chatName = chat.getNameClient()
 
         // Image box
         UserAvatar(chatName)
@@ -377,12 +392,18 @@ fun ChatRow(chat: Chat) {
 }
 
 @Composable
-fun UserRow(user: UserInfo, openChat: MutableState<Chat?>) {
-    Row(modifier = Modifier.fillMaxWidth().clickable {
-        createChat(user) { chat ->
-            openChat.value = chat
-        }
-    }) {
+fun UserRow(user: UserInfo, members: MutableState<MutableList<UserInfo>>) {
+    var selected by remember { mutableStateOf(false) }
+
+    Row(modifier = Modifier.fillMaxWidth().toggleable(selected) {
+        selected = it
+
+        if (selected)
+            members.value.add(user)
+        else
+            members.value.remove(user)
+    }.background(if (selected) Colors.SELECTED else MaterialTheme.colors.background)
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(5.dp)
         ) {

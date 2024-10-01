@@ -24,7 +24,7 @@ import kotlinx.datetime.Clock
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Chat(chat: Chat) {
+fun OpenChat(chat: Chat) {
     Column {
         // Message
         val messagesState = rememberLazyListState()
@@ -44,7 +44,7 @@ fun Chat(chat: Chat) {
 
         sync {
             messages.clear()
-            messages.addAll(Client.chats.find { it.getName() == chat.getName() }!!.messages)
+            messages.addAll(Client.chats.find { it.getNameClient() == chat.getNameClient() }!!.messages)
 
             if (messages.any { it.creator != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
                 readMessages(chat)

@@ -145,18 +145,20 @@ fun Route.chat() {
     post("/chat") {
         val chat = call.receive<Chat>()
 
-        if (user().chats.any { it.id == chat.id }) {
-            call.respondText("A chat with this name has already been created", status = HttpStatusCode.Conflict)
-        } else {
-            chat.members.keys.forEach { user ->
-                users.find { it.name == user.name }?.let {
-                    it.chats.add(chat)
-                    sync(it.name)
-                }
-            }
+        val maxLength = 20
+        val length = chat.getName().length
 
-            call.respondText("Created chat", status = HttpStatusCode.Created)
+        if (length > maxLength)
+            chat.getName().removeRange(maxLength, length)
+
+        chat.members.keys.forEach { user ->
+            users.find { it.name == user.name }?.let {
+                it.chats.add(chat)
+                sync(it.name)
+            }
         }
+
+        call.respondText("Created chat", status = HttpStatusCode.Created)
     }
 
     post("/chat/message") {
