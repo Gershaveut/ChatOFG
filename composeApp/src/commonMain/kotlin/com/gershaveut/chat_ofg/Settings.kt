@@ -15,25 +15,25 @@ import com.gershaveut.chat_ofg.data.Chat
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
     Column {
-        SettingsBar(openSettings, "Settings")
+        SettingsBar(openSettings, "Settings") {
+            if (Client.user != null) {
+                updateUser()
+            }
+        }
 
         Column {
             if (Client.user != null) {
                 Category("User") {
                     Filed("Display name", Client.user!!.displayName, defaultValue = Client.user!!.name) {
                         Client.user!!.displayName = it
-
-                        updateUser()
                     }
+
                     Filed("Description", Client.user!!.description) {
                         Client.user!!.description = it
-
-                        updateUser()
                     }
+
                     Filed("Password") {
                         Client.user!!.password = it
-
-                        updateUser()
                     }
                 }
             }
@@ -50,20 +50,18 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 @Composable
 fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
     Column {
-        SettingsBar(openSettings, "Settings " + chat.getNameClient())
+        SettingsBar(openSettings, "Settings " + chat.getNameClient()) {
+            updateChat(chat)
+        }
 
         Column {
             Category("Info") {
-                Filed("Name", chat.getNameClient(), defaultValue = chat.getNameClient()) {
+                Filed("Name", chat.getNameClient()) {
                     chat.setName(it)
-
-                    updateChat(chat)
                 }
 
                 Filed("Description", chat.description) {
                     chat.description = it
-
-                    updateChat(chat)
                 }
             }
         }
@@ -71,7 +69,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
 }
 
 @Composable
-fun SettingsBar(openSettings: MutableState<Boolean>, text: String) {
+fun SettingsBar(openSettings: MutableState<Boolean>, text: String, onClose: () -> Unit) {
     TopAppBar(
         title = {
             Text(text)
@@ -79,6 +77,7 @@ fun SettingsBar(openSettings: MutableState<Boolean>, text: String) {
         navigationIcon = {
             IconButton({
                 openSettings.value = false
+                onClose()
             }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
