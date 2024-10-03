@@ -88,7 +88,15 @@ object Client {
                 contentType(ContentType.Application.Json)
                 setBody(chat)
             }.status == HttpStatusCode.Created) {
-            onCreated?.let { it(chat) }
+            onCreated?.invoke(chat)
+        }
+    }
+
+    suspend fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
+        if (client.post("$domain/chat/delete") {
+                parameter("id", chat.id)
+            }.status == HttpStatusCode.Accepted) {
+            onDeleted?.invoke(chat)
         }
     }
 

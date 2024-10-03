@@ -112,11 +112,13 @@ fun Route.users() {
 }
 
 fun Route.user() {
-    get("/user/{name}") {
+    val path = "/user"
+
+    get("$path/{name}") {
         call.respond(usersInfo.find { it.name == call.parameters["name"].toString() }!!)
     }
 
-    post("/user/update") {
+    post("$path/update") {
         val user = call.receive<User>()
 
         if (user.name == userName()) {
@@ -136,13 +138,15 @@ fun Route.chats() {
 }
 
 fun Route.chat() {
-    get("/chat/{id}") {
+    val path = "/chat"
+
+    get("$path/{id}") {
         val chat = findChat()
 
         call.respond(chat)
     }
 
-    post("/chat") {
+    post(path) {
         val chat = call.receive<Chat>()
 
         val maxLength = 20
@@ -161,7 +165,7 @@ fun Route.chat() {
         call.respondText("Created chat", status = HttpStatusCode.Created)
     }
 
-    post("/chat/message") {
+    post("$path/message") {
         val chat = findChat()
 
         chat.messages.add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
@@ -172,7 +176,7 @@ fun Route.chat() {
         }
     }
 
-    post("/chat/read") {
+    post("$path/read") {
         val chat = findChat()
 
         chat.messages.forEach {
@@ -185,6 +189,23 @@ fun Route.chat() {
         chat.members.keys.forEach {
             if (it.name != userName())
                 sync(it.name)
+        }
+    }
+
+    post("$path/delete") {
+        val chat = findChat()
+
+        if (chat.members.mapKeys { it.key.name }[userName()]!!) {
+            chat.members.keys.forEach { user ->
+                users.find { it.name == user.name }?.let {
+                    it.chats.remove(chat)
+                    sync(it.name)
+                }
+            }
+
+            call.respondText("Chat deleted", status = HttpStatusCode.Accepted)
+        } else {
+            call.respondText("Access denied", status = HttpStatusCode.NotAcceptable)
         }
     }
 }

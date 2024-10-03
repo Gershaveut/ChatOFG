@@ -135,6 +135,13 @@ fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
+    scope.launch {
+        Client.deleteChat(chat, onDeleted)
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
     scope.launch {
         Client.readMessages(chat)

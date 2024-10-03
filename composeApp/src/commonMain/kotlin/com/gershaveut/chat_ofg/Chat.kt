@@ -43,12 +43,16 @@ fun OpenChat(chat: Chat) {
         messages.addAll(chat.messages)
 
         sync {
-            messages.clear()
-            messages.addAll(Client.chats.find { it.getNameClient() == chat.getNameClient() }!!.messages)
+            try {
+                messages.clear()
+                messages.addAll(Client.chats.find { it.getNameClient() == chat.getNameClient() }!!.messages)
 
-            if (messages.any { it.creator != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
-                readMessages(chat)
-                scroll()
+                if (messages.any { it.creator != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
+                    readMessages(chat)
+                    scroll()
+                }
+            } catch (_: Exception) {
+
             }
         }
 

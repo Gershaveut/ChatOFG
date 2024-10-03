@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
@@ -161,6 +162,28 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                             openChat.value = null
                         }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
                     },
+                    actions = {
+                        var expanded by remember { mutableStateOf(false) }
+
+                        IconButton( {
+                            expanded = true
+                        } ) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            TextButton({
+                                deleteChat(openChat.value!!) {
+                                    openChat.value = null
+                                }
+                            } ) {
+                                Text("Delete chat")
+                            }
+                        }
+                    }
                 )
 
                 OpenChat(openChat.value!!)
