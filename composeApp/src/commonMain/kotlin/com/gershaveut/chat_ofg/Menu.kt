@@ -455,6 +455,13 @@ fun UserRow(user: UserInfo, members: MutableState<MutableList<UserInfo>>) {
             members.value.remove(user)
     }.background(if (selected) Colors.SELECTED else MaterialTheme.colors.background)
     ) {
+        UserRow(user)
+    }
+}
+
+@Composable
+fun UserRow(user: UserInfo) {
+    Row {
         Row(
             verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(5.dp)
         ) {

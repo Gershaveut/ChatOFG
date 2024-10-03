@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,7 +59,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 @Composable
 fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
     Column {
-        SettingsBar(openSettings, "Settings " + chat.getNameClient()) {
+        SettingsBar(openSettings, "Settings chat " + chat.getNameClient()) {
             updateChat(chat)
         }
 
@@ -74,6 +75,32 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
                     if (!readOnly) {
                         FiledNullable("Description", chat.description) {
                             chat.description = it
+                        }
+                    }
+                }
+
+                Category("Members") {
+                    Column {
+                        chat.members.entries.forEach { member ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            )
+                            {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                                    UserRow(member.key)
+                                    if (member.value)
+                                        Text("Admin", color = Colors.BACKGROUND_VARIANT)
+                                }
+
+                                IconButton({
+
+                                }) {
+                                    Icon(Icons.Filled.MoreVert, "Actions")
+                                }
+                            }
                         }
                     }
                 }
@@ -164,7 +191,10 @@ fun Filed(
 
 @Composable
 fun SettingInfo(name: String, description: String? = null) {
-    Column(verticalArrangement = Arrangement.Center, modifier = Modifier.width(200.dp).padding(10.dp).padding(end = 50.dp)) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.width(200.dp).padding(10.dp).padding(end = 50.dp)
+    ) {
         Text(name)
 
         if (description != null)
