@@ -2,6 +2,7 @@ package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,32 +16,39 @@ import com.gershaveut.chat_ofg.data.Chat
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
     Column {
+        var password: String? = null
+
         SettingsBar(openSettings, "Settings") {
             if (Client.user != null) {
+                if (password != null)
+                    Client.user!!.password = password!!
+
                 updateUser()
             }
         }
 
-        Column {
-            if (Client.user != null) {
-                Category("User") {
-                    Filed("Display name", Client.user!!.displayName, defaultValue = Client.user!!.name) {
-                        Client.user!!.displayName = it
-                    }
+        LazyColumn {
+            item {
+                if (Client.user != null) {
+                    Category("User") {
+                        Filed("Display name", Client.user!!.displayName, Client.user!!.name) {
+                            Client.user!!.displayName = it
+                        }
 
-                    Filed("Description", Client.user!!.description) {
-                        Client.user!!.description = it
-                    }
+                        FiledNullable("Description", Client.user!!.description) {
+                            Client.user!!.description = it
+                        }
 
-                    Filed("Password") {
-                        Client.user!!.password = it
+                        FiledNullable("Password") {
+                            password = it
+                        }
                     }
                 }
-            }
 
-            Category("Application") {
-                Filed("Server", Client.host, "Server host", HOST_DEFAULT) {
-                    Client.host = it
+                Category("Application") {
+                    Filed("Server", Client.host, "Server host", HOST_DEFAULT) {
+                        Client.host = it
+                    }
                 }
             }
         }
@@ -54,14 +62,18 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
             updateChat(chat)
         }
 
-        Column {
-            Category("Info") {
-                Filed("Name", chat.getNameClient()) {
-                    chat.setName(it)
-                }
+        LazyColumn {
+            item {
+                Category("Info") {
+                    val readOnly = chat.members.size < 3
 
-                Filed("Description", chat.description) {
-                    chat.description = it
+                    Filed("Name", chat.getNameClient(), chat.getNameClient(), readOnly = readOnly) {
+                        chat.setName(it)
+                    }
+
+                    FiledNullable("Description", chat.description, readOnly = readOnly) {
+                        chat.description = it
+                    }
                 }
             }
         }
@@ -101,12 +113,13 @@ fun Category(name: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-fun Filed(
+fun FiledNullable(
     name: String,
     value: String? = null,
-    description: String? = null,
     defaultValue: String? = null,
-    onValueChanged: (text: String) -> Unit,
+    description: String? = null,
+    readOnly: Boolean = false,
+    onValueChanged: (text: String?) -> Unit,
 ) {
     var textFiled by remember { mutableStateOf(if (value != defaultValue) value else "") }
 
@@ -121,16 +134,33 @@ fun Filed(
                     onValueChanged(text)
                 else if (defaultValue != null)
                     onValueChanged(defaultValue)
+                else
+                    onValueChanged(null)
             },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { if (defaultValue != null) Text(defaultValue) }
+            placeholder = { if (defaultValue != null) Text(defaultValue) },
+            readOnly = readOnly
         )
     }
 }
 
 @Composable
+fun Filed(
+    name: String,
+    value: String?,
+    defaultValue: String,
+    description: String? = null,
+    readOnly: Boolean = false,
+    onValueChanged: (text: String) -> Unit,
+) {
+    FiledNullable(name, value, description, defaultValue, readOnly) {
+        onValueChanged(it!!)
+    }
+}
+
+@Composable
 fun SettingInfo(name: String, description: String? = null) {
-    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.padding(10.dp)) {
+    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.width(200.dp).padding(10.dp).padding(end = 50.dp)) {
         Text(name)
 
         if (description != null)

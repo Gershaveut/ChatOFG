@@ -39,6 +39,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     showInfo.value = true
                 }) {
                     UserAvatar(clientUser.name, 60.dp)
+
                     Text(clientUser.name, modifier = Modifier.padding(start = 5.dp).clickable {
                         showInfo.value = true
                     })
