@@ -47,6 +47,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                 Column {
                     MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
                         user.value = null
+                        Client.user = null
                     }
                     MenuButton("Settings", Icons.Filled.Settings) {
                         openSettings.value = true
@@ -128,7 +129,9 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                             floatingActionButton = {
                                 FloatingActionButton({
                                     createChat(
-                                        Chat(members = members.value.associateWith { false }.toMutableMap().apply { put(Client.user!!.toUserInfo(), true) })
+                                        Chat(
+                                            members = members.value.associateWith { false }.toMutableMap()
+                                                .apply { put(Client.user!!.toUserInfo(), true) })
                                     ) { chat ->
                                         openChat.value = chat
                                     }
@@ -146,62 +149,74 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     }
                 }
             } else {
-                // Chat
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxSize()
-                                .clickable { showInfo.value = true }) {
-                            Text(
-                                openChat.value!!.getNameClient()
-                            )
-                        }
-                    },
-                    navigationIcon = {
-                        IconButton({
-                            openChat.value = null
-                        }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
-                    },
-                    actions = {
-                        var expanded by remember { mutableStateOf(false) }
+                val openChatSettings = remember { mutableStateOf(false) }
 
-                        IconButton( {
-                            expanded = true
-                        } ) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
-                        }
+                if (!openChatSettings.value) {
+                    // Chat
+                    TopAppBar(
+                        title = {
+                            Row(verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxSize()
+                                    .clickable { showInfo.value = true }) {
+                                Text(
+                                    openChat.value!!.getNameClient()
+                                )
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton({
+                                openChat.value = null
+                            }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                        },
+                        actions = {
+                            var expanded by remember { mutableStateOf(false) }
 
-                        DropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            TextButton({
-                                deleteChat(openChat.value!!) {
-                                    openChat.value = null
+                            IconButton({
+                                expanded = true
+                            }) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                TextButton({
+                                    openChatSettings.value = true
+                                }) {
+                                    Text("Chat settings")
                                 }
-                            } ) {
-                                Text("Delete chat")
+
+                                TextButton({
+                                    deleteChat(openChat.value!!) {
+                                        openChat.value = null
+                                    }
+                                }) {
+                                    Text("Delete chat")
+                                }
                             }
                         }
-                    }
-                )
+                    )
 
-                OpenChat(openChat.value!!)
+                    OpenChat(openChat.value!!)
 
-                if (showInfo.value) {
-                    ChatDialog("Info", {
-                        showInfo.value = false
-                    }) {
-                        if (openChat.value != null)
-                            ShowInfo(openChat.value!!)
-                        else
-                            ShowInfo(
-                                clientUser.name,
-                                "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
-                                clientUser.description,
-                                clientUser.createTime
-                            )
+                    if (showInfo.value) {
+                        ChatDialog("Info", {
+                            showInfo.value = false
+                        }) {
+                            if (openChat.value != null)
+                                ShowInfo(openChat.value!!)
+                            else
+                                ShowInfo(
+                                    clientUser.name,
+                                    "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
+                                    clientUser.description,
+                                    clientUser.createTime
+                                )
+                        }
                     }
+                } else {
+                    ChatSettings(openChatSettings, openChat.value!!)
                 }
             }
         }

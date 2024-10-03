@@ -92,6 +92,14 @@ object Client {
         }
     }
 
+    suspend fun updateChat(chat: Chat) {
+        client.post("$domain/chat/update") {
+            contentType(ContentType.Application.Json)
+            setBody(chat)
+            parameter("id", chat.id)
+        }
+    }
+
     suspend fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
         if (client.post("$domain/chat/delete") {
                 parameter("id", chat.id)

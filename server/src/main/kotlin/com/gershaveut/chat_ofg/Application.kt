@@ -12,6 +12,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -149,11 +150,7 @@ fun Route.chat() {
     post(path) {
         val chat = call.receive<Chat>()
 
-        val maxLength = 20
-        val length = chat.getName().length
-
-        if (length > maxLength)
-            chat.getName().removeRange(maxLength, length)
+        chat.setName(chat.getName().removeMax())
 
         chat.members.keys.forEach { user ->
             users.find { it.name == user.name }?.let {
@@ -168,7 +165,10 @@ fun Route.chat() {
     post("$path/message") {
         val chat = findChat()
 
-        chat.messages.add(call.receive<Message>().apply { messageStatus = MessageStatus.UnRead })
+        chat.messages.add(call.receive<Message>().apply {
+            messageStatus = MessageStatus.UnRead
+            text = text.removeMax(300)
+        })
         call.respondText("Sent message", status = HttpStatusCode.Created)
 
         chat.members.keys.forEach {
@@ -195,7 +195,7 @@ fun Route.chat() {
     post("$path/delete") {
         val chat = findChat()
 
-        if (chat.members.mapKeys { it.key.name }[userName()]!!) {
+        chatAccess {
             chat.members.keys.forEach { user ->
                 users.find { it.name == user.name }?.let {
                     it.chats.remove(chat)
@@ -204,8 +204,33 @@ fun Route.chat() {
             }
 
             call.respondText("Chat deleted", status = HttpStatusCode.Accepted)
-        } else {
-            call.respondText("Access denied", status = HttpStatusCode.NotAcceptable)
         }
     }
+
+    post("$path/update") {
+        val updateChat = call.receive<Chat>()
+        val chat = findChat()
+
+        updateChat.setName(updateChat.getName().removeMax())
+        updateChat.description?.let { updateChat.description = updateChat.description!!.removeMax(300) }
+
+        chatAccess {
+            chat.members.keys.forEach { userInfo ->
+                users.find { it.name == userInfo.name }!!.let { user ->
+                    user.chats[user.chats.indexOf(user.chats.find { it.id == chat.id })] = updateChat
+                }
+            }
+        }
+    }
+}
+
+fun PipelineContext<Unit, ApplicationCall>.userName() = call.principal<UserIdPrincipal>()!!.name
+fun PipelineContext<Unit, ApplicationCall>.user() = users.find { it.name == call.principal<UserIdPrincipal>()!!.name }!!
+fun PipelineContext<Unit, ApplicationCall>.findChat() = user().chats.find { it.id == call.parameters["id"].toString() }!!
+
+suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend () -> Unit) {
+    if (findChat().members.mapKeys { it.key.name }[userName()]!!)
+        onAccept()
+    else
+        call.respondText("Access denied", status = HttpStatusCode.NotAcceptable)
 }

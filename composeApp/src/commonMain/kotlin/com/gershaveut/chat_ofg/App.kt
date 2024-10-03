@@ -42,7 +42,7 @@ fun App() {
         var connection by remember { mutableStateOf(true) }
 
         if (openSettings.value) {
-            Settings(openSettings)
+            AppSettings(openSettings)
         } else {
             if (user.value == null) {
                 Auth("Auth", openSettings) {
@@ -131,6 +131,13 @@ fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = 
 fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
     scope.launch {
         Client.createChat(chat, onCreated)
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun updateChat(chat: Chat) {
+    scope.launch {
+        Client.updateChat(chat)
     }
 }
 

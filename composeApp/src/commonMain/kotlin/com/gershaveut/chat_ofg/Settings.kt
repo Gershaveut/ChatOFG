@@ -10,22 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.gershaveut.chat_ofg.data.Chat
 
 @Composable
-fun Settings(openSettings: MutableState<Boolean>) {
+fun AppSettings(openSettings: MutableState<Boolean>) {
     Column {
-        TopAppBar(
-            title = {
-                Text("Settings")
-            },
-            navigationIcon = {
-                IconButton({
-                    openSettings.value = false
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
+        SettingsBar(openSettings, "Settings")
 
         Column {
             if (Client.user != null) {
@@ -55,6 +45,45 @@ fun Settings(openSettings: MutableState<Boolean>) {
             }
         }
     }
+}
+
+@Composable
+fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
+    Column {
+        SettingsBar(openSettings, "Settings " + chat.getNameClient())
+
+        Column {
+            Category("Info") {
+                Filed("Name", chat.getNameClient(), defaultValue = chat.getNameClient()) {
+                    chat.setName(it)
+
+                    updateChat(chat)
+                }
+
+                Filed("Description", chat.description) {
+                    chat.description = it
+
+                    updateChat(chat)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsBar(openSettings: MutableState<Boolean>, text: String) {
+    TopAppBar(
+        title = {
+            Text(text)
+        },
+        navigationIcon = {
+            IconButton({
+                openSettings.value = false
+            }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+        }
+    )
 }
 
 @Composable
