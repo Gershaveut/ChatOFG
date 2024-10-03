@@ -150,7 +150,10 @@ fun Route.chat() {
     post(path) {
         val chat = call.receive<Chat>()
 
-        chat.setName(chat.getName().removeMax())
+        if (chat.members.size > 2)
+            chat.setName(chat.getName().removeMax())
+        else
+            chat.setName(null)
 
         chat.members.keys.forEach { user ->
             users.find { it.name == user.name }?.let {
@@ -211,15 +214,19 @@ fun Route.chat() {
         val updateChat = call.receive<Chat>()
         val chat = findChat()
 
-        updateChat.setName(updateChat.getName().removeMax())
-        updateChat.description?.let { updateChat.description = updateChat.description!!.removeMax(300) }
+        if (chat.members.size > 2) {
+            updateChat.setName(updateChat.getName().removeMax())
+            updateChat.description?.let { updateChat.description = updateChat.description!!.removeMax(300) }
 
-        chatAccess {
-            chat.members.keys.forEach { userInfo ->
-                users.find { it.name == userInfo.name }!!.let { user ->
-                    user.chats[user.chats.indexOf(user.chats.find { it.id == chat.id })] = updateChat
+            chatAccess {
+                chat.members.keys.forEach { userInfo ->
+                    users.find { it.name == userInfo.name }!!.let { user ->
+                        user.chats[user.chats.indexOf(user.chats.find { it.id == chat.id })] = updateChat
+                    }
                 }
             }
+        } else {
+            accessDenied()
         }
     }
 }
@@ -232,5 +239,9 @@ suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend 
     if (findChat().members.mapKeys { it.key.name }[userName()]!!)
         onAccept()
     else
-        call.respondText("Access denied", status = HttpStatusCode.NotAcceptable)
+        accessDenied()
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.accessDenied() {
+    call.respondText("Access denied", status = HttpStatusCode.NotAcceptable)
 }

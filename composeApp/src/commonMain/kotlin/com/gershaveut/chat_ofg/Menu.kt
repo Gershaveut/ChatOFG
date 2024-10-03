@@ -49,6 +49,9 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
                         user.value = null
                         Client.user = null
+
+                        Client.users.clear()
+                        Client.chats.clear()
                     }
                     MenuButton("Settings", Icons.Filled.Settings) {
                         openSettings.value = true
@@ -179,20 +182,29 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                             }
 
                             DropdownMenu(
+                                modifier = Modifier.padding(horizontal = 5.dp),
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
+                                val widthButton = 150.dp
+
                                 TextButton({
                                     openChatSettings.value = true
-                                }) {
+                                },
+                                    modifier = Modifier.width(widthButton)
+                                ) {
                                     Text("Chat settings")
                                 }
+
+                                Divider()
 
                                 TextButton({
                                     deleteChat(openChat.value!!) {
                                         openChat.value = null
                                     }
-                                }) {
+                                },
+                                    modifier = Modifier.width(widthButton)
+                                ) {
                                     Text("Delete chat")
                                 }
                             }

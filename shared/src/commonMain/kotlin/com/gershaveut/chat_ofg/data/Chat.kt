@@ -20,7 +20,7 @@ data class Chat(
         }
     }
 
-    constructor(creator: UserInfo, user: UserInfo) : this(members = mutableMapOf(creator to true, user to true))
+    constructor(creator: UserInfo, user: UserInfo) : this(members = mutableMapOf(creator to false, user to false))
 
     fun getName(user: User? = null): String {
         return name ?: if (user != null && members.count() < 3) {
@@ -29,11 +29,11 @@ data class Chat(
             else
                 members.keys.first().displayName
         } else {
-            members.entries.joinToString { it.key.name }
+            members.entries.joinToString { it.key.displayName }
         }
     }
 
-    fun setName(name: String) {
+    fun setName(name: String?) {
         this.name = name
     }
 }

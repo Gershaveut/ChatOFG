@@ -67,12 +67,14 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
                 Category("Info") {
                     val readOnly = chat.members.size < 3
 
-                    Filed("Name", chat.getNameClient(), chat.getNameClient(), readOnly = readOnly) {
+                    Filed("Name", chat.getNameClient(), chat.getNameClient(), preview = false, readOnly = readOnly) {
                         chat.setName(it)
                     }
 
-                    FiledNullable("Description", chat.description, readOnly = readOnly) {
-                        chat.description = it
+                    if (!readOnly) {
+                        FiledNullable("Description", chat.description) {
+                            chat.description = it
+                        }
                     }
                 }
             }
@@ -119,9 +121,10 @@ fun FiledNullable(
     defaultValue: String? = null,
     description: String? = null,
     readOnly: Boolean = false,
+    preview: Boolean = true,
     onValueChanged: (text: String?) -> Unit,
 ) {
-    var textFiled by remember { mutableStateOf(if (value != defaultValue) value else "") }
+    var textFiled by remember { mutableStateOf(if (value != defaultValue) value else if (!preview) value else "") }
 
     SettingsRow {
         SettingInfo(name, description)
@@ -138,7 +141,7 @@ fun FiledNullable(
                     onValueChanged(null)
             },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { if (defaultValue != null) Text(defaultValue) },
+            placeholder = { if (defaultValue != null && preview) Text(defaultValue) },
             readOnly = readOnly
         )
     }
@@ -151,16 +154,17 @@ fun Filed(
     defaultValue: String,
     description: String? = null,
     readOnly: Boolean = false,
+    preview: Boolean = true,
     onValueChanged: (text: String) -> Unit,
 ) {
-    FiledNullable(name, value, description, defaultValue, readOnly) {
+    FiledNullable(name, value, defaultValue, description, readOnly, preview) {
         onValueChanged(it!!)
     }
 }
 
 @Composable
 fun SettingInfo(name: String, description: String? = null) {
-    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.width(200.dp).padding(10.dp).padding(end = 50.dp)) {
+    Column(verticalArrangement = Arrangement.Center, modifier = Modifier.width(200.dp).padding(10.dp).padding(end = 50.dp)) {
         Text(name)
 
         if (description != null)
