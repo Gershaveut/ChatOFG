@@ -150,19 +150,23 @@ fun Route.chat() {
     post(path) {
         val chat = call.receive<Chat>()
 
-        if (chat.members.size > 2)
-            chat.setName(chat.getName().removeMax())
-        else
-            chat.setName(null)
+        if (chat.members.size > 1) {
+            if (chat.members.size > 2)
+                chat.setName(chat.getName().removeMax())
+            else
+                chat.setName(null)
 
-        chat.members.keys.forEach { user ->
-            users.find { it.name == user.name }?.let {
-                it.chats.add(chat)
-                sync(it.name)
+            chat.members.keys.forEach { user ->
+                users.find { it.name == user.name }?.let {
+                    it.chats.add(chat)
+                    sync(it.name)
+                }
             }
-        }
 
-        call.respondText("Created chat", status = HttpStatusCode.Created)
+            call.respondText("Created chat", status = HttpStatusCode.Created)
+        } else {
+            call.respondText("There are less than two participants in the chat", status = HttpStatusCode.NotAcceptable)
+        }
     }
 
     post("$path/message") {

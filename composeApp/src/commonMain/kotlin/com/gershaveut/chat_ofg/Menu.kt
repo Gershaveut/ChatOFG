@@ -71,8 +71,6 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
             if (openChat.value == null) {
                 var createChat by remember { mutableStateOf(false) }
 
-                val scope = rememberCoroutineScope()
-
                 // Menu
                 TopAppBar(
                     title = { Text("ChatOFG") },
@@ -136,12 +134,14 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                         Scaffold(
                             floatingActionButton = {
                                 FloatingActionButton({
-                                    createChat(
-                                        Chat(
-                                            members = members.value.associateWith { false }.toMutableMap()
-                                                .apply { put(Client.user!!.toUserInfo(), true) })
-                                    ) { chat ->
-                                        openChat.value = chat
+                                    if (members.value.size > 1) {
+                                        createChat(
+                                            Chat(
+                                                members = members.value.associateWith { false }.toMutableMap()
+                                                    .apply { put(Client.user!!.toUserInfo(), true) })
+                                        ) { chat ->
+                                            openChat.value = chat
+                                        }
                                     }
                                 }) {
                                     Icon(Icons.Filled.Add, contentDescription = "Confirm")
@@ -230,7 +230,7 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     else
                         ShowInfo(
                             clientUser.name,
-                            "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
+                            clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
                             clientUser.description,
                             clientUser.createTime
                         )
