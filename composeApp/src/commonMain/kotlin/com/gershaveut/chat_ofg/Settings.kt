@@ -79,26 +79,28 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
                     }
                 }
 
-                Category("Members") {
-                    Column {
-                        chat.members.entries.forEach { member ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            )
-                            {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                if (chat.members.size > 2) {
+                    Category("Members") {
+                        Column {
+                            chat.members.entries.forEach { member ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                )
+                                {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
 
-                                    UserRow(member.key)
-                                    if (member.value)
-                                        Text("Admin", color = Colors.BACKGROUND_VARIANT)
-                                }
+                                        UserRow(member.key)
+                                        if (member.value)
+                                            Text("Admin", color = Colors.BACKGROUND_VARIANT)
+                                    }
 
-                                IconButton({
+                                    IconButton({
 
-                                }) {
-                                    Icon(Icons.Filled.MoreVert, "Actions")
+                                    }) {
+                                        Icon(Icons.Filled.MoreVert, "Actions")
+                                    }
                                 }
                             }
                         }

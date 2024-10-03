@@ -32,17 +32,21 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val showInfo = remember { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
+
     ModalDrawer(
         {
             Column(modifier = Modifier.padding(5.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable {
+                    scope.launch {
+                        drawerState.close()
+                    }
+
                     showInfo.value = true
                 }) {
                     UserAvatar(clientUser.name, 60.dp)
 
-                    Text(clientUser.name, modifier = Modifier.padding(start = 5.dp).clickable {
-                        showInfo.value = true
-                    })
+                    Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
                 }
 
                 Column {
@@ -212,24 +216,24 @@ fun Menu(user: MutableState<User?>, openSettings: MutableState<Boolean>) {
                     )
 
                     OpenChat(openChat.value!!)
-
-                    if (showInfo.value) {
-                        ChatDialog("Info", {
-                            showInfo.value = false
-                        }) {
-                            if (openChat.value != null)
-                                ShowInfo(openChat.value!!)
-                            else
-                                ShowInfo(
-                                    clientUser.name,
-                                    "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
-                                    clientUser.description,
-                                    clientUser.createTime
-                                )
-                        }
-                    }
                 } else {
                     ChatSettings(openChatSettings, openChat.value!!)
+                }
+            }
+
+            if (showInfo.value) {
+                ChatDialog("Info", {
+                    showInfo.value = false
+                }) {
+                    if (openChat.value != null)
+                        ShowInfo(openChat.value!!)
+                    else
+                        ShowInfo(
+                            clientUser.name,
+                            "Last login: " + clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
+                            clientUser.description,
+                            clientUser.createTime
+                        )
                 }
             }
         }
