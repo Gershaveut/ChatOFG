@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Message(
-    val creator: String,
-    var text: String,
-    val sendTime: Long = Clock.System.now().epochSeconds,
-    var messageStatus: MessageStatus = MessageStatus.UnRead,
-    var modified: Boolean = false
+	val creator: UserInfo,
+	var text: String,
+	val sendTime: Long = Clock.System.now().epochSeconds,
+	var messageStatus: MessageStatus = MessageStatus.UnRead,
+	var modified: Boolean = false
 )

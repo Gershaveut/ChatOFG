@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,48 +33,49 @@ val clientUser get() = Client.user!!
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
-    Client.onSync = {
-        scope.launch {
-            syncResponseFlow.emit("")
-        }
-    }
-
-    MaterialTheme {
-        val openSettings = remember { mutableStateOf(false) }
-        val user = remember { mutableStateOf(Client.user) }
-
-        var connection by remember { mutableStateOf(true) }
-
-        if (openSettings.value) {
-            AppSettings(openSettings)
-        } else {
-            if (user.value == null) {
-                Auth("Auth", openSettings) {
-                    user.value = Client.user
-                }
-            } else {
-                scope.launch {
-                    Client.handleConnection {
-                        connection = it
-                    }
-                }
-
-                Scaffold(bottomBar = {
-                    if (!connection) {
-                        Row(
-                            Modifier.fillMaxWidth().height(35.dp).background(MaterialTheme.colors.error)
-                                .padding(start = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("Connection lost", color = MaterialTheme.colors.onError)
-                        }
-                    }
-                }) {
-                    Menu(user, openSettings)
-                }
-            }
-        }
-    }
+	Client.onSync = {
+		scope.launch {
+			syncResponseFlow.emit("")
+		}
+	}
+	
+	MaterialTheme {
+		val openSettings = remember { mutableStateOf(false) }
+		val user = remember { mutableStateOf(Client.user) }
+		
+		var connection by remember { mutableStateOf(true) }
+		
+		if (openSettings.value) {
+			AppSettings(openSettings)
+		} else {
+			if (user.value == null) {
+				Auth("Auth", openSettings) {
+					user.value = Client.user
+				}
+			} else {
+				scope.launch {
+					Client.handleConnection {
+						connection = it
+					}
+				}
+				
+				Scaffold(bottomBar = {
+					if (!connection) {
+						Row(
+							Modifier.fillMaxWidth().height(35.dp)
+								.background(MaterialTheme.colors.error)
+								.padding(start = 5.dp),
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							Text("Connection lost", color = MaterialTheme.colors.onError)
+						}
+					}
+				}) {
+					Menu(user, openSettings)
+				}
+			}
+		}
+	}
 }
 
 fun Chat.getNameClient() = this.getName(Client.user)
@@ -80,86 +85,86 @@ val scope = GlobalScope
 
 @OptIn(DelicateCoroutinesApi::class)
 fun auth(name: String, password: String, onAuth: () -> Unit) {
-    scope.launch {
-        Client.auth(name, password)
-
-        onAuth()
-    }
+	scope.launch {
+		Client.auth(name, password)
+		
+		onAuth()
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshChats(onRefresh: () -> Unit) {
-    scope.launch {
-        Client.chats = Client.getChats()
-
-        onRefresh()
-    }
+	scope.launch {
+		Client.chats = Client.getChats()
+		
+		onRefresh()
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun refreshUsers(onRefresh: () -> Unit) {
-    scope.launch {
-        Client.users = Client.getUsers()
-
-        onRefresh()
-    }
+	scope.launch {
+		Client.users = Client.getUsers()
+		
+		onRefresh()
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun getUser(name: String, onGet: (UserInfo) -> Unit) {
-    scope.launch {
-        onGet(Client.getUser(name))
-    }
+	scope.launch {
+		onGet(Client.getUser(name))
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun updateUser() {
-    scope.launch {
-        Client.updateUser()
-    }
+	scope.launch {
+		Client.updateUser()
+	}
 }
 
 
 @OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
-    scope.launch {
-        Client.sendMessage(message, chat, onCreated)
-    }
+	scope.launch {
+		Client.sendMessage(message, chat, onCreated)
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
-    scope.launch {
-        Client.createChat(chat, onCreated)
-    }
+	scope.launch {
+		Client.createChat(chat, onCreated)
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun updateChat(chat: Chat) {
-    scope.launch {
-        Client.updateChat(chat)
-    }
+	scope.launch {
+		Client.updateChat(chat)
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
-    scope.launch {
-        Client.deleteChat(chat, onDeleted)
-    }
+	scope.launch {
+		Client.deleteChat(chat, onDeleted)
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
-    scope.launch {
-        Client.readMessages(chat)
-    }
+	scope.launch {
+		Client.readMessages(chat)
+	}
 }
 
 @OptIn(DelicateCoroutinesApi::class)
 fun sync(onSync: () -> Unit) {
-    scope.launch {
-        sharedFlow.collect {
-            onSync()
-        }
-    }
+	scope.launch {
+		sharedFlow.collect {
+			onSync()
+		}
+	}
 }
