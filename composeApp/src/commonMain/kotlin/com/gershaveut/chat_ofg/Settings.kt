@@ -151,12 +151,11 @@ fun SettingsBar(openSettings: MutableState<Boolean>, text: String, onClose: () -
 fun Category(name: String, content: @Composable () -> Unit) {
 	Column {
 		Row(
-			Modifier.background(MaterialTheme.colors.secondary).height(50.dp).fillMaxWidth()
+			Modifier.height(50.dp).fillMaxWidth()
 				.padding(start = 10.dp),
-			Arrangement.Center,
-			Alignment.CenterVertically
+			verticalAlignment = Alignment.CenterVertically
 		) {
-			Text(name, fontSize = 18.sp, color = MaterialTheme.colors.onSecondary)
+			Text(name, fontSize = 18.sp)
 		}
 		
 		content()
