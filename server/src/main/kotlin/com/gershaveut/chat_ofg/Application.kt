@@ -192,6 +192,19 @@ fun Route.chat() {
 		}
 	}
 	
+	post("$path/message/delete") {
+		val chat = findChat()
+		
+		chat.messages.remove(call.receive())
+		
+		chat.members.keys.forEach {
+			if (it.name != userName())
+				sync(it.name)
+		}
+		
+		call.respondText("Message deleted", status = HttpStatusCode.Accepted)
+	}
+	
 	post("$path/read") {
 		val chat = findChat()
 		

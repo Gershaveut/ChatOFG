@@ -1,6 +1,7 @@
 package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,7 +23,6 @@ import com.gershaveut.chat_ofg.data.MessageStatus
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun OpenChat(chat: Chat) {
 	Column {
@@ -69,7 +69,7 @@ fun OpenChat(chat: Chat) {
 						modifier = Modifier.fillMaxWidth()
 					) {
 						Box(
-							modifier = Modifier.padding(5.dp)
+							modifier = Modifier.padding(5.dp).padding(top = 0.dp)
 								.background(
 									color = Colors.BACKGROUND_SECONDARY,
 									shape = MaterialTheme.shapes.medium
@@ -80,32 +80,7 @@ fun OpenChat(chat: Chat) {
 					}
 				}
 				
-				if (message.creator.name != clientUser.name) {
-					Box(
-						modifier = chatBoxModifier
-							.background(
-								color = Colors.OTHERS_MESSAGE,
-								shape = MaterialTheme.shapes.medium
-							)
-					) {
-						Message(message)
-					}
-				} else {
-					Row(
-						modifier = Modifier.fillMaxWidth(),
-						horizontalArrangement = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
-					) {
-						Box(
-							modifier = chatBoxModifier
-								.background(
-									color = Colors.MY_MESSAGE,
-									shape = MaterialTheme.shapes.medium
-								)
-						) {
-							Message(message)
-						}
-					}
-				}
+				Message(message, chat, messages)
 			}
 		}
 		
@@ -155,44 +130,83 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
 	}
 }
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Message(message: Message) {
-	Column(horizontalAlignment = Alignment.CenterHorizontally) {
-		Text(
-			message.creator.displayName,
-			color = MaterialTheme.colors.secondaryVariant,
-			fontSize = 15.sp,
-			modifier = Modifier
-				.padding(top = 10.dp, start = 10.dp, end = 10.dp)
-				.align(Alignment.Start)
-		)
-		
-		Text(
-			message.text, modifier = Modifier
-				.padding(
-					top = 10.dp,
-					start = 10.dp,
-					bottom = 5.dp,
-					end = 10.dp
-				).align(Alignment.Start)
-		)
+fun Message(message: Message, chat: Chat, messages: MutableList<Message>) {
+	var expanded by remember { mutableStateOf(false) }
+	
+	Column {
+		DropdownMenu(
+			modifier = Modifier.padding(horizontal = 5.dp),
+			expanded = expanded,
+			onDismissRequest = { expanded = false }
+		) {
+			val widthButton = 150.dp
+			
+			TextButton(
+				{
+					expanded = false
+					
+					messages.remove(message)
+					
+					deletedMessages(message, chat)
+				},
+				modifier = Modifier.width(widthButton)
+			) {
+				Text("Delete Message")
+			}
+		}
 		
 		Row(
-			Modifier.align(Alignment.End).padding(
-				bottom = 10.dp,
-				end = 10.dp
-			)
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
 		) {
-			Text(
-				message.sendTime.timeToLocalDateTime().time.toString(),
-				color = Colors.BACKGROUND_VARIANT,
-				fontSize = 10.sp
-			)
-			
-			if (message.creator.name == clientUser.name)
-				Row(modifier = Modifier.padding(horizontal = 5.dp)) {
-					MessageStatusIcon(message.messageStatus)
+			Column(
+				modifier = Modifier.sizeIn(maxWidth = 350.dp).padding(5.dp).padding(top = 0.dp).background(
+					color = if (clientUser.name == message.creator.name) Colors.MY_MESSAGE else Colors.OTHERS_MESSAGE,
+					shape = MaterialTheme.shapes.medium
+				).clickable {
+					expanded = true
+				},
+				horizontalAlignment = Alignment.CenterHorizontally,
+			) {
+				Text(
+					message.creator.displayName,
+					color = MaterialTheme.colors.secondaryVariant,
+					fontSize = 15.sp,
+					modifier = Modifier
+						.padding(top = 10.dp, start = 10.dp, end = 10.dp)
+						.align(Alignment.Start)
+				)
+				
+				Text(
+					message.text, modifier = Modifier
+						.padding(
+							top = 10.dp,
+							start = 10.dp,
+							bottom = 5.dp,
+							end = 10.dp
+						).align(Alignment.Start)
+				)
+				
+				Row(
+					Modifier.align(Alignment.End).padding(
+						bottom = 10.dp,
+						end = 10.dp
+					)
+				) {
+					Text(
+						message.sendTime.timeToLocalDateTime().time.toString(),
+						color = Colors.BACKGROUND_VARIANT,
+						fontSize = 10.sp
+					)
+					
+					if (message.creator.name == clientUser.name)
+						Row(modifier = Modifier.padding(horizontal = 5.dp)) {
+							MessageStatusIcon(message.messageStatus)
+						}
 				}
+			}
 		}
 	}
 }

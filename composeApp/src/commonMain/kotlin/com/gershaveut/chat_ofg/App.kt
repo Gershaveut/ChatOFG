@@ -195,6 +195,13 @@ fun readMessages(chat: Chat) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun deletedMessages(message: Message, chat: Chat) {
+	scope.launch {
+		Client.deleteMessage(message, chat)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun sync(onSync: () -> Unit) {
 	scope.launch {
 		sharedFlow.collect {

@@ -177,6 +177,14 @@ object Client {
 		}
 	}
 	
+	suspend fun deleteMessage(message: Message, chat: Chat) {
+		client.post("$domain/chat/message/delete") {
+			contentType(ContentType.Application.Json)
+			setBody(message)
+			parameter("id", chat.id)
+		}
+	}
+	
 	suspend fun readMessages(chat: Chat) {
 		chat.messages.forEach {
 			if (it.creator.name != user!!.name) {
