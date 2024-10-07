@@ -2,33 +2,11 @@ package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.Button
-import androidx.compose.material.Divider
-import androidx.compose.material.DrawerValue
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.FabPosition
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalDrawer
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -37,14 +15,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.rememberDrawerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,10 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.gershaveut.chat_ofg.data.Chat
-import com.gershaveut.chat_ofg.data.Message
-import com.gershaveut.chat_ofg.data.MessageStatus
-import com.gershaveut.chat_ofg.data.UserInfo
+import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 
 @Composable
@@ -137,6 +105,9 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					
 					sync {
 						chats = Client.chats
+						
+						if (!chats.any { it.id == openChat.value?.id })
+							openChat.value = null
 					}
 					
 					refreshChats {
@@ -245,15 +216,26 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								
 								Divider()
 								
-								TextButton(
-									{
-										deleteChat(openChat.value!!) {
-											openChat.value = null
-										}
-									},
-									modifier = Modifier.width(widthButton)
-								) {
-									Text("Delete chat")
+								if (openChat.value!!.userAccess(clientUser)) {
+									TextButton(
+										{
+											deleteChat(openChat.value!!) {
+												openChat.value = null
+											}
+										},
+										modifier = Modifier.width(widthButton)
+									) {
+										Text("Delete chat")
+									}
+								} else {
+									TextButton(
+										{
+											//TODO: Leave chat
+										},
+										modifier = Modifier.width(widthButton)
+									) {
+										Text("Leave chat")
+									}
 								}
 							}
 						}
@@ -261,23 +243,23 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					
 					OpenChat(openChat.value!!)
 				} else {
-					ChatSettings(openChatSettings, openChat.value!!)
+					ChatSettings(openChatSettings, openChat.value!!, openChat.value!!.userAccess(clientUser))
 				}
 			}
 			
 			if (showInfo.value) {
-				ChatDialog("Info", {
-					showInfo.value = false
-				}) {
-					if (openChat.value != null)
+				if (openChat.value != null) {
+					ChatDialog("Chat Info", {
+						showInfo.value = false
+					}) {
 						ShowInfo(openChat.value!!)
-					else
-						ShowInfo(
-							clientUser.name,
-							clientUser.lastLoginTime.timeToLocalDateTime().customToString(),
-							clientUser.description,
-							clientUser.createTime
-						)
+					}
+				} else {
+					ChatDialog("Account", {
+						showInfo.value = false
+					}) {
+						ShowInfo(clientUser)
+					}
 				}
 			}
 		}
@@ -362,30 +344,40 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 }
 
 @Composable
-fun ShowInfo(chat: Chat) {
+fun ShowInfo(userInfo: UserInfo) {
 	var sign by remember { mutableStateOf("") }
 	var description: String? by remember { mutableStateOf(null) }
 	
-	if (chat.members.size > 2) {
-		sign = "Members: " + chat.members.size
-		description = chat.description
-	} else {
-		if (sign == "") {
-			sign = "...".also {
-				getUser(chat.getNameClient()) {
-					sign = it.lastLoginTime.timeToLocalDateTime().customToString()
-				}
+	if (sign == "") {
+		sign = "...".also {
+			getUser(userInfo.name) {
+				sign = it.lastLoginTime.timeToLocalDateTime().customToString()
 			}
-			
-			description = "...".also {
-				getUser(chat.getNameClient()) {
-					description = it.description
-				}
+		}
+		
+		description = "...".also {
+			getUser(userInfo.name) {
+				description = it.description
 			}
 		}
 	}
 	
-	ShowInfo(chat.getNameClient(), sign, description, chat.createTime)
+	ShowInfo(userInfo.name, sign, description, userInfo.createTime)
+}
+
+@Composable
+fun ShowInfo(chat: Chat) {
+	var sign by remember { mutableStateOf("") }
+	var description: String? by remember { mutableStateOf(null) }
+	
+	if (chat.chatType == ChatType.Group) {
+		sign = "Members: " + chat.members.size
+		description = chat.description
+		
+		ShowInfo(chat.getNameClient(), sign, description, chat.createTime)
+	} else {
+		ShowInfo(chat.members.keys.find { it.name == chat.getNameClient() }!!)
+	}
 }
 
 @Composable

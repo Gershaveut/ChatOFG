@@ -125,6 +125,14 @@ object Client {
 		}
 	}
 	
+	suspend fun kickChat(userName: String, chat: Chat) {
+		client.post("$domain/chat/kick") {
+			contentType(ContentType.Application.Json)
+			setBody(userName)
+			parameter("id", chat.id)
+		}
+	}
+	
 	suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
 		chat.messages.add(message)
 		

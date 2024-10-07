@@ -9,12 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
@@ -29,6 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
+import com.gershaveut.chat_ofg.data.ChatType
+import com.gershaveut.chat_ofg.data.UserInfo
 
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
@@ -44,7 +41,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 		LazyColumn {
 			item {
 				if (Client.user != null) {
-					Category("User") {
+					Category("Account") {
 						Filed("Display name", clientUser.displayName, clientUser.name) {
 							clientUser.displayName = it
 						}
@@ -70,7 +67,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 }
 
 @Composable
-fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
+fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean) {
 	Column {
 		SettingsBar(openSettings, "Settings chat " + chat.getNameClient()) {
 			updateChat(chat)
@@ -79,29 +76,42 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
 		LazyColumn {
 			item {
 				Category("Info") {
-					val readOnly = chat.members.size < 3
-					
 					Filed(
 						"Name",
 						chat.getNameClient(),
 						chat.getNameClient(),
 						preview = false,
-						readOnly = readOnly
+						readOnly = !admin
 					) {
 						chat.setName(it)
 					}
 					
-					if (!readOnly) {
-						FiledNullable("Description", chat.description) {
+					if (chat.chatType == ChatType.Group) {
+						FiledNullable("Description", chat.description, readOnly = !admin) {
 							chat.description = it
 						}
 					}
 				}
 				
-				if (chat.members.size > 2) {
+				var userInfo by remember { mutableStateOf<UserInfo?>(null) }
+				
+				if (userInfo != null)
+					ChatDialog("User Info", {
+						userInfo = null
+					}) {
+						ShowInfo(userInfo!!)
+					}
+				
+				if (chat.chatType == ChatType.Group) {
 					Category("Members") {
 						Column {
-							chat.members.entries.forEach { member ->
+							var members by remember { mutableStateOf(chat.members.entries) }
+							
+							sync {
+								members = Client.chats.find { it.id == chat.id }?.members!!.entries
+							}
+							
+							members.forEach { member ->
 								Row(
 									modifier = Modifier.fillMaxWidth(),
 									horizontalArrangement = Arrangement.SpaceBetween,
@@ -115,10 +125,46 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat) {
 											Text("Admin", color = Colors.BACKGROUND_VARIANT)
 									}
 									
-									IconButton({
+									var expanded by remember { mutableStateOf(false) }
 									
-									}) {
-										Icon(Icons.Filled.MoreVert, "Actions")
+									Column {
+										IconButton({
+											expanded = true
+										}) {
+											Icon(Icons.Filled.MoreVert, "Actions")
+										}
+										
+										DropdownMenu(
+											modifier = Modifier.padding(horizontal = 5.dp),
+											expanded = expanded,
+											onDismissRequest = { expanded = false }
+										) {
+											val widthButton = 150.dp
+											
+											TextButton(
+												{
+													expanded = false
+													
+													userInfo = member.key
+												},
+												modifier = Modifier.width(widthButton)
+											) {
+												Text("Show Info")
+											}
+											
+											if (admin) {
+												TextButton(
+													{
+														expanded = false
+														
+														kickChat(member.key.name, chat)
+													},
+													modifier = Modifier.width(widthButton)
+												) {
+													Text("Kick")
+												}
+											}
+										}
 									}
 								}
 							}
@@ -157,6 +203,8 @@ fun Category(name: String, content: @Composable () -> Unit) {
 		) {
 			Text(name, fontSize = 18.sp)
 		}
+		
+		Divider()
 		
 		content()
 	}

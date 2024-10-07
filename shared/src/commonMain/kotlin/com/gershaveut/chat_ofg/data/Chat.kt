@@ -12,22 +12,23 @@ data class Chat(
 	var messages: MutableList<Message> = mutableListOf(),
 	val createTime: Long = Clock.System.now().epochSeconds,
 	var description: String? = null,
+	val chatType: ChatType = if (members.count() < 3) ChatType.PrivateChat else ChatType.Group
 ) {
 	init {
-		if (members.count() < 3) {
+		if (chatType == ChatType.PrivateChat) {
 			members = members.keys.associateWith { true }.toMutableMap()
 		}
 	}
 	
 	constructor(creator: UserInfo, user: UserInfo) : this(
 		members = mutableMapOf(
-			creator to false,
-			user to false
+			creator to true,
+			user to true
 		)
 	)
 	
 	fun getName(user: UserInfo? = null): String {
-		return name ?: if (user != null && members.count() < 3) {
+		return name ?: if (user != null && chatType == ChatType.PrivateChat) {
 			if (user.name == members.keys.first().name)
 				members.keys.last().displayName
 			else
@@ -39,5 +40,14 @@ data class Chat(
 	
 	fun setName(name: String?) {
 		this.name = name
+	}
+	
+	fun userAccess(userInfo: UserInfo) : Boolean {
+		members.forEach {
+			if (it.key.name == userInfo.name)
+				return it.value
+		}
+		
+		return false
 	}
 }

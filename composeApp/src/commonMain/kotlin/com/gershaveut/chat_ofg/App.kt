@@ -154,6 +154,13 @@ fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun kickChat(userName: String, chat: Chat) {
+	scope.launch {
+		Client.kickChat(userName, chat)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
 	scope.launch {
 		Client.readMessages(chat)
@@ -164,7 +171,11 @@ fun readMessages(chat: Chat) {
 fun sync(onSync: () -> Unit) {
 	scope.launch {
 		sharedFlow.collect {
-			onSync()
+			try {
+				onSync()
+			} catch (_: Exception) {
+			
+			}
 		}
 	}
 }

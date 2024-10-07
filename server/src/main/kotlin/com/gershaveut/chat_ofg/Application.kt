@@ -151,7 +151,7 @@ fun Route.chat() {
 		val chat = call.receive<Chat>()
 		
 		if (chat.members.size > 1) {
-			if (chat.members.size > 2)
+			if (chat.chatType == ChatType.Group)
 				chat.setName(chat.getName().removeMax())
 			else
 				chat.setName(null)
@@ -221,7 +221,7 @@ fun Route.chat() {
 		val updateChat = call.receive<Chat>()
 		val chat = findChat()
 		
-		if (chat.members.size > 2) {
+		if (chat.chatType == ChatType.Group) {
 			updateChat.setName(updateChat.getName().removeMax())
 			updateChat.description?.let {
 				updateChat.description = updateChat.description!!.removeMax(300)
@@ -237,6 +237,25 @@ fun Route.chat() {
 			}
 		} else {
 			accessDenied()
+		}
+	}
+	
+	post("$path/kick") {
+		val chat = findChat()
+		val name = call.receive<String>()
+		
+		chatAccess {
+			users.find { it.name == name }!!.chats.remove(chat)
+			
+			sync(name)
+			
+			users.forEach { user ->
+				user.chats.find { it.id == chat.id }?.members?.also { members ->
+					members.remove(members.keys.find { it.name == name })
+				}
+				
+				sync(user.name)
+			}
 		}
 	}
 }
