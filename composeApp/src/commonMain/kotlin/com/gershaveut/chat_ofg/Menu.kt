@@ -206,9 +206,12 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								}
 								
 								if (selectInvite) {
-									SelectUsers("Invite user", users.apply { removeAll(openChat.value!!.members.keys) }, {
-										selectInvite = false
-									}) { members ->
+									SelectUsers(
+										"Invite user",
+										users.apply { removeAll(openChat.value!!.members.keys) },
+										{
+											selectInvite = false
+										}) { members ->
 										selectInvite = false
 										
 										members.forEach {
@@ -247,7 +250,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 									Text("Chat settings")
 								}
 								
-								if (openChat.value!!.userAccess(clientUser) && openChat.value!!.chatType != ChatType.PrivateChat) {
+								if (openChat.value!!.userAccess(clientUser)) {
 									TextButton(
 										{
 											expanded = false
@@ -262,15 +265,19 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 									}
 								}
 								
-								TextButton(
-									{
-										expanded = false
-										
-										//TODO: Leave chat
-									},
-									modifier = Modifier.width(widthButton)
-								) {
-									Text("Leave chat")
+								if (openChat.value!!.chatType != ChatType.PrivateChat) {
+									TextButton(
+										{
+											expanded = false
+											
+											leaveChat(openChat.value!!) {
+												openChat.value = null
+											}
+										},
+										modifier = Modifier.width(widthButton)
+									) {
+										Text("Leave chat")
+									}
 								}
 							}
 						}

@@ -84,7 +84,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 						chat.getNameClient(),
 						chat.getNameClient(),
 						preview = false,
-						readOnly = !admin && chat.chatType == ChatType.Group
+						readOnly = !admin || chat.chatType == ChatType.PrivateChat
 					) {
 						chat.setName(it)
 					}
@@ -155,9 +155,9 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 												Text("Show Info")
 											}
 											
-											Divider()
-											
 											if (admin) {
+												Divider()
+												
 												if (!member.value) {
 													TextButton(
 														{

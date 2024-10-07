@@ -132,6 +132,14 @@ object Client {
 		}
 	}
 	
+	suspend fun leaveChat(chat: Chat, onLeaved: ((Chat) -> Unit)? = null) {
+		if (client.post("$domain/chat/leave") {
+				parameter("id", chat.id)
+			}.status == HttpStatusCode.Accepted) {
+			onLeaved?.invoke(chat)
+		}
+	}
+	
 	suspend fun kickChat(userName: String, chat: Chat) {
 		client.post("$domain/chat/kick") {
 			contentType(ContentType.Application.Json)

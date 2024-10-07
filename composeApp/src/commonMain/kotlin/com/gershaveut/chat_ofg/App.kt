@@ -167,6 +167,13 @@ fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun leaveChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
+	scope.launch {
+		Client.leaveChat(chat, onDeleted)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun kickChat(userName: String, chat: Chat) {
 	scope.launch {
 		Client.kickChat(userName, chat)

@@ -223,6 +223,29 @@ fun Route.chat() {
 		}
 	}
 	
+	post("$path/leave") {
+		val chat = findChat()
+		val leaveUser = user()
+		
+		chatAccess {
+			leaveUser.chats.remove(chat)
+			
+			sync(userName())
+			
+			chat.members.keys.forEach { member ->
+				users.find { it.name == member.name }?.let { user ->
+					val members = user.chats.find { it.id == chat.id }!!.members
+					
+					members.remove(members.keys.find { it.name == leaveUser.name })
+					
+					sync(user.name)
+				}
+			}
+			
+			call.respondText("User leaved", status = HttpStatusCode.Accepted)
+		}
+	}
+	
 	post("$path/update") {
 		val updateChat = call.receive<Chat>()
 		val chat = findChat()
