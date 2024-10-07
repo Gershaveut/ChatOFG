@@ -130,6 +130,12 @@ fun Route.user() {
 			call.respondText("Wrong user name", status = HttpStatusCode.Conflict)
 		}
 	}
+	
+	post("$path/password") {
+		user().password = call.receive<String>()
+		
+		call.respondText("Password updated", status = HttpStatusCode.Accepted)
+	}
 }
 
 fun Route.chats() {
@@ -235,6 +241,8 @@ fun Route.chat() {
 					}
 				}
 			}
+			
+			call.respondText("Chat updated", status = HttpStatusCode.Accepted)
 		} else {
 			accessDenied()
 		}
@@ -256,6 +264,8 @@ fun Route.chat() {
 				
 				sync(user.name)
 			}
+			
+			call.respondText("User $name kicked", status = HttpStatusCode.Accepted)
 		}
 	}
 }

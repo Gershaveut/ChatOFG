@@ -30,11 +30,14 @@ import com.gershaveut.chat_ofg.data.UserInfo
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
 	Column {
-		var password: String? = null //TODO: Change password
+		var password: String? = null
 		
 		SettingsBar(openSettings, "Settings") {
 			if (Client.user != null) {
 				updateUser()
+				
+				if (password != null)
+					updatePassword(password!!)
 			}
 		}
 		

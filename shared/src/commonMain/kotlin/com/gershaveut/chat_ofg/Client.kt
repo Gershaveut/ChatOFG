@@ -100,6 +100,13 @@ object Client {
 		}
 	}
 	
+	suspend fun updatePassword(password: String) {
+		client.post("$domain/user/password") {
+			contentType(ContentType.Application.Json)
+			setBody(password)
+		}
+	}
+	
 	suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
 		if (client.post("$domain/chat") {
 				contentType(ContentType.Application.Json)

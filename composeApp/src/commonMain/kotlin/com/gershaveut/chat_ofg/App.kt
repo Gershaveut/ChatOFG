@@ -147,6 +147,13 @@ fun updateChat(chat: Chat) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun updatePassword(password: String) {
+	scope.launch {
+		Client.updatePassword(password)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 	scope.launch {
 		Client.deleteChat(chat, onDeleted)
