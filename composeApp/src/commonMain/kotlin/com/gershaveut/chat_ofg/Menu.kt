@@ -68,6 +68,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 		drawerState = drawerState
 	) {
 		val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
+		var users by remember { mutableStateOf(Client.users) }
 		
 		Column {
 			if (openChat.value == null) {
@@ -84,8 +85,6 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 						}) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
 					}
 				)
-				
-				var users by remember { mutableStateOf(Client.users) }
 				
 				Scaffold(
 					floatingActionButton = {
@@ -131,35 +130,19 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 				}
 				
 				if (createChat) {
-					ChatDialog("Create Chat", {
+					SelectUsers("Create Chat", users, {
 						createChat = false
-					}) {
-						val members = remember { mutableStateOf(mutableListOf<UserInfo>()) }
+					}) { members ->
+						createChat = false
 						
-						Scaffold(
-							floatingActionButton = {
-								FloatingActionButton({
-									if (members.value.size > 1) {
-										createChat(
-											Chat(
-												members = members.value.associateWith { false }
-													.toMutableMap()
-													.apply { put(clientUser, true) })
-										) { chat ->
-											openChat.value = chat
-										}
-									}
-								}) {
-									Icon(Icons.Filled.Add, contentDescription = "Confirm")
-								}
-							}
-						) {
-							LazyColumn {
-								items(
-									users.filter { it.name != clientUser.name },
-									{ it.name }) { user ->
-									UserRow(user, members)
-								}
+						if (members.size > 0) {
+							createChat(
+								Chat(
+									members = members.associateWith { false }
+										.toMutableMap()
+										.apply { put(clientUser, true) })
+							) { chat ->
+								openChat.value = chat
 							}
 						}
 					}
@@ -205,6 +188,50 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 							) {
 								val widthButton = 150.dp
 								
+								var selectInvite by remember { mutableStateOf(false) }
+								
+								TextButton(
+									{
+										showInfo.value = true
+									},
+									modifier = Modifier.width(widthButton)
+								) {
+									Text("Show Info")
+								}
+								
+								sync {
+									openChat.value = Client.chats.find { it.id == openChat.value!!.id }
+								}
+								
+								if (selectInvite) {
+									SelectUsers("Invite user", users.apply { removeAll(openChat.value!!.members.keys) }, {
+										selectInvite = false
+									}) { members ->
+										selectInvite = false
+										
+										members.forEach {
+											inviteChat(it.name, openChat.value!!) {
+												openChat.value = null
+											}
+										}
+									}
+								}
+								
+								TextButton(
+									{
+										refreshUsers {
+											users = Client.users
+										}
+										
+										selectInvite = true
+									},
+									modifier = Modifier.width(widthButton)
+								) {
+									Text("Invite User")
+								}
+								
+								Divider()
+								
 								TextButton(
 									{
 										openChatSettings.value = true
@@ -213,8 +240,6 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								) {
 									Text("Chat settings")
 								}
-								
-								Divider()
 								
 								if (openChat.value!!.userAccess(clientUser)) {
 									TextButton(
@@ -260,6 +285,36 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					}) {
 						ShowInfo(clientUser)
 					}
+				}
+			}
+		}
+	}
+}
+
+@Composable
+fun SelectUsers(
+	name: String,
+	users: MutableList<UserInfo>,
+	onDismissRequest: () -> Unit,
+	onConfirm: (members: MutableList<UserInfo>) -> Unit
+) {
+	ChatDialog(name, onDismissRequest) {
+		val members = remember { mutableStateOf(mutableListOf<UserInfo>()) }
+		
+		Scaffold(
+			floatingActionButton = {
+				FloatingActionButton({
+					onConfirm(members.value)
+				}) {
+					Icon(Icons.Filled.Add, contentDescription = "Confirm")
+				}
+			}
+		) {
+			LazyColumn {
+				items(
+					users.filter { it.name != clientUser.name },
+					{ it.name }) { user ->
+					UserRow(user, members)
 				}
 			}
 		}

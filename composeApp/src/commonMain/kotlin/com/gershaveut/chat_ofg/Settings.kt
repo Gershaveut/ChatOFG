@@ -84,7 +84,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 						chat.getNameClient(),
 						chat.getNameClient(),
 						preview = false,
-						readOnly = !admin
+						readOnly = !admin && chat.chatType == ChatType.Group
 					) {
 						chat.setName(it)
 					}
@@ -146,8 +146,6 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 											
 											TextButton(
 												{
-													expanded = false
-													
 													userInfo = member.key
 												},
 												modifier = Modifier.width(widthButton)
@@ -158,8 +156,6 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 											if (admin) {
 												TextButton(
 													{
-														expanded = false
-														
 														kickChat(member.key.name, chat)
 													},
 													modifier = Modifier.width(widthButton)

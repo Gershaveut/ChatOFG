@@ -248,6 +248,47 @@ fun Route.chat() {
 		}
 	}
 	
+	post("$path/invite") {
+		val chat = findChat()
+		val name = call.receive<String>()
+		val invitedUser = users.find { it.name == name }!!
+		
+		chatAccess {
+			if (!invitedUser.chats.any { it.id == chat.id }) {
+				if (chat.chatType == ChatType.Group) {
+					invitedUser.chats.add(chat)
+					
+					sync(name)
+					
+					users.forEach { user ->
+						user.chats.find { it.id == chat.id }?.members?.also { members ->
+							members[invitedUser.toUserInfo()] = false
+						}
+						
+						sync(user.name)
+					}
+					
+					call.respondText("User $name invited", status = HttpStatusCode.Accepted)
+				} else {
+					val newChat = Chat(members = chat.members.apply { put(invitedUser.toUserInfo(), false) })
+					
+					invitedUser.chats.add(newChat)
+					
+					users.forEach { user ->
+						if (chat.members.keys.any { it.name == user.name }) {
+							user.chats.add(newChat)
+						}
+					}
+					
+					call.respondText("Group created", status = HttpStatusCode.Created)
+					call.respond(newChat)
+				}
+			} else {
+				call.respondText("User $name already exists", status = HttpStatusCode.NotAcceptable)
+			}
+		}
+	}
+	
 	post("$path/kick") {
 		val chat = findChat()
 		val name = call.receive<String>()

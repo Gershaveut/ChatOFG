@@ -140,6 +140,15 @@ object Client {
 		}
 	}
 	
+	suspend fun inviteChat(userName: String, chat: Chat, onCreatedGroup: (() -> Unit)? = null) {
+		if (client.post("$domain/chat/invite") {
+			contentType(ContentType.Application.Json)
+			setBody(userName)
+			parameter("id", chat.id)
+		}.status == HttpStatusCode.Created)
+			onCreatedGroup?.invoke()
+	}
+	
 	suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
 		chat.messages.add(message)
 		

@@ -124,7 +124,6 @@ fun updateUser() {
 	}
 }
 
-
 @OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
 	scope.launch {
@@ -143,6 +142,13 @@ fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
 fun updateChat(chat: Chat) {
 	scope.launch {
 		Client.updateChat(chat)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun inviteChat(userName: String, chat: Chat, onCreatedGroup: (() -> Unit)? = null) {
+	scope.launch {
+		Client.inviteChat(userName, chat, onCreatedGroup)
 	}
 }
 
