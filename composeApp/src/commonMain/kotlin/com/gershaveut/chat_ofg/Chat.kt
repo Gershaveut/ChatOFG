@@ -28,9 +28,7 @@ fun OpenChat(chat: Chat) {
 	Column {
 		// Message
 		val messagesState = rememberLazyListState()
-		
-		val messages = remember { mutableStateListOf<Message>() }
-		
+		var messages by remember { mutableStateOf(mutableListOf<Message>()) }
 		val scope = rememberCoroutineScope()
 		
 		fun scroll() {
@@ -43,8 +41,7 @@ fun OpenChat(chat: Chat) {
 		messages.addAll(chat.messages)
 		
 		sync {
-			messages.clear()
-			messages.addAll(Client.chats.find { it.getNameClient() == chat.getNameClient() }!!.messages)
+			messages = Client.chats.find { it.id == chat.id }!!.messages
 			
 			if (messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
 				readMessages(chat)
@@ -207,10 +204,6 @@ fun MessageStatusIcon(messageStatus: MessageStatus) {
 	when (messageStatus) {
 		MessageStatus.UnSend -> Text("?", color = Colors.BACKGROUND_VARIANT, fontSize = size)
 		MessageStatus.UnRead -> Text("!", color = Colors.BACKGROUND_VARIANT, fontSize = size)
-		MessageStatus.Read -> Text(
-			"!!",
-			color = MaterialTheme.colors.primaryVariant,
-			fontSize = size
-		)
+		MessageStatus.Read -> Text("!!", color = MaterialTheme.colors.primaryVariant, fontSize = size)
 	}
 }
