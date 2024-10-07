@@ -281,7 +281,6 @@ fun Route.chat() {
 					}
 					
 					call.respondText("Group created", status = HttpStatusCode.Created)
-					call.respond(newChat)
 				}
 			} else {
 				call.respondText("User $name already exists", status = HttpStatusCode.NotAcceptable)
@@ -307,6 +306,19 @@ fun Route.chat() {
 			}
 			
 			call.respondText("User $name kicked", status = HttpStatusCode.Accepted)
+		}
+	}
+	
+	post("$path/admin") {
+		val chat = findChat()
+		val name = call.receive<String>()
+		
+		chatAccess {
+			chat.members[chat.members.keys.find { it.name == name }!!] = true
+			
+			chat.members.forEach {
+				sync(it.key.name)
+			}
 		}
 	}
 }

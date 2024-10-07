@@ -174,6 +174,13 @@ fun kickChat(userName: String, chat: Chat) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
+fun adminChat(userName: String, chat: Chat) {
+	scope.launch {
+		Client.adminChat(userName, chat)
+	}
+}
+
+@OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
 	scope.launch {
 		Client.readMessages(chat)

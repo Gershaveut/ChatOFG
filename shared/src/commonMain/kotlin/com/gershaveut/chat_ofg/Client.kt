@@ -140,6 +140,14 @@ object Client {
 		}
 	}
 	
+	suspend fun adminChat(userName: String, chat: Chat) {
+		client.post("$domain/chat/admin") {
+			contentType(ContentType.Application.Json)
+			setBody(userName)
+			parameter("id", chat.id)
+		}
+	}
+	
 	suspend fun inviteChat(userName: String, chat: Chat, onCreatedGroup: (() -> Unit)? = null) {
 		if (client.post("$domain/chat/invite") {
 			contentType(ContentType.Application.Json)

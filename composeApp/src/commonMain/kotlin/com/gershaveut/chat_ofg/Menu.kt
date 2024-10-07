@@ -192,6 +192,8 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								
 								TextButton(
 									{
+										expanded = false
+										
 										showInfo.value = true
 									},
 									modifier = Modifier.width(widthButton)
@@ -219,6 +221,8 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								
 								TextButton(
 									{
+										expanded = false
+										
 										refreshUsers {
 											users = Client.users
 										}
@@ -234,6 +238,8 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								
 								TextButton(
 									{
+										expanded = false
+										
 										openChatSettings.value = true
 									},
 									modifier = Modifier.width(widthButton)
@@ -241,9 +247,11 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 									Text("Chat settings")
 								}
 								
-								if (openChat.value!!.userAccess(clientUser)) {
+								if (openChat.value!!.userAccess(clientUser) && openChat.value!!.chatType != ChatType.PrivateChat) {
 									TextButton(
 										{
+											expanded = false
+											
 											deleteChat(openChat.value!!) {
 												openChat.value = null
 											}
@@ -252,15 +260,17 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 									) {
 										Text("Delete chat")
 									}
-								} else {
-									TextButton(
-										{
-											//TODO: Leave chat
-										},
-										modifier = Modifier.width(widthButton)
-									) {
-										Text("Leave chat")
-									}
+								}
+								
+								TextButton(
+									{
+										expanded = false
+										
+										//TODO: Leave chat
+									},
+									modifier = Modifier.width(widthButton)
+								) {
+									Text("Leave chat")
 								}
 							}
 						}

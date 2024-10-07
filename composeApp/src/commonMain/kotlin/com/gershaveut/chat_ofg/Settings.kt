@@ -146,6 +146,8 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 											
 											TextButton(
 												{
+													expanded = false
+													
 													userInfo = member.key
 												},
 												modifier = Modifier.width(widthButton)
@@ -153,9 +155,26 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 												Text("Show Info")
 											}
 											
+											Divider()
+											
 											if (admin) {
+												if (!member.value) {
+													TextButton(
+														{
+															expanded = false
+															
+															adminChat(member.key.name, chat)
+														},
+														modifier = Modifier.width(widthButton)
+													) {
+														Text("Give admin")
+													}
+												}
+												
 												TextButton(
 													{
+														expanded = false
+														
 														kickChat(member.key.name, chat)
 													},
 													modifier = Modifier.width(widthButton)
