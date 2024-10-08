@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
+import com.gershaveut.chat_ofg.data.MessageType
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
@@ -53,33 +54,24 @@ fun OpenChat(chat: Chat) {
 		
 		LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
 			itemsIndexed(messages) { index, message ->
-				// Message Data
-				if (index <= 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
-					val data = message.sendTime.timeToLocalDateTime().date
-					
-					val dataText =
-						if (data.year == getCurrentDataTime().year)
-							"${data.dayOfMonth} ${data.month.name}"
-						else
-							data.customToString()
-					
-					Row(
-						horizontalArrangement = Arrangement.Center,
-						modifier = Modifier.fillMaxWidth()
-					) {
-						Box(
-							modifier = Modifier.padding(5.dp).padding(top = 0.dp)
-								.background(
-									color = Colors.BACKGROUND_SECONDARY,
-									shape = MaterialTheme.shapes.medium
-								)
-						) {
-							Text(dataText, modifier = Modifier.padding(10.dp, 5.dp))
-						}
+				if (message.messageType == MessageType.System) {
+					SystemMessage(message.text)
+				} else {
+					// Message Data
+					if (index <= 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
+						val data = message.sendTime.timeToLocalDateTime().date
+						
+						val dataText =
+							if (data.year == getCurrentDataTime().year)
+								"${data.dayOfMonth} ${data.month.name}"
+							else
+								data.customToString()
+						
+						SystemMessage(dataText)
 					}
+					
+					Message(message, chat, messages, pinnedMessage)
 				}
-				
-				Message(message, chat, messages, pinnedMessage)
 			}
 		}
 		
@@ -106,6 +98,24 @@ fun OpenChat(chat: Chat) {
 					pinnedMessage.value = null
 				}
 			}
+		}
+	}
+}
+
+@Composable
+fun SystemMessage(text: String) {
+	Row(
+		horizontalArrangement = Arrangement.Center,
+		modifier = Modifier.fillMaxWidth()
+	) {
+		Box(
+			modifier = Modifier.padding(5.dp).padding(top = 0.dp)
+				.background(
+					color = Colors.BACKGROUND_SECONDARY,
+					shape = MaterialTheme.shapes.medium
+				)
+		) {
+			Text(text, modifier = Modifier.padding(10.dp, 5.dp))
 		}
 	}
 }

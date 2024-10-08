@@ -262,6 +262,8 @@ fun Route.chat() {
 			
 			sync(userName())
 			
+			chat.messages.add(Message(user().toUserInfo(), "${userName()} leaved", messageType = MessageType.System))
+			
 			chat.members.keys.forEach { member ->
 				users.find { it.name == member.name }?.let { user ->
 					val members = user.chats.find { it.id == chat.id }!!.members
@@ -281,9 +283,19 @@ fun Route.chat() {
 		val chat = findChat()
 		
 		if (chat.chatType == ChatType.Group) {
-			updateChat.setName(updateChat.getName().removeMax())
-			updateChat.description?.let {
-				updateChat.description = updateChat.description!!.removeMax(300)
+			val newName = updateChat.getName().removeMax()
+			val newDescription = updateChat.description?.removeMax()
+			
+			if (chat.getName() != newName) {
+				updateChat.setName(newName)
+				chat.messages.add(Message(user().toUserInfo(), "Update name to $newName by ${userName()}", messageType = MessageType.System))
+			}
+			
+			newDescription?.let {
+				if (chat.description != newDescription) {
+					updateChat.description = newDescription
+					chat.messages.add(Message(user().toUserInfo(), "Update description to $newDescription by ${userName()}", messageType = MessageType.System))
+				}
 			}
 			
 			chatAccess {
@@ -312,6 +324,8 @@ fun Route.chat() {
 					invitedUser.chats.add(chat)
 					
 					sync(name)
+					
+					chat.messages.add(Message(user().toUserInfo(), "${userName()} Invited", messageType = MessageType.System))
 					
 					users.forEach { user ->
 						user.chats.find { it.id == chat.id }?.members?.also { members ->
@@ -350,6 +364,8 @@ fun Route.chat() {
 			
 			sync(name)
 			
+			chat.messages.add(Message(user().toUserInfo(), "${userName()} kicked", messageType = MessageType.System))
+			
 			users.forEach { user ->
 				user.chats.find { it.id == chat.id }?.members?.also { members ->
 					members.remove(members.keys.find { it.name == name })
@@ -368,6 +384,8 @@ fun Route.chat() {
 		
 		chatAccess {
 			chat.members[chat.members.keys.find { it.name == name }!!] = true
+			
+			chat.messages.add(Message(user().toUserInfo(), "${userName()} give admin $name", messageType = MessageType.System))
 			
 			chat.members.forEach {
 				sync(it.key.name)

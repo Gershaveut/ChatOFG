@@ -11,5 +11,6 @@ data class Message(
 	val sendTime: Long = Clock.System.now().epochSeconds,
 	var messageStatus: MessageStatus = MessageStatus.UnRead,
 	var modified: Boolean = false,
+	val messageType: MessageType = MessageType.Default,
 	val id: String = uuid4().toString(),
 )
