@@ -181,14 +181,31 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
 							}
 							
+							var selectInvite by remember { mutableStateOf(false) }
+							
+							if (selectInvite) {
+								SelectUsers(
+									"Invite user",
+									users.apply { removeAll(openChat.value!!.members.keys) },
+									{
+										selectInvite = false
+									}) { members ->
+									selectInvite = false
+									
+									members.forEach {
+										inviteChat(it.name, openChat.value!!) {
+											openChat.value = null
+										}
+									}
+								}
+							}
+							
 							DropdownMenu(
 								modifier = Modifier.padding(horizontal = 5.dp),
 								expanded = expanded,
 								onDismissRequest = { expanded = false }
 							) {
 								val widthButton = 150.dp
-								
-								var selectInvite by remember { mutableStateOf(false) }
 								
 								TextButton(
 									{
@@ -203,23 +220,6 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 								
 								sync {
 									openChat.value = Client.chats.find { it.id == openChat.value!!.id }
-								}
-								
-								if (selectInvite) {
-									SelectUsers(
-										"Invite user",
-										users.apply { removeAll(openChat.value!!.members.keys) },
-										{
-											selectInvite = false
-										}) { members ->
-										selectInvite = false
-										
-										members.forEach {
-											inviteChat(it.name, openChat.value!!) {
-												openChat.value = null
-											}
-										}
-									}
 								}
 								
 								TextButton(

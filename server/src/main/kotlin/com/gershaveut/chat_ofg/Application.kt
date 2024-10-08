@@ -211,6 +211,7 @@ fun Route.chat() {
 		
 		chat.messages.find { it.id == id }!!.apply {
 			text = call.receive()
+			modified = true
 			
 			chat.members.keys.forEach {
 				if (it.name != userName())

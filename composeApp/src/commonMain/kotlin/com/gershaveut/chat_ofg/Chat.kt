@@ -96,7 +96,10 @@ fun OpenChat(chat: Chat) {
 					
 					scroll()
 				} else {
-					messages.find { it.id == pinnedMessage.value!!.id }!!.text = message.text
+					messages.find { it.id == pinnedMessage.value!!.id }!!.apply {
+						text = message.text
+						modified = true
+					}
 					
 					editMessages(message.text, pinnedMessage.value!!, chat)
 					
@@ -159,24 +162,24 @@ fun SendRow(onSend: (message: Message) -> Unit) {
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinnedMessage: MutableState<Message?>) {
+	var showInfo by remember { mutableStateOf(false) }
+	
+	if (showInfo)
+		ChatDialog("User Info", {
+			showInfo = false
+		}) {
+			ShowInfo(message.creator.name)
+		}
+	
 	var expanded by remember { mutableStateOf(false) }
 	
-	Column {
+	Column(horizontalAlignment = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start) {
 		DropdownMenu(
 			modifier = Modifier.padding(horizontal = 5.dp),
 			expanded = expanded,
 			onDismissRequest = { expanded = false }
 		) {
 			val widthButton = 150.dp
-			
-			var showInfo by remember { mutableStateOf(false) }
-			
-			if (showInfo)
-				ChatDialog("User Info", {
-					showInfo = false
-				}) {
-					ShowInfo(message.creator.name)
-				}
 			
 			TextButton(
 				{
@@ -218,10 +221,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 			}
 		}
 		
-		Row(
-			modifier = Modifier.fillMaxWidth(),
-			horizontalArrangement = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Arrangement.End else Arrangement.Start
-		) {
+		Row(modifier = Modifier.fillMaxWidth()) {
 			Column(
 				modifier = Modifier.sizeIn(maxWidth = 350.dp).padding(5.dp).padding(top = 0.dp).background(
 					color = if (clientUser.name == message.creator.name) Colors.MY_MESSAGE else Colors.OTHERS_MESSAGE,
