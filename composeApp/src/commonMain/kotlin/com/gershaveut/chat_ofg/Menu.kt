@@ -300,7 +300,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					ChatDialog("Account", {
 						showInfo.value = false
 					}) {
-						ShowInfo(clientUser)
+						ShowInfo(clientUser.name)
 					}
 				}
 			}
@@ -416,25 +416,16 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 }
 
 @Composable
-fun ShowInfo(userInfo: UserInfo) {
-	var sign by remember { mutableStateOf("") }
-	var description: String? by remember { mutableStateOf(null) }
+fun ShowInfo(userName: String) {
+	var userInfo: UserInfo? by remember { mutableStateOf(null) }
 	
-	if (sign == "") {
-		sign = "...".also {
-			getUser(userInfo.name) {
-				sign = it.lastLoginTime.timeToLocalDateTime().customToString()
-			}
-		}
-		
-		description = "...".also {
-			getUser(userInfo.name) {
-				description = it.description
-			}
+	if (userInfo == null) {
+		getUser(userName) {
+			userInfo = it
 		}
 	}
 	
-	ShowInfo(userInfo.name, sign, description, userInfo.createTime)
+	ShowInfo(userInfo?.displayName ?: "...", if (userInfo == null) "..." else "Last login: ${userInfo!!.lastLoginTime.timeToLocalDateTime().customToString()} \n@${userInfo!!.name}", userInfo?.description, userInfo?.createTime ?: 0)
 }
 
 @Composable
@@ -448,7 +439,7 @@ fun ShowInfo(chat: Chat) {
 		
 		ShowInfo(chat.getNameClient(), sign, description, chat.createTime)
 	} else {
-		ShowInfo(chat.members.keys.find { it.name == chat.getNameClient() }!!)
+		ShowInfo(chat.members.keys.find { it.name == chat.getNameClient() }!!.name)
 	}
 }
 

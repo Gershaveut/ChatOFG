@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
@@ -28,7 +29,7 @@ fun OpenChat(chat: Chat) {
 	Column {
 		// Message
 		val messagesState = rememberLazyListState()
-		var messages by remember { mutableStateOf(mutableListOf<Message>()) }
+		val messages = remember { chat.messages.toMutableStateList() }
 		val scope = rememberCoroutineScope()
 		
 		fun scroll() {
@@ -38,10 +39,9 @@ fun OpenChat(chat: Chat) {
 			}
 		}
 		
-		messages.addAll(chat.messages)
-		
 		sync {
-			messages = Client.chats.find { it.id == chat.id }!!.messages
+			messages.clear()
+			messages.addAll(Client.chats.find { it.id == chat.id }!!.messages)
 			
 			if (messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
 				readMessages(chat)
@@ -49,11 +49,10 @@ fun OpenChat(chat: Chat) {
 			}
 		}
 		
+		val pinnedMessage = remember { mutableStateOf<Message?>(null) }
+		
 		LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
 			itemsIndexed(messages) { index, message ->
-				val chatBoxModifier =
-					Modifier.sizeIn(maxWidth = 350.dp).padding(top = 5.dp, start = 5.dp, end = 5.dp)
-				
 				// Message Data
 				if (index <= 0 || message.sendTime.timeToLocalDateTime().date != messages[index - 1].sendTime.timeToLocalDateTime().date) {
 					val data = message.sendTime.timeToLocalDateTime().date
@@ -80,20 +79,49 @@ fun OpenChat(chat: Chat) {
 					}
 				}
 				
-				Message(message, chat, messages)
+				Message(message, chat, messages, pinnedMessage)
 			}
 		}
 		
-		SendRow(chat) {
-			messages.add(it)
+		Column {
+			if (pinnedMessage.value != null) {
+				PinnedMessage(pinnedMessage)
+			}
 			
-			scroll()
+			SendRow { message ->
+				if (pinnedMessage.value == null) {
+					messages.add(message)
+					
+					sendMessage(message, chat)
+					
+					scroll()
+				} else {
+					messages.find { it.id == pinnedMessage.value!!.id }!!.text = message.text
+					
+					editMessages(message.text, pinnedMessage.value!!, chat)
+					
+					pinnedMessage.value = null
+				}
+			}
 		}
 	}
 }
 
 @Composable
-fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
+fun PinnedMessage(pinnedMessage: MutableState<Message?>) {
+	Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+		Text(pinnedMessage.value!!.text)
+		
+		IconButton({
+			pinnedMessage.value = null
+		}) {
+			Icon(Icons.Filled.Close, "Close")
+		}
+	}
+}
+
+@Composable
+fun SendRow(onSend: (message: Message) -> Unit) {
 	Row {
 		var messageText by remember { mutableStateOf("") }
 		
@@ -118,21 +146,19 @@ fun SendRow(chat: Chat, onSend: (message: Message) -> Unit) {
 						)
 					onSend(message)
 					
-					sendMessage(message, chat)
-					
 					messageText = ""
 				}
 			},
 			modifier = Modifier.size(50.dp)
 		) {
-			Icon(Icons.AutoMirrored.Outlined.Send, null)
+			Icon(Icons.AutoMirrored.Outlined.Send, null, modifier = Modifier.padding(10.dp))
 		}
 	}
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Message(message: Message, chat: Chat, messages: MutableList<Message>) {
+fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinnedMessage: MutableState<Message?>) {
 	var expanded by remember { mutableStateOf(false) }
 	
 	Column {
@@ -143,17 +169,52 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>) {
 		) {
 			val widthButton = 150.dp
 			
+			var showInfo by remember { mutableStateOf(false) }
+			
+			if (showInfo)
+				ChatDialog("User Info", {
+					showInfo = false
+				}) {
+					ShowInfo(message.creator.name)
+				}
+			
 			TextButton(
 				{
 					expanded = false
 					
-					messages.remove(message)
-					
-					deletedMessages(message, chat)
+					showInfo = true
 				},
 				modifier = Modifier.width(widthButton)
 			) {
-				Text("Delete Message")
+				Text("Show Info")
+			}
+			
+			if (chat.userAccess(clientUser) && message.creator.name == clientUser.name) {
+				Divider()
+				
+				TextButton(
+					{
+						expanded = false
+						
+						pinnedMessage.value = message
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text("Edit Message")
+				}
+				
+				TextButton(
+					{
+						expanded = false
+						
+						messages.remove(message)
+						
+						deletedMessages(message, chat)
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text("Delete Message")
+				}
 			}
 		}
 		
@@ -195,6 +256,13 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>) {
 						end = 10.dp
 					)
 				) {
+					if (message.modified)
+						Text(
+							"edited",
+							color = Colors.BACKGROUND_VARIANT,
+							fontSize = 10.sp
+						)
+					
 					Text(
 						message.sendTime.timeToLocalDateTime().time.toString(),
 						color = Colors.BACKGROUND_VARIANT,

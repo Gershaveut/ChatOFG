@@ -120,13 +120,13 @@ object Client {
 		client.post("$domain/chat/update") {
 			contentType(ContentType.Application.Json)
 			setBody(chat)
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
 		}
 	}
 	
 	suspend fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 		if (client.post("$domain/chat/delete") {
-				parameter("id", chat.id)
+				parameter("chatId", chat.id)
 			}.status == HttpStatusCode.Accepted) {
 			onDeleted?.invoke(chat)
 		}
@@ -134,7 +134,7 @@ object Client {
 	
 	suspend fun leaveChat(chat: Chat, onLeaved: ((Chat) -> Unit)? = null) {
 		if (client.post("$domain/chat/leave") {
-				parameter("id", chat.id)
+				parameter("chatId", chat.id)
 			}.status == HttpStatusCode.Accepted) {
 			onLeaved?.invoke(chat)
 		}
@@ -144,7 +144,7 @@ object Client {
 		client.post("$domain/chat/kick") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
 		}
 	}
 	
@@ -152,7 +152,7 @@ object Client {
 		client.post("$domain/chat/admin") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
 		}
 	}
 	
@@ -160,7 +160,7 @@ object Client {
 		if (client.post("$domain/chat/invite") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
 		}.status == HttpStatusCode.Created)
 			onCreatedGroup?.invoke()
 	}
@@ -171,7 +171,7 @@ object Client {
 		if (client.post("$domain/chat/message") {
 				contentType(ContentType.Application.Json)
 				setBody(message)
-				parameter("id", chat.id)
+				parameter("chatId", chat.id)
 			}.status == HttpStatusCode.Created) {
 			onCreated?.let { it(message) }
 		}
@@ -181,7 +181,16 @@ object Client {
 		client.post("$domain/chat/message/delete") {
 			contentType(ContentType.Application.Json)
 			setBody(message)
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
+		}
+	}
+	
+	suspend fun editMessage(newText: String, message: Message, chat: Chat) {
+		client.post("$domain/chat/message/edit") {
+			contentType(ContentType.Application.Json)
+			setBody(newText)
+			parameter("chatId", chat.id)
+			parameter("messageId", message.id)
 		}
 	}
 	
@@ -193,7 +202,7 @@ object Client {
 		}
 		
 		client.post("$domain/chat/read") {
-			parameter("id", chat.id)
+			parameter("chatId", chat.id)
 		}
 	}
 	

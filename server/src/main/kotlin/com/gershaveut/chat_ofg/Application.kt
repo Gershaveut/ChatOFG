@@ -205,6 +205,22 @@ fun Route.chat() {
 		call.respondText("Message deleted", status = HttpStatusCode.Accepted)
 	}
 	
+	post("$path/message/edit") {
+		val chat = findChat()
+		val id = call.parameters["messageId"].toString()
+		
+		chat.messages.find { it.id == id }!!.apply {
+			text = call.receive()
+			
+			chat.members.keys.forEach {
+				if (it.name != userName())
+					sync(it.name)
+			}
+			
+			call.respondText("Message edited", status = HttpStatusCode.Accepted)
+		}
+	}
+	
 	post("$path/read") {
 		val chat = findChat()
 		
@@ -364,7 +380,7 @@ fun PipelineContext<Unit, ApplicationCall>.user() =
 	users.find { it.name == call.principal<UserIdPrincipal>()!!.name }!!
 
 fun PipelineContext<Unit, ApplicationCall>.findChat() =
-	user().chats.find { it.id == call.parameters["id"].toString() }!!
+	user().chats.find { it.id == call.parameters["chatId"].toString() }!!
 
 suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend () -> Unit) {
 	if (findChat().members.mapKeys { it.key.name }[userName()]!!)

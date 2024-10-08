@@ -102,7 +102,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 					ChatDialog("User Info", {
 						userInfo = null
 					}) {
-						ShowInfo(userInfo!!)
+						ShowInfo(userInfo!!.name)
 					}
 				
 				if (chat.chatType == ChatType.Group) {

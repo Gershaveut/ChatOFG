@@ -1,5 +1,6 @@
 package com.gershaveut.chat_ofg.data
 
+import com.benasher44.uuid.uuid4
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
@@ -9,5 +10,6 @@ data class Message(
 	var text: String,
 	val sendTime: Long = Clock.System.now().epochSeconds,
 	var messageStatus: MessageStatus = MessageStatus.UnRead,
-	var modified: Boolean = false
+	var modified: Boolean = false,
+	val id: String = uuid4().toString(),
 )
