@@ -123,7 +123,7 @@ fun Route.user() {
 		val user = call.receive<User>()
 		
 		if (user.name == userName()) {
-			users[users.indexOf(users.find { it.name == user().name })] = user
+			users[users.indexOf(users.find { it.name == user.name })] = user
 			
 			call.respondText("User updated", status = HttpStatusCode.Accepted)
 		} else {
@@ -164,77 +164,82 @@ fun Route.chat() {
 			
 			chat.members.keys.forEach { user ->
 				users.find { it.name == user.name }?.let {
-					it.chats.add(chat)
+					it.chats.add(Chat(members = chat.members, name = chat.getName()))
 					sync(it.name)
 				}
 			}
 			
 			call.respondText("Created chat", status = HttpStatusCode.Created)
 		} else {
-			call.respondText(
-				"There are less than two participants in the chat",
-				status = HttpStatusCode.NotAcceptable
-			)
+			call.respondText("There are less than two participants in the chat", status = HttpStatusCode.NotAcceptable)
 		}
 	}
 	
 	post("$path/message") {
 		val chat = findChat()
 		
-		chat.messages.add(call.receive<Message>().apply {
-			messageStatus = MessageStatus.UnRead
-			text = text.removeMax(300)
-		})
-		call.respondText("Sent message", status = HttpStatusCode.Created)
-		
-		chat.members.keys.forEach {
-			sync(it.name)
+		chatAccess {
+			chat.messages.add(call.receive<Message>().apply {
+				messageStatus = MessageStatus.UnRead
+				text = text.removeMax(300)
+			})
+			call.respondText("Sent message", status = HttpStatusCode.Created)
+			
+			chat.members.keys.forEach {
+				sync(it.name)
+			}
 		}
 	}
 	
 	post("$path/message/delete") {
 		val chat = findChat()
 		
-		chat.messages.remove(call.receive())
-		
-		chat.members.keys.forEach {
-			if (it.name != userName())
-				sync(it.name)
-		}
-		
-		call.respondText("Message deleted", status = HttpStatusCode.Accepted)
-	}
-	
-	post("$path/message/edit") {
-		val chat = findChat()
-		val id = call.parameters["messageId"].toString()
-		
-		chat.messages.find { it.id == id }!!.apply {
-			text = call.receive()
-			modified = true
+		chatAccess {
+			chat.messages.remove(call.receive())
 			
 			chat.members.keys.forEach {
 				if (it.name != userName())
 					sync(it.name)
 			}
 			
-			call.respondText("Message edited", status = HttpStatusCode.Accepted)
+			call.respondText("Message deleted", status = HttpStatusCode.Accepted)
+		}
+	}
+	
+	post("$path/message/edit") {
+		val chat = findChat()
+		val id = call.parameters["messageId"].toString()
+		
+		chatAccess {
+			chat.messages.find { it.id == id }!!.apply {
+				text = call.receive()
+				modified = true
+				
+				chat.members.keys.forEach {
+					if (it.name != userName())
+						sync(it.name)
+				}
+				
+				call.respondText("Message edited", status = HttpStatusCode.Accepted)
+			}
 		}
 	}
 	
 	post("$path/read") {
 		val chat = findChat()
 		
-		chat.messages.forEach {
-			if (it.creator.name != userName()) {
-				it.messageStatus = MessageStatus.Read
+		chatAccess {
+			chat.messages.forEach {
+				if (it.creator.name != userName()) {
+					it.messageStatus = MessageStatus.Read
+				}
 			}
-		}
-		call.respondText("Messages read", status = HttpStatusCode.Accepted)
-		
-		chat.members.keys.forEach {
-			if (it.name != userName())
-				sync(it.name)
+			call.respondText("Messages read", status = HttpStatusCode.Accepted)
+			
+			chat.members.keys.forEach {
+				if (it.name != userName())
+					sync(it.name)
+			}
 		}
 	}
 	
@@ -257,25 +262,23 @@ fun Route.chat() {
 		val chat = findChat()
 		val leaveUser = user()
 		
-		chatAccess {
-			leaveUser.chats.remove(chat)
-			
-			sync(userName())
-			
-			chat.messages.add(Message(user().toUserInfo(), "${userName()} leaved", messageType = MessageType.System))
-			
-			chat.members.keys.forEach { member ->
-				users.find { it.name == member.name }?.let { user ->
-					val members = user.chats.find { it.id == chat.id }!!.members
-					
-					members.remove(members.keys.find { it.name == leaveUser.name })
-					
-					sync(user.name)
-				}
+		leaveUser.chats.remove(chat)
+		
+		sync(userName())
+		
+		chat.messages.add(Message(user().toUserInfo(), "${userName()} leaved", messageType = MessageType.System))
+		
+		chat.members.keys.forEach { member ->
+			users.find { it.name == member.name }?.let { user ->
+				val members = user.chats.find { it.id == chat.id }!!.members
+				
+				members.remove(members.keys.find { it.name == leaveUser.name })
+				
+				sync(user.name)
 			}
-			
-			call.respondText("User leaved", status = HttpStatusCode.Accepted)
 		}
+		
+		call.respondText("User leaved", status = HttpStatusCode.Accepted)
 	}
 	
 	post("$path/update") {
@@ -401,8 +404,15 @@ fun PipelineContext<Unit, ApplicationCall>.user() =
 fun PipelineContext<Unit, ApplicationCall>.findChat() =
 	user().chats.find { it.id == call.parameters["chatId"].toString() }!!
 
-suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend () -> Unit) {
+suspend fun PipelineContext<Unit, ApplicationCall>.chatAccessAdmin(onAccept: suspend () -> Unit) {
 	if (findChat().members.mapKeys { it.key.name }[userName()]!!)
+		onAccept()
+	else
+		accessDenied()
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend () -> Unit) {
+	if (!user().chats.any { it.id == call.parameters["chatId"].toString() })
 		onAccept()
 	else
 		accessDenied()
