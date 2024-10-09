@@ -4,26 +4,17 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
-import io.ktor.client.plugins.auth.providers.basic
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.webSocket
-import io.ktor.client.request.get
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.websocket.Frame
-import io.ktor.websocket.readText
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.auth.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.websocket.*
 
 object Client {
 	var host = HOST_DEFAULT
@@ -93,108 +84,194 @@ object Client {
 	suspend fun getChats(): MutableList<Chat> = client.get("$domain/chats").body()
 	suspend fun getUser(name: String): UserInfo = client.get("$domain/user/$name").body()
 	
-	suspend fun updateUser() {
+	suspend fun updateUser(onAccepted: (() -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
 		client.post("$domain/user/update") {
 			contentType(ContentType.Application.Json)
 			setBody(user!!)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun updatePassword(password: String) {
+	suspend fun updatePassword(
+		password: String,
+		onAccepted: (() -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
 		client.post("$domain/user/password") {
 			contentType(ContentType.Application.Json)
 			setBody(password)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
-		if (client.post("$domain/chat") {
-				contentType(ContentType.Application.Json)
-				setBody(chat)
-			}.status == HttpStatusCode.Created) {
-			onCreated?.invoke(chat)
+	suspend fun createChat(
+		chat: Chat,
+		onCreated: ((Chat) -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
+		client.post("$domain/chat") {
+			contentType(ContentType.Application.Json)
+			setBody(chat)
+		}.let {
+			if (it.status == HttpStatusCode.Created)
+				onCreated?.invoke(chat)
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun updateChat(chat: Chat) {
+	suspend fun updateChat(chat: Chat, onAccepted: (() -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
 		client.post("$domain/chat/update") {
 			contentType(ContentType.Application.Json)
 			setBody(chat)
 			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
-		if (client.post("$domain/chat/delete") {
-				parameter("chatId", chat.id)
-			}.status == HttpStatusCode.Accepted) {
-			onDeleted?.invoke(chat)
+	suspend fun deleteChat(
+		chat: Chat,
+		onDeleted: ((Chat) -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
+		client.post("$domain/chat/delete") {
+			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onDeleted?.invoke(chat)
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun leaveChat(chat: Chat, onLeaved: ((Chat) -> Unit)? = null) {
-		if (client.post("$domain/chat/leave") {
-				parameter("chatId", chat.id)
-			}.status == HttpStatusCode.Accepted) {
-			onLeaved?.invoke(chat)
+	suspend fun leaveChat(chat: Chat, onLeaved: ((Chat) -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
+		client.post("$domain/chat/leave") {
+			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onLeaved?.invoke(chat)
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun kickChat(userName: String, chat: Chat) {
+	suspend fun kickChat(
+		userName: String,
+		chat: Chat,
+		onAccepted: (() -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
 		client.post("$domain/chat/kick") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
 			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun adminChat(userName: String, chat: Chat) {
+	suspend fun adminChat(
+		userName: String,
+		chat: Chat,
+		onAccepted: (() -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
 		client.post("$domain/chat/admin") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
 			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted) {
+				onAccepted?.invoke()
+			} else {
+				onError?.invoke(it.body())
+			}
 		}
 	}
 	
-	suspend fun inviteChat(userName: String, chat: Chat, onCreatedGroup: (() -> Unit)? = null) {
-		if (client.post("$domain/chat/invite") {
+	suspend fun inviteChat(
+		userName: String,
+		chat: Chat,
+		onCreatedGroup: (() -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
+		client.post("$domain/chat/invite") {
 			contentType(ContentType.Application.Json)
 			setBody(userName)
 			parameter("chatId", chat.id)
-		}.status == HttpStatusCode.Created)
-			onCreatedGroup?.invoke()
-	}
-	
-	suspend fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
-		chat.messages.add(message)
-		
-		if (client.post("$domain/chat/message") {
-				contentType(ContentType.Application.Json)
-				setBody(message)
-				parameter("chatId", chat.id)
-			}.status == HttpStatusCode.Created) {
-			onCreated?.let { it(message) }
+		}.let {
+			if (it.status == HttpStatusCode.Created || it.status == HttpStatusCode.Accepted) {
+				onCreatedGroup?.invoke()
+			} else {
+				onError?.invoke(it.body())
+			}
 		}
 	}
 	
-	suspend fun deleteMessage(message: Message, chat: Chat) {
+	suspend fun sendMessage(
+		message: Message,
+		chat: Chat,
+		onCreated: ((Message) -> Unit)? = null,
+		onError: ((reason: String) -> Unit)? = null
+	) {
+		chat.messages.add(message)
+		
+		client.post("$domain/chat/message") {
+			contentType(ContentType.Application.Json)
+			setBody(message)
+			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Created) {
+				onCreated?.invoke(message)
+			} else {
+				onError?.invoke(it.body())
+			}
+		}
+	}
+	
+	suspend fun deleteMessage(message: Message, chat: Chat, onAccepted: (() -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
 		client.post("$domain/chat/message/delete") {
 			contentType(ContentType.Application.Json)
 			setBody(message)
 			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun editMessage(newText: String, message: Message, chat: Chat) {
+	suspend fun editMessage(newText: String, message: Message, chat: Chat, onAccepted: (() -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
 		client.post("$domain/chat/message/edit") {
 			contentType(ContentType.Application.Json)
 			setBody(newText)
 			parameter("chatId", chat.id)
 			parameter("messageId", message.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	
-	suspend fun readMessages(chat: Chat) {
+	suspend fun readMessages(chat: Chat, onAccepted: (() -> Unit)? = null, onError: ((reason: String) -> Unit)? = null) {
 		chat.messages.forEach {
 			if (it.creator.name != user!!.name) {
 				it.messageStatus = MessageStatus.Read
@@ -203,6 +280,11 @@ object Client {
 		
 		client.post("$domain/chat/read") {
 			parameter("chatId", chat.id)
+		}.let {
+			if (it.status == HttpStatusCode.Accepted)
+				onAccepted?.invoke()
+			else
+				onError?.invoke(it.body())
 		}
 	}
 	

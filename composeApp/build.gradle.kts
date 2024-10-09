@@ -58,6 +58,7 @@ kotlin {
             implementation(projects.shared)
             implementation(libs.kotlinx.datetime)
             implementation("dev.chrisbanes.material3:material3-window-size-class-multiplatform:0.5.0")
+            implementation("io.github.aakira:napier:2.7.1")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

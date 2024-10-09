@@ -246,7 +246,7 @@ fun Route.chat() {
 	post("$path/delete") {
 		val chat = findChat()
 		
-		chatAccess {
+		chatAccessAdmin {
 			chat.members.keys.forEach { user ->
 				users.find { it.name == user.name }?.let {
 					it.chats.remove(chat)
@@ -286,31 +286,44 @@ fun Route.chat() {
 		val chat = findChat()
 		
 		if (chat.chatType == ChatType.Group) {
-			val newName = updateChat.getName().removeMax()
-			val newDescription = updateChat.description?.removeMax()
-			
-			if (chat.getName() != newName) {
-				updateChat.setName(newName)
-				chat.messages.add(Message(user().toUserInfo(), "Update name to $newName by ${userName()}", messageType = MessageType.System))
-			}
-			
-			newDescription?.let {
-				if (chat.description != newDescription) {
-					updateChat.description = newDescription
-					chat.messages.add(Message(user().toUserInfo(), "Update description to $newDescription by ${userName()}", messageType = MessageType.System))
+			chatAccessAdmin {
+				val newName = updateChat.getName().removeMax()
+				val newDescription = updateChat.description?.removeMax()
+				
+				if (chat.getName() != newName) {
+					updateChat.setName(newName)
+					chat.messages.add(
+						Message(
+							user().toUserInfo(),
+							"Update name to $newName by ${userName()}",
+							messageType = MessageType.System
+						)
+					)
 				}
-			}
-			
-			chatAccess {
+				
+				newDescription?.let {
+					if (chat.description != newDescription) {
+						updateChat.description = newDescription
+						chat.messages.add(
+							Message(
+								user().toUserInfo(),
+								"Update description to $newDescription by ${userName()}",
+								messageType = MessageType.System
+							)
+						)
+					}
+				}
+				
+				
 				chat.members.keys.forEach { userInfo ->
 					users.find { it.name == userInfo.name }!!.let { user ->
 						user.chats[user.chats.indexOf(user.chats.find { it.id == chat.id })] =
 							updateChat
 					}
 				}
+				
+				call.respondText("Chat updated", status = HttpStatusCode.Accepted)
 			}
-			
-			call.respondText("Chat updated", status = HttpStatusCode.Accepted)
 		} else {
 			accessDenied()
 		}
@@ -362,7 +375,7 @@ fun Route.chat() {
 		val chat = findChat()
 		val name = call.receive<String>()
 		
-		chatAccess {
+		chatAccessAdmin {
 			users.find { it.name == name }!!.chats.remove(chat)
 			
 			sync(name)
@@ -385,7 +398,7 @@ fun Route.chat() {
 		val chat = findChat()
 		val name = call.receive<String>()
 		
-		chatAccess {
+		chatAccessAdmin {
 			chat.members[chat.members.keys.find { it.name == name }!!] = true
 			
 			chat.messages.add(Message(user().toUserInfo(), "${userName()} give admin $name", messageType = MessageType.System))
@@ -393,6 +406,8 @@ fun Route.chat() {
 			chat.members.forEach {
 				sync(it.key.name)
 			}
+			
+			call.respondText("Given admin $name", status = HttpStatusCode.Accepted)
 		}
 	}
 }
@@ -412,7 +427,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.chatAccessAdmin(onAccept: sus
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.chatAccess(onAccept: suspend () -> Unit) {
-	if (!user().chats.any { it.id == call.parameters["chatId"].toString() })
+	if (user().chats.any { it.id == call.parameters["chatId"].toString() })
 		onAccept()
 	else
 		accessDenied()
