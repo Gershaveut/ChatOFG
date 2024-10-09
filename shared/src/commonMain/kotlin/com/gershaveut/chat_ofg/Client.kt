@@ -229,8 +229,6 @@ object Client {
 		onCreated: ((Message) -> Unit)? = null,
 		onError: ((reason: String) -> Unit)? = null
 	) {
-		chat.messages.add(message)
-		
 		client.post("$domain/chat/message") {
 			contentType(ContentType.Application.Json)
 			setBody(message)
@@ -288,9 +286,8 @@ object Client {
 		}
 	}
 	
-	suspend fun sync() {
+	private suspend fun sync() {
 		chats = getChats()
-		users = getUsers()
 		
 		onSync?.invoke()
 	}

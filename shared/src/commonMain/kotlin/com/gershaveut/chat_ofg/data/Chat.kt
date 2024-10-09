@@ -12,7 +12,7 @@ data class Chat(
 	var messages: MutableList<Message> = mutableListOf(),
 	val createTime: Long = Clock.System.now().epochSeconds,
 	var description: String? = null,
-	val chatType: ChatType = if (members.count() < 3) ChatType.PrivateChat else ChatType.Group
+	val chatType: ChatType = if (members.count() > 2) ChatType.Group else ChatType.PrivateChat
 ) {
 	init {
 		if (chatType == ChatType.PrivateChat) {

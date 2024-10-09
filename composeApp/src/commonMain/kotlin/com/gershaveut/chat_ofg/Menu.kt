@@ -12,7 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.runtime.*
@@ -25,10 +24,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.gershaveut.chat_ofg.data.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
+fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, chats: MutableState<MutableList<Chat>>) {
 	val drawerState = rememberDrawerState(DrawerValue.Closed)
 	val showInfo = remember { mutableStateOf(false) }
 	
@@ -36,34 +36,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 	
 	ModalDrawer(
 		{
-			Column(modifier = Modifier.padding(5.dp)) {
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-					modifier = Modifier.fillMaxWidth().clickable {
-						scope.launch {
-							drawerState.close()
-						}
-						
-						showInfo.value = true
-					}) {
-					UserAvatar(clientUser.name, 60.dp)
-					
-					Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
-				}
-				
-				Column {
-					MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
-						user.value = null
-						Client.user = null
-						
-						Client.users.clear()
-						Client.chats.clear()
-					}
-					MenuButton("Settings", Icons.Filled.Settings) {
-						openSettings.value = true
-					}
-				}
-			}
+			NavigationMenu(scope, drawerState, showInfo, user, openSettings)
 		},
 		drawerState = drawerState
 	) {
@@ -74,7 +47,6 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 			if (openChat.value == null) {
 				var createChat by remember { mutableStateOf(false) }
 				
-				// Menu
 				TopAppBar(
 					title = { Text("ChatOFG") },
 					navigationIcon = {
@@ -100,21 +72,18 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					},
 					floatingActionButtonPosition = FabPosition.End
 				) {
-					var chats by remember { mutableStateOf(Client.chats) }
-					
 					sync {
-						chats = Client.chats
+						chats.value = Client.chats
 						
-						if (!chats.any { it.id == openChat.value?.id })
-							openChat.value = null
-					}
-					
-					refreshChats {
-						chats = Client.chats
+						// Close chat if deleted
+						if (openChat.value != null) {
+							if (!Client.chats.any { it.id == openChat.value!!.id })
+								openChat.value = null
+						}
 					}
 					
 					LazyColumn {
-						items(chats, { it.id }) { chat ->
+						items(chats.value, { it.id }) { chat ->
 							Row(
 								modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
 									if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
@@ -148,145 +117,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 					}
 				}
 			} else {
-				val openChatSettings = remember { mutableStateOf(false) }
-				
-				if (!openChatSettings.value) {
-					// Chat
-					TopAppBar(
-						title = {
-							Row(verticalAlignment = Alignment.CenterVertically,
-								modifier = Modifier.fillMaxSize()
-									.clickable { showInfo.value = true }) {
-								Text(
-									openChat.value!!.getNameClient()
-								)
-							}
-						},
-						navigationIcon = {
-							IconButton({
-								openChat.value = null
-							}) {
-								Icon(
-									Icons.AutoMirrored.Filled.ArrowBack,
-									contentDescription = "Back"
-								)
-							}
-						},
-						actions = {
-							var expanded by remember { mutableStateOf(false) }
-							
-							IconButton({
-								expanded = true
-							}) {
-								Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
-							}
-							
-							var selectInvite by remember { mutableStateOf(false) }
-							
-							if (selectInvite) {
-								SelectUsers(
-									"Invite user",
-									users.apply { removeAll(openChat.value!!.members.keys) },
-									{
-										selectInvite = false
-									}) { members ->
-									selectInvite = false
-									
-									members.forEach {
-										inviteChat(it.name, openChat.value!!) {
-											openChat.value = null
-										}
-									}
-								}
-							}
-							
-							DropdownMenu(
-								modifier = Modifier.padding(horizontal = 5.dp),
-								expanded = expanded,
-								onDismissRequest = { expanded = false }
-							) {
-								val widthButton = 150.dp
-								
-								TextButton(
-									{
-										expanded = false
-										
-										showInfo.value = true
-									},
-									modifier = Modifier.width(widthButton)
-								) {
-									Text("Show Info")
-								}
-								
-								sync {
-									openChat.value = Client.chats.find { it.id == openChat.value!!.id }
-								}
-								
-								TextButton(
-									{
-										expanded = false
-										
-										refreshUsers {
-											users = Client.users
-										}
-										
-										selectInvite = true
-									},
-									modifier = Modifier.width(widthButton)
-								) {
-									Text("Invite User")
-								}
-								
-								Divider()
-								
-								TextButton(
-									{
-										expanded = false
-										
-										openChatSettings.value = true
-									},
-									modifier = Modifier.width(widthButton)
-								) {
-									Text("Chat settings")
-								}
-								
-								if (openChat.value!!.userAccess(clientUser)) {
-									TextButton(
-										{
-											expanded = false
-											
-											deleteChat(openChat.value!!) {
-												openChat.value = null
-											}
-										},
-										modifier = Modifier.width(widthButton)
-									) {
-										Text("Delete chat")
-									}
-								}
-								
-								if (openChat.value!!.chatType != ChatType.PrivateChat) {
-									TextButton(
-										{
-											expanded = false
-											
-											leaveChat(openChat.value!!) {
-												openChat.value = null
-											}
-										},
-										modifier = Modifier.width(widthButton)
-									) {
-										Text("Leave chat")
-									}
-								}
-							}
-						}
-					)
-					
-					OpenChat(openChat.value!!)
-				} else {
-					ChatSettings(openChatSettings, openChat.value!!, openChat.value!!.userAccess(clientUser))
-				}
+				OpenChat(openChat.value!!, showInfo, openChat)
 			}
 			
 			if (showInfo.value) {
@@ -303,6 +134,46 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>) {
 						ShowInfo(clientUser.name)
 					}
 				}
+			}
+		}
+	}
+}
+
+@Composable
+fun NavigationMenu(
+	scope: CoroutineScope,
+	drawerState: DrawerState,
+	showInfo: MutableState<Boolean>,
+	user: MutableState<UserInfo?>,
+	openSettings: MutableState<Boolean>
+) {
+	Column(modifier = Modifier.padding(5.dp)) {
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
+			modifier = Modifier.fillMaxWidth().clickable {
+				scope.launch {
+					drawerState.close()
+				}
+				
+				showInfo.value = true
+			}) {
+			UserAvatar(clientUser.name, 60.dp)
+			
+			Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
+		}
+		
+		Column {
+			MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
+				user.value = null
+				Client.user = null
+				
+				Client.users.clear()
+				Client.chats.clear()
+				
+				info("Exit")
+			}
+			MenuButton("Settings", Icons.Filled.Settings) {
+				openSettings.value = true
 			}
 		}
 	}
@@ -425,7 +296,14 @@ fun ShowInfo(userName: String) {
 		}
 	}
 	
-	ShowInfo(userInfo?.displayName ?: "...", if (userInfo == null) "..." else "Last login: ${userInfo!!.lastLoginTime.timeToLocalDateTime().customToString()} \n@${userInfo!!.name}", userInfo?.description, userInfo?.createTime ?: 0)
+	ShowInfo(
+		userInfo?.displayName ?: "...",
+		if (userInfo == null) "..." else "Last login: ${
+			userInfo!!.lastLoginTime.timeToLocalDateTime().customToString()
+		} \n@${userInfo!!.name}",
+		userInfo?.description,
+		userInfo?.createTime ?: 0
+	)
 }
 
 @Composable

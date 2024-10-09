@@ -11,7 +11,7 @@ data class User(
 	var lastLoginTime: Long = Clock.System.now().epochSeconds,
 	val createTime: Long = Clock.System.now().epochSeconds,
 	var password: String,
-	var chats: MutableList<Chat> = mutableListOf(),
+	var chats: MutableList<String> = mutableListOf(),
 ) {
 	fun toUserInfo() = UserInfo(this)
 }

@@ -58,21 +58,24 @@ fun AppAndroidPreview() {
 	}
 }
 
-@SuppressLint("UnrememberedMutableState")
+@SuppressLint("UnrememberedMutableState", "MutableCollectionMutableState")
 @Preview
 @Composable
 fun AppAndroidPreviewMenu() {
 	Preview {
-		Menu(mutableStateOf(user), mutableStateOf(false))
+		Menu(mutableStateOf(user), mutableStateOf(false), mutableStateOf(chats))
 	}
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview
 @Composable
 fun AppAndroidPreviewChatInfo() {
 	Preview {
 		OpenChat(
-			chats[0]
+			chats[0],
+			mutableStateOf(false),
+			mutableStateOf(null)
 		)
 	}
 }
