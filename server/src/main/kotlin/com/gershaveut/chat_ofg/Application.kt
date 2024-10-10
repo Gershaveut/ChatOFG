@@ -44,7 +44,7 @@ val sharedFlow = messageResponseFlow.asSharedFlow()
 
 val LOGGER = KtorSimpleLogger("com.gershaveut.Data")
 
-const val FILE_USERS_NAME = "User.txt"
+const val FILE_USERS_NAME = "Users.txt"
 const val FILE_CHATS_NAME = "Chats.txt"
 
 suspend fun main() = coroutineScope {
@@ -123,12 +123,14 @@ fun Application.module() {
 	}
 }
 
+private val json = Json { allowStructuredMapKeys = true }
+
 fun saveData() {
 	try {
 		LOGGER.info("Save data")
 		
-		File(FILE_USERS_NAME).writeText(Json.encodeToString(users))
-		File(FILE_CHATS_NAME).writeText(Json.encodeToString(chats))
+		File(FILE_USERS_NAME).writeText(json.encodeToString(users))
+		File(FILE_CHATS_NAME).writeText(json.encodeToString(chats))
 	} catch (e: Exception) {
 		LOGGER.error("Save data error")
 		LOGGER.debug(e.toString())
@@ -139,8 +141,8 @@ fun loadData() {
 	try {
 		LOGGER.info("Load data data")
 		
-		users = Json.decodeFromString(File(FILE_USERS_NAME).readText())
-		chats = Json.decodeFromString(File(FILE_CHATS_NAME).readText())
+		users = json.decodeFromString(File(FILE_USERS_NAME).readText())
+		chats = json.decodeFromString(File(FILE_CHATS_NAME).readText())
 	} catch (e: Exception) {
 		LOGGER.error("Load data error")
 		LOGGER.debug(e.toString())
