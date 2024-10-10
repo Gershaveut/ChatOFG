@@ -27,6 +27,8 @@ val sharedFlow = syncResponseFlow.asSharedFlow()
 
 val clientUser get() = Client.user!!
 
+lateinit var onAction: (String) -> Unit
+
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
@@ -48,24 +50,34 @@ fun App() {
 		
 		Column {
 			if (DEBUG) {
-				LazyRow (Modifier.background(color = Color.Gray).fillMaxWidth()) {
-					item {
-						val modifier = Modifier.padding(5.dp)
-						
-						Button({
-							sync()
-						}, modifier) {
-							Text("Sync")
-						}
-						
-						Button({
-							auth("User ${Random.nextUInt()}", "test") {
-								debug("Create user")
-								exit()
+				Row(Modifier.background(color = Color.Gray).fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+					LazyRow {
+						item {
+							val modifier = Modifier.padding(5.dp)
+							
+							Button({
+								sync()
+							}, modifier) {
+								Text("Sync")
 							}
-						}, modifier) {
-							Text("Create test user")
+							
+							Button({
+								auth("User ${Random.nextUInt()}", "test") {
+									debug("Create user")
+									exit()
+								}
+							}, modifier) {
+								Text("Create test user")
+							}
 						}
+					}
+					
+					var lastAction by remember { mutableStateOf("") }
+					
+					Text(lastAction)
+					
+					onAction = {
+						lastAction = it
 					}
 				}
 			}
@@ -133,10 +145,12 @@ fun debug(text: String) {
 
 fun info(text: String) {
 	Napier.i(text, tag = "Client")
+	onAction(text)
 }
 
 fun error(text: String) {
 	Napier.e(text, tag = "Client")
+	onAction(text)
 }
 
 fun exit() {

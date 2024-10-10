@@ -349,7 +349,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 		}
 	
 	var expanded by remember { mutableStateOf(false) }
-	
+	//TODO: Fix
 	Column(horizontalAlignment = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start) {
 		DropdownMenu(
 			modifier = Modifier.padding(horizontal = 5.dp),

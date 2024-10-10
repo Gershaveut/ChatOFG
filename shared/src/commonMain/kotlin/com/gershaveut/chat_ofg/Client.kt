@@ -15,6 +15,9 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.delay
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 object Client {
 	var host = HOST_DEFAULT
@@ -69,6 +72,8 @@ object Client {
 			}
 		} catch (_: Exception) {
 			onConnection(false)
+			
+			delay(1000)
 			handleConnection(onConnection)
 		}
 	}
