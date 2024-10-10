@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -28,7 +29,7 @@ import kotlinx.datetime.Clock
 fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
 	Column {
 		val messagesState = rememberLazyListState()
-		var messages by remember { mutableStateOf(chat.messages) } // TODO: Update bug on add or edit
+		var messages by remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
 		val scope = rememberCoroutineScope()
 		
 		fun scroll() {
@@ -191,58 +192,70 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 				}
 			)
 			
-			LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-				itemsIndexed(messages, { _, it -> it.id } ) { index, message ->
-					if (message.messageType == MessageType.System) {
-						SystemMessage(message.text)
-					} else {
-						// Message Data
-						val dataLast =
-							messages.findLast { last -> index > messages.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
-						
-						if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
-							val data = message.sendTime.timeToLocalDateTime().date
-							
-							val dataText =
-								if (data.year == getCurrentDataTime().year)
-									"${data.dayOfMonth} ${data.month.name}"
-								else
-									data.customToString()
-							
-							SystemMessage(dataText)
+			Scaffold(
+				floatingActionButton = {
+					if (messagesState.firstVisibleItemIndex < messages.count() - 10)
+						FloatingActionButton({
+							scroll()
+						}, modifier = Modifier.padding(bottom = 50.dp)) {
+							Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll")
+						}
+				}
+			) {
+				Column {
+					LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
+						itemsIndexed(messages, { _, it -> it.id }) { index, message ->
+							if (message.messageType == MessageType.System) {
+								SystemMessage(message.text)
+							} else {
+								// Message Data
+								val dataLast =
+									messages.findLast { last -> index > messages.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+								
+								if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
+									val data = message.sendTime.timeToLocalDateTime().date
+									
+									val dataText =
+										if (data.year == getCurrentDataTime().year)
+											"${data.dayOfMonth} ${data.month.name}"
+										else
+											data.customToString()
+									
+									SystemMessage(dataText)
+								}
+								
+								Message(message, chat, messages, pinnedMessage)
+							}
 						}
 						
-						Message(message, chat, messages, pinnedMessage)
+						// TODO: Scroll on open
 					}
-				}
-				
-				// TODO: Scroll on open
-			}
-			
-			Column {
-				if (pinnedMessage.value != null) {
-					PinnedMessage(pinnedMessage)
-				}
-				
-				SendRow { message ->
-					if (pinnedMessage.value == null) {
-						messages.add(message)
-						
-						sendMessage(message, chat)
-						
-						scroll()
-					} else {
-						pinnedMessage.value!!.apply {
-							text = message.text
-							modified = true
-							messageStatus = MessageStatus.UnSend
+					
+					if (pinnedMessage.value != null) {
+						PinnedMessage(pinnedMessage)
+					}
+					
+					SendRow { message ->
+						if (pinnedMessage.value == null) {
+							messages.add(message)
+							
+							sendMessage(message, chat)
+							
+							scroll()
+						} else {
+							pinnedMessage.value!!.apply {
+								text = message.text
+								modified = true
+								messageStatus = MessageStatus.UnSend
+							}
+							
+							messages[messages.indexOfFirst { it.id == pinnedMessage.value!!.id }] =
+								pinnedMessage.value!!
+							
+							editMessages(pinnedMessage.value!!, chat)
+							
+							pinnedMessage.value = null
 						}
-						
-						messages[messages.indexOfFirst { it.id == pinnedMessage.value!!.id }] = pinnedMessage.value!!
-						
-						editMessages(pinnedMessage.value!!, chat)
-						
-						pinnedMessage.value = null
 					}
 				}
 			}
