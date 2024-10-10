@@ -12,15 +12,21 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
+import kotlin.concurrent.timer
 
-val users = mutableListOf<User>()
-val chats = mutableListOf<Chat>()
+var users = mutableListOf<User>()
+var chats = mutableListOf<Chat>()
 
 val usersInfo: List<UserInfo>
 	get() = users.map {
@@ -36,9 +42,27 @@ val usersInfo: List<UserInfo>
 val messageResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = messageResponseFlow.asSharedFlow()
 
-fun main() {
+val LOGGER = KtorSimpleLogger("com.gershaveut.Data")
+
+const val FILE_USERS_NAME = "User.txt"
+const val FILE_CHATS_NAME = "Chats.txt"
+
+suspend fun main() = coroutineScope {
+	File(FILE_USERS_NAME).createNewFile()
+	File(FILE_CHATS_NAME).createNewFile()
+	
+	loadData()
+	
+	launch {
+		timer(initialDelay = 100000L, period = 100000L) {
+			saveData()
+		}
+	}
+	
 	embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
 		.start(wait = true)
+	
+	saveData()
 }
 
 fun Application.module() {
@@ -76,8 +100,9 @@ fun Application.module() {
 			webSocket("/echo") {
 				launch {
 					sharedFlow.collect { message ->
-						if (call.principal<UserIdPrincipal>()!!.name == message)
+						if (call.principal<UserIdPrincipal>()!!.name == message) {
 							send(message)
+						}
 					}
 				}
 				
@@ -95,6 +120,30 @@ fun Application.module() {
 			chats()
 			chat()
 		}
+	}
+}
+
+fun saveData() {
+	try {
+		LOGGER.info("Save data")
+		
+		File(FILE_USERS_NAME).writeText(Json.encodeToString(users))
+		File(FILE_CHATS_NAME).writeText(Json.encodeToString(chats))
+	} catch (e: Exception) {
+		LOGGER.error("Save data error")
+		LOGGER.debug(e.toString())
+	}
+}
+
+fun loadData() {
+	try {
+		LOGGER.info("Load data data")
+		
+		users = Json.decodeFromString(File(FILE_USERS_NAME).readText())
+		chats = Json.decodeFromString(File(FILE_CHATS_NAME).readText())
+	} catch (e: Exception) {
+		LOGGER.error("Load data error")
+		LOGGER.debug(e.toString())
 	}
 }
 
