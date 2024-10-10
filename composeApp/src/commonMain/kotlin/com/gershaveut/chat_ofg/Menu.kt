@@ -75,7 +75,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 					sync {
 						chats.value = Client.chats
 						
-						// Close chat if deleted
+						// Close chat if deleted TODO: Repair
 						if (openChat.value != null) {
 							if (!Client.chats.any { it.id == openChat.value!!.id })
 								openChat.value = null
@@ -165,10 +165,8 @@ fun NavigationMenu(
 		Column {
 			MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
 				user.value = null
-				Client.user = null
 				
-				Client.users.clear()
-				Client.chats.clear()
+				exit()
 				
 				info("Exit")
 			}

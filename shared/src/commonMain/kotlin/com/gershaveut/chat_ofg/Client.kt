@@ -73,7 +73,7 @@ object Client {
 		}
 	}
 	
-	private suspend fun sync() {
+	suspend fun sync() {
 		chats = getChats()
 		
 		onSync?.invoke()

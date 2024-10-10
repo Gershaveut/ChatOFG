@@ -1,16 +1,13 @@
 package com.gershaveut.chat_ofg
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
@@ -22,6 +19,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 val syncResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = syncResponseFlow.asSharedFlow()
@@ -47,37 +46,62 @@ fun App() {
 		
 		var connection by remember { mutableStateOf(true) }
 		
-		Scaffold(bottomBar = {
-			if (!connection && user.value != null) {
-				ConnectLost()
-			}
-		}) {
-			if (openSettings.value) {
-				AppSettings(openSettings)
-			} else {
-				if (user.value == null) {
-					Auth("Auth", openSettings) {
-						user.value = Client.user
-					}
-				} else {
-					val chats = remember { mutableStateOf(Client.chats) }
-					
-					scope.launch {
-						Client.handleConnection {
-							if (it) {
-								info("Connected")
-								
-								refreshChats {
-									chats.value = Client.chats
-								}
-							} else
-								warning("Connection lost")
-							
-							connection = it
+		Column {
+			if (DEBUG) {
+				LazyRow (Modifier.background(color = Color.Gray).fillMaxWidth()) {
+					item {
+						val modifier = Modifier.padding(5.dp)
+						
+						Button({
+							sync()
+						}, modifier) {
+							Text("Sync")
+						}
+						
+						Button({
+							auth("User ${Random.nextUInt()}", "test") {
+								debug("Create user")
+								exit()
+							}
+						}, modifier) {
+							Text("Create test user")
 						}
 					}
-					
-					Menu(user, openSettings, chats)
+				}
+			}
+			
+			Scaffold(bottomBar = {
+				if (!connection && user.value != null) {
+					ConnectLost()
+				}
+			}) {
+				if (openSettings.value) {
+					AppSettings(openSettings)
+				} else {
+					if (user.value == null) {
+						Auth("Auth", openSettings) {
+							user.value = Client.user
+						}
+					} else {
+						val chats = remember { mutableStateOf(Client.chats) }
+						
+						scope.launch {
+							Client.handleConnection {
+								if (it) {
+									info("Connected")
+									
+									refreshChats {
+										chats.value = Client.chats
+									}
+								} else
+									warning("Connection lost")
+								
+								connection = it
+							}
+						}
+						
+						Menu(user, openSettings, chats)
+					}
 				}
 			}
 		}
@@ -115,8 +139,22 @@ fun error(text: String) {
 	Napier.e(text, tag = "Client")
 }
 
+fun exit() {
+	Client.user = null
+	
+	Client.users.clear()
+	Client.chats.clear()
+}
+
 @OptIn(DelicateCoroutinesApi::class)
 val scope = GlobalScope
+
+@OptIn(DelicateCoroutinesApi::class)
+fun sync() {
+	scope.launch {
+		Client.sync()
+	}
+}
 
 @OptIn(DelicateCoroutinesApi::class)
 fun auth(name: String, password: String, onAuth: () -> Unit) {
