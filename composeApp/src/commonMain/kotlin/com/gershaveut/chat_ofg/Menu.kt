@@ -270,7 +270,7 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 					sign,
 					textAlign = TextAlign.Start,
 					fontSize = 12.sp,
-					color = Colors.BACKGROUND_VARIANT,
+					color = BACKGROUND_VARIANT,
 					modifier = Modifier.padding(5.dp)
 				)
 			}
@@ -337,7 +337,7 @@ private fun InfoRow(icon: ImageVector, contentDescription: String, text: String)
 			Text(
 				text,
 				fontSize = 12.sp,
-				color = Colors.BACKGROUND_VARIANT,
+				color = BACKGROUND_VARIANT,
 				modifier = Modifier.padding(5.dp)
 			)
 		}
@@ -349,7 +349,7 @@ fun UserAvatar(name: String, size: Dp = 45.dp) {
 	Box(
 		contentAlignment = Alignment.Center,
 		modifier = Modifier.background(
-			color = Colors.BACKGROUND_SECONDARY,
+			color = BACKGROUND_SECONDARY,
 			shape = MaterialTheme.shapes.small
 		).size(size)
 	) {
@@ -390,7 +390,7 @@ fun ChatRow(chat: Chat) {
 					Text(
 						lastMessage.sendTime.timeToLocalDateTime().customToString(),
 						fontSize = 10.sp,
-						color = Colors.BACKGROUND_VARIANT,
+						color = BACKGROUND_VARIANT,
 						modifier = Modifier.padding(start = 5.dp)
 					)
 				}
@@ -406,7 +406,7 @@ fun ChatRow(chat: Chat) {
 					lastMessage.text,
 					textAlign = TextAlign.Start,
 					fontSize = 12.sp,
-					color = Colors.BACKGROUND_VARIANT
+					color = BACKGROUND_VARIANT
 				)
 				
 				val unread =
@@ -439,7 +439,7 @@ fun UserRow(user: UserInfo, members: MutableState<MutableList<UserInfo>>) {
 				members.value.add(user)
 			else
 				members.value.remove(user)
-		}.background(if (selected) Colors.SELECTED else MaterialTheme.colors.background)
+		}.background(if (selected) SELECTED else MaterialTheme.colors.background)
 	) {
 		UserRow(user)
 	}

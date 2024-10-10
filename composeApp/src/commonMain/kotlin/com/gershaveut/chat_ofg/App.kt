@@ -23,8 +23,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-const val DEBUG = true
-
 val syncResponseFlow = MutableSharedFlow<String>()
 val sharedFlow = syncResponseFlow.asSharedFlow()
 
@@ -309,12 +307,12 @@ fun deletedMessages(message: Message, chat: Chat) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun editMessages(newText: String, message: Message, chat: Chat) {
-	info("Edit message ${message.text} with $newText")
+fun editMessages(message: Message, chat: Chat) {
+	info("Edit message ${message.text}")
 	debug("Message: $message")
 	
 	scope.launch {
-		Client.editMessage(newText, message, chat) {
+		Client.editMessage(message.text, message, chat) {
 			error(it)
 		}
 	}

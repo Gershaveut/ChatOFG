@@ -73,6 +73,12 @@ object Client {
 		}
 	}
 	
+	private suspend fun sync() {
+		chats = getChats()
+		
+		onSync?.invoke()
+	}
+	
 	suspend fun auth(name: String, password: String) {
 		authName = name
 		authPassword = password
@@ -284,11 +290,5 @@ object Client {
 			else
 				onError?.invoke(it.body())
 		}
-	}
-	
-	private suspend fun sync() {
-		chats = getChats()
-		
-		onSync?.invoke()
 	}
 }

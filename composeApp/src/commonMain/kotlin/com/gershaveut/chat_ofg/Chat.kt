@@ -28,7 +28,7 @@ import kotlinx.datetime.Clock
 fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
 	Column {
 		val messagesState = rememberLazyListState()
-		val messages = remember { chat.messages.toMutableStateList() }
+		var messages by remember { mutableStateOf(chat.messages) } // TODO: Update bug on add or edit
 		val scope = rememberCoroutineScope()
 		
 		fun scroll() {
@@ -39,8 +39,12 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 		}
 		
 		sync {
+			/* Code duplicate list bug
 			messages.clear()
 			messages.addAll(Client.chats.find { it.id == chat.id }!!.messages)
+			 */
+			
+			messages = Client.chats.find { it.id == chat.id }!!.messages
 			
 			if (messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
 				readMessages(chat)
@@ -188,13 +192,13 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			)
 			
 			LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-				itemsIndexed(messages) { index, message ->
+				itemsIndexed(messages, { _, it -> it.id } ) { index, message ->
 					if (message.messageType == MessageType.System) {
 						SystemMessage(message.text)
 					} else {
 						// Message Data
 						val dataLast =
-							messages.findLast { index > messages.indexOf(it) && it.messageType == MessageType.Default && it.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+							messages.findLast { last -> index > messages.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
 						
 						if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
 							val data = message.sendTime.timeToLocalDateTime().date
@@ -228,12 +232,15 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 						
 						scroll()
 					} else {
-						messages.find { it.id == pinnedMessage.value!!.id }!!.apply {
+						pinnedMessage.value!!.apply {
 							text = message.text
 							modified = true
+							messageStatus = MessageStatus.UnSend
 						}
 						
-						editMessages(message.text, pinnedMessage.value!!, chat)
+						messages[messages.indexOfFirst { it.id == pinnedMessage.value!!.id }] = pinnedMessage.value!!
+						
+						editMessages(pinnedMessage.value!!, chat)
 						
 						pinnedMessage.value = null
 					}
@@ -254,7 +261,7 @@ fun SystemMessage(text: String) {
 		Box(
 			modifier = Modifier.padding(5.dp).padding(top = 0.dp)
 				.background(
-					color = Colors.BACKGROUND_SECONDARY,
+					color = BACKGROUND_SECONDARY,
 					shape = MaterialTheme.shapes.medium
 				)
 		) {
@@ -383,7 +390,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 		Row(modifier = Modifier.fillMaxWidth()) {
 			Column(
 				modifier = Modifier.sizeIn(maxWidth = 350.dp).padding(5.dp).padding(top = 0.dp).background(
-					color = if (clientUser.name == message.creator.name) Colors.MY_MESSAGE else Colors.OTHERS_MESSAGE,
+					color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
 					shape = MaterialTheme.shapes.medium
 				).clickable {
 					expanded = true
@@ -418,13 +425,13 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 					if (message.modified)
 						Text(
 							"edited",
-							color = Colors.BACKGROUND_VARIANT,
+							color = BACKGROUND_VARIANT,
 							fontSize = 10.sp
 						)
 					
 					Text(
 						message.sendTime.timeToLocalDateTime().time.toString(),
-						color = Colors.BACKGROUND_VARIANT,
+						color = BACKGROUND_VARIANT,
 						fontSize = 10.sp
 					)
 					
@@ -443,8 +450,8 @@ fun MessageStatusIcon(messageStatus: MessageStatus) {
 	val size = 10.sp
 	
 	when (messageStatus) {
-		MessageStatus.UnSend -> Text("?", color = Colors.BACKGROUND_VARIANT, fontSize = size)
-		MessageStatus.UnRead -> Text("!", color = Colors.BACKGROUND_VARIANT, fontSize = size)
+		MessageStatus.UnSend -> Text("?", color = BACKGROUND_VARIANT, fontSize = size)
+		MessageStatus.UnRead -> Text("!", color = BACKGROUND_VARIANT, fontSize = size)
 		MessageStatus.Read -> Text("!!", color = MaterialTheme.colors.primaryVariant, fontSize = size)
 	}
 }
