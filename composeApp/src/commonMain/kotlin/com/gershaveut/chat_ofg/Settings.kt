@@ -5,10 +5,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
@@ -18,8 +20,10 @@ import chatofg.composeapp.generated.resources.chat_settings
 import chatofg.composeapp.generated.resources.info
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.ChatType
+import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
 import org.jetbrains.compose.resources.stringResource
+import kotlin.enums.EnumEntries
 
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
@@ -55,6 +59,22 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 				Category(stringResource(Res.string.application)) {
 					Filed(stringResource(Res.string.server), Client.host, HOST_DEFAULT, stringResource(Res.string.server_host)) {
 						Client.host = it
+					}
+				}
+				
+				if (DEBUG) {
+					Category("DEBUG") {
+						FiledNullable("Filed Nullable", null) {
+						
+						}
+						
+						Filed("Filed", null, "null") {
+						
+						}
+						
+						Dropdown(MessageStatus.entries, "Dropdown", MessageStatus.UnSend) {
+						
+						}
 					}
 				}
 			}
@@ -284,6 +304,51 @@ open class SettingsScope {
 	) {
 		FiledNullable(name, value, defaultValue, description, readOnly, preview) {
 			onValueChanged(it!!)
+		}
+	}
+	
+	@Composable
+	fun <T : Enum<T>> Dropdown(
+		enumEntries: EnumEntries<T>,
+		name: String,
+		value: Enum<T>,
+		description: String? = null,
+		readOnly: Boolean = false,
+		onValueChanged: (value: Enum<T>) -> Unit,
+	) {
+		var expanded by remember { mutableStateOf(false) }
+		var closeValue by remember { mutableStateOf(value) }
+		
+		SettingsRow {
+			SettingInfo(name, description)
+			
+			Row( horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.size(150.dp, 50.dp) ) {
+				Text(closeValue.name)
+				
+				if (!readOnly) {
+					Column {
+						IconButton({
+							expanded = true
+						}) {
+							Icon(Icons.Filled.ArrowDropDown, stringResource(Res.string.expand))
+						}
+						
+						DropdownMenu(expanded, {
+							expanded = false
+						}) {
+							enumEntries.forEach {
+								DropdownMenuItem({
+									closeValue = it
+									
+									onValueChanged(it)
+								}) {
+									Text(it.name)
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	

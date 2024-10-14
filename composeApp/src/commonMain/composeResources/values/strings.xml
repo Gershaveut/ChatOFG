@@ -39,4 +39,5 @@
     <string name="admin">Admin</string>
     <string name="give_admin">Give Admin</string>
     <string name="kick">Kick</string>
+    <string name="expand">Expand</string>
 </resources>
