@@ -11,15 +11,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import chatofg.composeapp.generated.resources.*
+import chatofg.composeapp.generated.resources.Res
+import chatofg.composeapp.generated.resources.actions
+import chatofg.composeapp.generated.resources.chat_settings
+import chatofg.composeapp.generated.resources.info
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.ChatType
 import com.gershaveut.chat_ofg.data.UserInfo
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AppSettings(openSettings: MutableState<Boolean>) {
 	var password: String? = null
 	
-	Settings(openSettings, "Settings", {
+	Settings(openSettings, stringResource(Res.string.settings), {
 		if (Client.user != null) {
 			updateUser()
 			
@@ -31,23 +37,23 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 		LazyColumn {
 			item {
 				if (Client.user != null) {
-					Category("Account") {
-						Filed("Display name", clientUser.displayName, clientUser.name) {
+					Category(stringResource(Res.string.account)) {
+						Filed(stringResource(Res.string.display_name), clientUser.displayName, clientUser.name) {
 							clientUser.displayName = it
 						}
 						
-						FiledNullable("Description", clientUser.description) {
+						FiledNullable(stringResource(Res.string.description), clientUser.description) {
 							clientUser.description = it
 						}
 						
-						FiledNullable("Password") {
+						FiledNullable(stringResource(Res.string.password)) {
 							password = it
 						}
 					}
 				}
 				
-				Category("Application") {
-					Filed("Server", Client.host, "Server host", HOST_DEFAULT) {
+				Category(stringResource(Res.string.application)) {
+					Filed(stringResource(Res.string.server), Client.host, stringResource(Res.string.server_host), HOST_DEFAULT) {
 						Client.host = it
 					}
 				}
@@ -58,14 +64,14 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 
 @Composable
 fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean) {
-	Settings(openSettings, "Settings chat " + chat.getNameClient(), {
+	Settings(openSettings, "${stringResource(Res.string.chat_settings)} " + chat.getNameClient(), {
 		updateChat(chat)
 	}) {
 		LazyColumn {
 			item {
-				Category("Info") {
+				Category(stringResource(Res.string.info)) {
 					Filed(
-						"Name",
+						stringResource(Res.string.name),
 						chat.getNameClient(),
 						chat.getNameClient(),
 						preview = false,
@@ -75,7 +81,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 					}
 					
 					if (chat.chatType == ChatType.Group) {
-						FiledNullable("Description", chat.description, readOnly = !admin) {
+						FiledNullable(stringResource(Res.string.description), chat.description, readOnly = !admin) {
 							chat.description = it
 						}
 					}
@@ -84,14 +90,14 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 				var userInfo by remember { mutableStateOf<UserInfo?>(null) }
 				
 				if (userInfo != null)
-					ChatDialog("User Info", {
+					ChatDialog(stringResource(Res.string.user_info), {
 						userInfo = null
 					}) {
 						ShowInfo(userInfo!!.name)
 					}
 				
 				if (chat.chatType == ChatType.Group) {
-					Category("Members") {
+					Category(stringResource(Res.string.members)) {
 						Column {
 							var members by remember { mutableStateOf(chat.members.entries) }
 							
@@ -110,7 +116,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 										
 										UserRow(member.key)
 										if (member.value)
-											Text("Admin", color = BACKGROUND_VARIANT)
+											Text(stringResource(Res.string.admin), color = BACKGROUND_VARIANT)
 									}
 									
 									var expanded by remember { mutableStateOf(false) }
@@ -119,7 +125,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 										IconButton({
 											expanded = true
 										}) {
-											Icon(Icons.Filled.MoreVert, "Actions")
+											Icon(Icons.Filled.MoreVert, stringResource(Res.string.actions))
 										}
 										
 										DropdownMenu(
@@ -137,7 +143,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 												},
 												modifier = Modifier.width(widthButton)
 											) {
-												Text("Show Info")
+												Text(stringResource(Res.string.show))
 											}
 											
 											if (admin) {
@@ -152,7 +158,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 														},
 														modifier = Modifier.width(widthButton)
 													) {
-														Text("Give admin")
+														Text(stringResource(Res.string.give_admin))
 													}
 												}
 												
@@ -164,7 +170,7 @@ fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean
 													},
 													modifier = Modifier.width(widthButton)
 												) {
-													Text("Kick")
+													Text(stringResource(Res.string.kick))
 												}
 											}
 										}
@@ -200,7 +206,7 @@ fun Settings(
 						InstanceSettingsScope.save = false
 					}
 				}) {
-					Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+					Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.back))
 				}
 			}
 		)

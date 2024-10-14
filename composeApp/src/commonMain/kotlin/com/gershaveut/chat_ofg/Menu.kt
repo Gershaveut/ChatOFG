@@ -23,9 +23,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import chatofg.composeapp.generated.resources.*
+import chatofg.composeapp.generated.resources.Res
+import chatofg.composeapp.generated.resources.app_name
+import chatofg.composeapp.generated.resources.chat_created
+import chatofg.composeapp.generated.resources.members
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, chats: MutableState<MutableList<Chat>>) {
@@ -48,13 +54,13 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 				var createChat by remember { mutableStateOf(false) }
 				
 				TopAppBar(
-					title = { Text("ChatOFG") },
+					title = { Text(stringResource(Res.string.app_name)) },
 					navigationIcon = {
 						IconButton({
 							scope.launch {
 								drawerState.open()
 							}
-						}) { Icon(Icons.Filled.Menu, contentDescription = "Menu") }
+						}) { Icon(Icons.Filled.Menu, contentDescription = stringResource(Res.string.menu)) }
 					}
 				)
 				
@@ -67,7 +73,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 							
 							createChat = true
 						}) {
-							Icon(Icons.Filled.Add, contentDescription = "Create Chat")
+							Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.create_chat))
 						}
 					},
 					floatingActionButtonPosition = FabPosition.End
@@ -99,7 +105,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 				}
 				
 				if (createChat) {
-					SelectUsers("Create Chat", users, {
+					SelectUsers(stringResource(Res.string.create_chat), users, {
 						createChat = false
 					}) { members ->
 						createChat = false
@@ -122,13 +128,13 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 			
 			if (showInfo.value) {
 				if (openChat.value != null) {
-					ChatDialog("Chat Info", {
+					ChatDialog(stringResource(Res.string.chat_info), {
 						showInfo.value = false
 					}) {
 						ShowInfo(openChat.value!!)
 					}
 				} else {
-					ChatDialog("Account", {
+					ChatDialog(stringResource(Res.string.account), {
 						showInfo.value = false
 					}) {
 						ShowInfo(clientUser.name)
@@ -163,14 +169,14 @@ fun NavigationMenu(
 		}
 		
 		Column {
-			MenuButton("Exit", Icons.AutoMirrored.Filled.ArrowBack) {
+			MenuButton(stringResource(Res.string.exit), Icons.AutoMirrored.Filled.ArrowBack) {
 				user.value = null
 				
 				exit()
 				
 				info("Exit")
 			}
-			MenuButton("Settings", Icons.Filled.Settings) {
+			MenuButton(stringResource(Res.string.settings), Icons.Filled.Settings) {
 				openSettings.value = true
 			}
 		}
@@ -192,7 +198,7 @@ fun SelectUsers(
 				FloatingActionButton({
 					onConfirm(members.value)
 				}) {
-					Icon(Icons.Filled.Add, contentDescription = "Confirm")
+					Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.confirm))
 				}
 			}
 		) {
@@ -239,7 +245,7 @@ fun ChatDialog(name: String, onDismissRequest: () -> Unit, content: @Composable 
 						}) {
 							Icon(
 								Icons.AutoMirrored.Filled.ExitToApp,
-								contentDescription = "Close"
+								contentDescription = stringResource(Res.string.close)
 							)
 						}
 					}
@@ -274,11 +280,11 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 			}
 		}
 		
-		InfoRow(Icons.Outlined.Info, "Description", description ?: "No Description")
+		InfoRow(Icons.Outlined.Info, stringResource(Res.string.description), description ?: stringResource(Res.string.no_description))
 		
 		InfoRow(
 			Icons.Outlined.Info,
-			"Creation Time",
+			stringResource(Res.string.creation_time),
 			createTime.timeToLocalDateTime().customToString()
 		)
 	}
@@ -296,7 +302,7 @@ fun ShowInfo(userName: String) {
 	
 	ShowInfo(
 		userInfo?.displayName ?: "...",
-		if (userInfo == null) "..." else "Last login: ${
+		if (userInfo == null) "..." else "${stringResource(Res.string.last_login)}: ${
 			userInfo!!.lastLoginTime.timeToLocalDateTime().customToString()
 		} \n@${userInfo!!.name}",
 		userInfo?.description,
@@ -310,7 +316,7 @@ fun ShowInfo(chat: Chat) {
 	var description: String? by remember { mutableStateOf(null) }
 	
 	if (chat.chatType == ChatType.Group) {
-		sign = "Members: " + chat.members.size
+		sign = "${stringResource(Res.string.members)}: " + chat.members.size
 		description = chat.description
 		
 		ShowInfo(chat.getNameClient(), sign, description, chat.createTime)
@@ -363,7 +369,7 @@ fun ChatRow(chat: Chat) {
 		// Image box
 		UserAvatar(chatName)
 		
-		var lastMessage = Message(clientUser, "Chat created", chat.createTime)
+		var lastMessage = Message(clientUser, stringResource(Res.string.chat_created), chat.createTime)
 		
 		try {
 			lastMessage = chat.messages.last()

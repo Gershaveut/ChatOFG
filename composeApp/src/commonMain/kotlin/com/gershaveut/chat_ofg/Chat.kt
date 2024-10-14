@@ -21,9 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import chatofg.composeapp.generated.resources.*
+import chatofg.composeapp.generated.resources.Res
+import chatofg.composeapp.generated.resources.delete_message
+import chatofg.composeapp.generated.resources.edit_message
+import chatofg.composeapp.generated.resources.edited
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
@@ -76,7 +82,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 					}) {
 						Icon(
 							Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = "Back"
+							contentDescription = stringResource(Res.string.back)
 						)
 					}
 				},
@@ -86,14 +92,14 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 					IconButton({
 						expanded = true
 					}) {
-						Icon(Icons.Filled.MoreVert, contentDescription = "Actions")
+						Icon(Icons.Filled.MoreVert, contentDescription = stringResource(Res.string.actions))
 					}
 					
 					var selectInvite by remember { mutableStateOf(false) }
 					
 					if (selectInvite) {
 						SelectUsers(
-							"Invite user",
+							stringResource(Res.string.invite),
 							users.apply { removeAll(openChat.value!!.members.keys) },
 							{
 								selectInvite = false
@@ -124,7 +130,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 							},
 							modifier = Modifier.width(widthButton)
 						) {
-							Text("Show Info")
+							Text(stringResource(Res.string.show))
 						}
 						
 						sync {
@@ -143,7 +149,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 							},
 							modifier = Modifier.width(widthButton)
 						) {
-							Text("Invite User")
+							Text(stringResource(Res.string.invite))
 						}
 						
 						Divider()
@@ -156,7 +162,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 							},
 							modifier = Modifier.width(widthButton)
 						) {
-							Text("Chat settings")
+							Text(stringResource(Res.string.chat_settings))
 						}
 						
 						if (chat.userAccess(clientUser)) {
@@ -170,7 +176,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 								},
 								modifier = Modifier.width(widthButton)
 							) {
-								Text("Delete chat")
+								Text(stringResource(Res.string.delete_chat))
 							}
 						}
 						
@@ -185,7 +191,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 								},
 								modifier = Modifier.width(widthButton)
 							) {
-								Text("Leave chat")
+								Text(stringResource(Res.string.leave_chat))
 							}
 						}
 					}
@@ -198,7 +204,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 						FloatingActionButton({
 							scroll()
 						}, modifier = Modifier.padding(bottom = 50.dp)) {
-							Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll")
+							Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(Res.string.scroll))
 						}
 				}
 			) {
@@ -295,7 +301,7 @@ fun PinnedMessage(pinnedMessage: MutableState<Message?>) {
 		IconButton({
 			pinnedMessage.value = null
 		}) {
-			Icon(Icons.Filled.Close, "Close")
+			Icon(Icons.Filled.Close, stringResource(Res.string.close))
 		}
 	}
 }
@@ -312,7 +318,7 @@ fun SendRow(onSend: (message: Message) -> Unit) {
 			modifier = Modifier
 				.weight(1f)
 				.fillMaxWidth(),
-			placeholder = { Text("Print here...") }
+			placeholder = { Text(stringResource(Res.string.print)) }
 		)
 		IconButton(
 			{
@@ -342,7 +348,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 	var showInfo by remember { mutableStateOf(false) }
 	
 	if (showInfo)
-		ChatDialog("User Info", {
+		ChatDialog(stringResource(Res.string.user_info), {
 			showInfo = false
 		}) {
 			ShowInfo(message.creator.name)
@@ -366,7 +372,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 				},
 				modifier = Modifier.width(widthButton)
 			) {
-				Text("Show Info")
+				Text(stringResource(Res.string.show))
 			}
 			
 			if (chat.userAccess(clientUser) || message.creator.name == clientUser.name) {
@@ -381,7 +387,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 						},
 						modifier = Modifier.width(widthButton)
 					) {
-						Text("Edit Message")
+						Text(stringResource(Res.string.edit_message))
 					}
 				}
 				
@@ -395,7 +401,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 					},
 					modifier = Modifier.width(widthButton)
 				) {
-					Text("Delete Message")
+					Text(stringResource(Res.string.delete_message))
 				}
 			}
 		}
@@ -437,7 +443,7 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 				) {
 					if (message.modified)
 						Text(
-							"edited",
+							stringResource(Res.string.edited),
 							color = BACKGROUND_VARIANT,
 							fontSize = 10.sp
 						)

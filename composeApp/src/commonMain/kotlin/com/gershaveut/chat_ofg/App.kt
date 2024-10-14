@@ -9,6 +9,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import chatofg.composeapp.generated.resources.*
+import chatofg.composeapp.generated.resources.Res
+import chatofg.composeapp.generated.resources.auth
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.UserInfo
@@ -19,6 +22,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
@@ -91,7 +95,7 @@ fun App() {
 					AppSettings(openSettings)
 				} else {
 					if (user.value == null) {
-						Auth("Auth", openSettings) {
+						Auth(stringResource(Res.string.auth), openSettings) {
 							user.value = Client.user
 						}
 					} else {
@@ -128,7 +132,7 @@ fun ConnectLost() {
 			.padding(start = 5.dp),
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Text("Connection lost", color = MaterialTheme.colors.onError)
+		Text(stringResource(Res.string.lost), color = MaterialTheme.colors.onError)
 	}
 }
 

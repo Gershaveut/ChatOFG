@@ -25,6 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import chatofg.composeapp.generated.resources.*
+import chatofg.composeapp.generated.resources.Res
+import chatofg.composeapp.generated.resources.confirm
+import chatofg.composeapp.generated.resources.name
+import chatofg.composeapp.generated.resources.settings
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) {
@@ -32,7 +38,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) 
 		IconButton({
 			openSettings.value = true
 		}) {
-			Icon(Icons.Filled.Settings, contentDescription = "Settings")
+			Icon(Icons.Filled.Settings, contentDescription = stringResource(Res.string.settings))
 		}
 	}) {
 		Column(
@@ -52,7 +58,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) 
 					name = text
 				},
 				modifier = fieldModifier,
-				placeholder = { Text("Name") }
+				placeholder = { Text(stringResource(Res.string.name)) }
 			)
 			
 			TextField(
@@ -60,7 +66,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) 
 					password = text
 				},
 				modifier = fieldModifier,
-				placeholder = { Text("Password") },
+				placeholder = { Text(stringResource(Res.string.password)) },
 				visualTransformation = PasswordVisualTransformation(),
 				keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
 			)
@@ -69,7 +75,7 @@ fun Auth(type: String, openSettings: MutableState<Boolean>, onAuth: () -> Unit) 
 				if (name.isNotEmpty() && password.isNotEmpty())
 					auth(name, password, onAuth)
 			}) {
-				Text("Confirm")
+				Text(stringResource(Res.string.confirm))
 			}
 		}
 	}
