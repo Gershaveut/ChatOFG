@@ -53,7 +53,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 				}
 				
 				Category(stringResource(Res.string.application)) {
-					Filed(stringResource(Res.string.server), Client.host, stringResource(Res.string.server_host), HOST_DEFAULT) {
+					Filed(stringResource(Res.string.server), Client.host, HOST_DEFAULT, stringResource(Res.string.server_host)) {
 						Client.host = it
 					}
 				}

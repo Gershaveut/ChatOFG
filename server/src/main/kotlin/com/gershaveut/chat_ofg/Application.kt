@@ -106,9 +106,11 @@ fun Application.module() {
 					}
 				}
 				
-				for (frame in incoming) {
-					frame as? Frame.Text ?: continue
-					frame.readText()
+				while (true) {
+					for (frame in incoming) {
+						frame as? Frame.Text ?: continue
+						frame.readText()
+					}
 				}
 			}
 			

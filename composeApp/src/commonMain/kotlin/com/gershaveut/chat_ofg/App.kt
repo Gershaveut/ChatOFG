@@ -94,28 +94,28 @@ fun App() {
 				if (openSettings.value) {
 					AppSettings(openSettings)
 				} else {
+					val chats = remember { mutableStateOf(Client.chats) }
+					
 					if (user.value == null) {
 						Auth(stringResource(Res.string.auth), openSettings) {
 							user.value = Client.user
-						}
-					} else {
-						val chats = remember { mutableStateOf(Client.chats) }
-						
-						scope.launch {
-							Client.handleConnection {
-								if (it) {
-									info("Connected")
+							
+							scope.launch {
+								Client.handleConnection {
+									if (it) {
+										info("Connected")
+										
+										refreshChats {
+											chats.value = Client.chats
+										}
+									} else
+										warning("Connection lost")
 									
-									refreshChats {
-										chats.value = Client.chats
-									}
-								} else
-									warning("Connection lost")
-								
-								connection = it
+									connection = it
+								}
 							}
 						}
-						
+					} else {
 						Menu(user, openSettings, chats)
 					}
 				}
