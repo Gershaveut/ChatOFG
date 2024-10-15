@@ -20,7 +20,6 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
@@ -246,7 +245,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 					
 					SendRow { message ->
 						if (pinnedMessage.value == null) {
-							messages.add(message)
+							messages = messages.toMutableList().apply { add(message) }
 							
 							sendMessage(message, chat)
 							
@@ -454,6 +453,7 @@ fun Message(
 				Column {
 					if (message.reply != null) {
 						val scope = rememberCoroutineScope()
+						val reply = message.reply!!
 						
 						Column(
 							modifier = Modifier.padding(5.dp).background(
@@ -461,20 +461,20 @@ fun Message(
 								shape = MaterialTheme.shapes.medium
 							).clickable {
 								scope.launch {
-									messagesState.animateScrollToItem(messages.indexOfFirst { it.id == message.reply!!.id })
+									messagesState.animateScrollToItem(messages.indexOfFirst { it.id == reply.id })
 								}
 							},
 							horizontalAlignment = Alignment.CenterHorizontally,
 						) {
 							Text(
-								message.creator.displayName,
+								reply.creator.displayName,
 								color = MaterialTheme.colors.secondaryVariant,
 								modifier = Modifier
 									.padding(7.dp).align(Alignment.Start)
 							)
 							
 							Text(
-								message.text, modifier = Modifier
+								reply.text, modifier = Modifier
 									.padding(7.dp).align(Alignment.Start)
 							)
 						}

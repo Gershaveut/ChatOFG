@@ -18,6 +18,7 @@
     <string name="print">Пишите здесь...</string>
     <string name="user_info">Информация пользователя</string>
     <string name="edit_message">Редактировать сообщение</string>
+    <string name="delete_message">Удалить сообщение</string>
     <string name="edited">изменён</string>
     <string name="menu">Меню</string>
     <string name="create_chat">Создать чат</string>

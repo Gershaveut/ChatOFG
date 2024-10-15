@@ -15,6 +15,7 @@ import io.ktor.server.websocket.*
 import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -53,7 +54,7 @@ suspend fun main() = coroutineScope {
 	
 	loadData()
 	
-	launch {
+	val timer = launch {
 		timer(initialDelay = 100000L, period = 100000L) {
 			saveData()
 		}
@@ -61,6 +62,8 @@ suspend fun main() = coroutineScope {
 	
 	embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
 		.start(wait = true)
+	
+	timer.cancel()
 	
 	saveData()
 }

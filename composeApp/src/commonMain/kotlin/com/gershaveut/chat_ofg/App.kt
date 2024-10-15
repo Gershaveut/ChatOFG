@@ -138,22 +138,24 @@ fun ConnectLost() {
 
 fun Chat.getNameClient() = this.getName(Client.user)
 
+const val CLIENT_TAG = "Client"
+
 fun warning(text: String) {
-	Napier.w(text, tag = "Client")
+	Napier.w(text, tag = CLIENT_TAG)
 }
 
 fun debug(text: String) {
 	if (DEBUG)
-		Napier.d(text, tag = "Client")
+		Napier.d(text, tag = CLIENT_TAG)
 }
 
 fun info(text: String) {
-	Napier.i(text, tag = "Client")
+	Napier.i(text, tag = CLIENT_TAG)
 	onAction(text)
 }
 
 fun error(text: String) {
-	Napier.e(text, tag = "Client")
+	Napier.e(text, tag = CLIENT_TAG)
 	onAction(text)
 }
 
