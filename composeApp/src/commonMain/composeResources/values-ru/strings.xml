@@ -41,4 +41,5 @@
     <string name="kick">Выгнать</string>
     <string name="expand">Раскрыть список</string>
     <string name="reply">Ответить</string>
+    <string name="version">Версия приложения</string>
 </resources>

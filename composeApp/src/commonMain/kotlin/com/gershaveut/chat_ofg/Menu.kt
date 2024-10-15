@@ -153,33 +153,37 @@ fun NavigationMenu(
 	user: MutableState<UserInfo?>,
 	openSettings: MutableState<Boolean>
 ) {
-	Column(modifier = Modifier.padding(5.dp)) {
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			modifier = Modifier.fillMaxWidth().clickable {
-				scope.launch {
-					drawerState.close()
-				}
+	Column(modifier = Modifier.padding(5.dp), verticalArrangement = Arrangement.SpaceBetween) {
+		Column {
+			Row(
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier.fillMaxWidth().clickable {
+					scope.launch {
+						drawerState.close()
+					}
+					
+					showInfo.value = true
+				}) {
+				UserAvatar(clientUser.name, 60.dp)
 				
-				showInfo.value = true
-			}) {
-			UserAvatar(clientUser.name, 60.dp)
+				Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
+			}
 			
-			Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
+			Column {
+				MenuButton(stringResource(Res.string.exit), Icons.AutoMirrored.Filled.ArrowBack) {
+					user.value = null
+					
+					exit()
+					
+					info("Exit")
+				}
+				MenuButton(stringResource(Res.string.settings), Icons.Filled.Settings) {
+					openSettings.value = true
+				}
+			}
 		}
 		
-		Column {
-			MenuButton(stringResource(Res.string.exit), Icons.AutoMirrored.Filled.ArrowBack) {
-				user.value = null
-				
-				exit()
-				
-				info("Exit")
-			}
-			MenuButton(stringResource(Res.string.settings), Icons.Filled.Settings) {
-				openSettings.value = true
-			}
-		}
+		Text("${stringResource(Res.string.version)}: $VERSION")
 	}
 }
 

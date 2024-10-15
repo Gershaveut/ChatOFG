@@ -41,4 +41,5 @@
     <string name="kick">Kick</string>
     <string name="expand">Expand</string>
     <string name="reply">Reply</string>
+    <string name="version">Version</string>
 </resources>
