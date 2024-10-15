@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.*
@@ -19,17 +20,19 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
-import chatofg.composeapp.generated.resources.Res
-import chatofg.composeapp.generated.resources.delete_message
-import chatofg.composeapp.generated.resources.edit_message
-import chatofg.composeapp.generated.resources.edited
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.stringResource
+
+enum class PinnedType {
+	Edit,
+	Reply
+}
 
 @Composable
 fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
@@ -59,7 +62,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			}
 		}
 		
-		val pinnedMessage = remember { mutableStateOf<Message?>(null) }
+		val pinnedMessage = remember { mutableStateOf<Pair<Message, PinnedType>?>(null) }
 		
 		val openChatSettings = remember { mutableStateOf(false) }
 		
@@ -230,7 +233,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 									SystemMessage(dataText)
 								}
 								
-								Message(message, chat, messages, pinnedMessage)
+								Message(message, chat, messages, pinnedMessage, messagesState)
 							}
 						}
 						
@@ -249,18 +252,33 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 							
 							scroll()
 						} else {
-							pinnedMessage.value!!.apply {
-								text = message.text
-								modified = true
-								messageStatus = MessageStatus.UnSend
+							if (pinnedMessage.value!!.second == PinnedType.Edit) {
+								val editMessage = pinnedMessage.value!!.first
+								
+								editMessage.apply {
+									text = message.text
+									modified = true
+									messageStatus = MessageStatus.UnSend
+								}
+								
+								messages[messages.indexOfFirst { it.id == editMessage.id }] = editMessage
+								
+								editMessages(editMessage, chat)
+								
+								pinnedMessage.value = null
+							} else {
+								val replyMessage = pinnedMessage.value!!.first
+								
+								message.apply {
+									reply = replyMessage
+								}
+								
+								messages.add(message)
+								
+								sendMessage(message, chat)
+								
+								pinnedMessage.value = null
 							}
-							
-							messages[messages.indexOfFirst { it.id == pinnedMessage.value!!.id }] =
-								pinnedMessage.value!!
-							
-							editMessages(pinnedMessage.value!!, chat)
-							
-							pinnedMessage.value = null
 						}
 					}
 				}
@@ -290,13 +308,13 @@ fun SystemMessage(text: String) {
 }
 
 @Composable
-fun PinnedMessage(pinnedMessage: MutableState<Message?>) {
+fun PinnedMessage(pinnedMessage: MutableState<Pair<Message, PinnedType>?>) {
 	Row(
 		modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 5.dp),
 		horizontalArrangement = Arrangement.SpaceBetween,
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Text(pinnedMessage.value!!.text)
+		Text(pinnedMessage.value!!.first.text)
 		
 		IconButton({
 			pinnedMessage.value = null
@@ -344,7 +362,13 @@ fun SendRow(onSend: (message: Message) -> Unit) {
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinnedMessage: MutableState<Message?>) {
+fun Message(
+	message: Message,
+	chat: Chat,
+	messages: MutableList<Message>,
+	pinnedMessage: MutableState<Pair<Message, PinnedType>?>,
+	messagesState: LazyListState
+) {
 	var showInfo by remember { mutableStateOf(false) }
 	
 	if (showInfo)
@@ -383,12 +407,23 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 						{
 							expanded = false
 							
-							pinnedMessage.value = message
+							pinnedMessage.value = message to PinnedType.Edit
 						},
 						modifier = Modifier.width(widthButton)
 					) {
 						Text(stringResource(Res.string.edit_message))
 					}
+				}
+				
+				TextButton(
+					{
+						expanded = false
+						
+						pinnedMessage.value = message to PinnedType.Reply
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text(stringResource(Res.string.reply))
 				}
 				
 				TextButton(
@@ -416,48 +451,76 @@ fun Message(message: Message, chat: Chat, messages: MutableList<Message>, pinned
 				},
 				horizontalAlignment = Alignment.CenterHorizontally,
 			) {
-				Text(
-					message.creator.displayName,
-					color = MaterialTheme.colors.secondaryVariant,
-					fontSize = 15.sp,
-					modifier = Modifier
-						.padding(top = 10.dp, start = 10.dp, end = 10.dp)
-						.align(Alignment.Start)
-				)
-				
-				Text(
-					message.text, modifier = Modifier
-						.padding(
-							top = 10.dp,
-							start = 10.dp,
-							bottom = 5.dp,
-							end = 10.dp
-						).align(Alignment.Start)
-				)
-				
-				Row(
-					Modifier.align(Alignment.End).padding(
-						bottom = 10.dp,
-						end = 10.dp
+				Column {
+					if (message.reply != null) {
+						val scope = rememberCoroutineScope()
+						
+						Column(
+							modifier = Modifier.padding(5.dp).background(
+								color = REPLY_MESSAGE,
+								shape = MaterialTheme.shapes.medium
+							).clickable {
+								scope.launch {
+									messagesState.animateScrollToItem(messages.indexOfFirst { it.id == message.reply!!.id })
+								}
+							},
+							horizontalAlignment = Alignment.CenterHorizontally,
+						) {
+							Text(
+								message.creator.displayName,
+								color = MaterialTheme.colors.secondaryVariant,
+								modifier = Modifier
+									.padding(7.dp).align(Alignment.Start)
+							)
+							
+							Text(
+								message.text, modifier = Modifier
+									.padding(7.dp).align(Alignment.Start)
+							)
+						}
+					}
+					
+					Text(
+						message.creator.displayName,
+						color = MaterialTheme.colors.secondaryVariant,
+						modifier = Modifier
+							.padding(7.dp).align(Alignment.Start)
 					)
-				) {
-					if (message.modified)
+					
+					Text(
+						message.text, modifier = Modifier
+							.padding(
+								top = 10.dp,
+								start = 10.dp,
+								bottom = 5.dp,
+								end = 10.dp
+							).align(Alignment.Start)
+					)
+					
+					Row(
+						Modifier.align(Alignment.End).padding(
+							bottom = 10.dp,
+							end = 10.dp
+						)
+					) {
+						if (message.modified)
+							Text(
+								stringResource(Res.string.edited),
+								color = BACKGROUND_VARIANT,
+								fontSize = 10.sp
+							)
+						
 						Text(
-							stringResource(Res.string.edited),
+							message.sendTime.timeToLocalDateTime().time.toString(),
 							color = BACKGROUND_VARIANT,
 							fontSize = 10.sp
 						)
-					
-					Text(
-						message.sendTime.timeToLocalDateTime().time.toString(),
-						color = BACKGROUND_VARIANT,
-						fontSize = 10.sp
-					)
-					
-					if (message.creator.name == clientUser.name)
-						Row(modifier = Modifier.padding(horizontal = 5.dp)) {
-							MessageStatusIcon(message.messageStatus)
-						}
+						
+						if (message.creator.name == clientUser.name)
+							Row(modifier = Modifier.padding(horizontal = 5.dp)) {
+								MessageStatusIcon(message.messageStatus)
+							}
+					}
 				}
 			}
 		}

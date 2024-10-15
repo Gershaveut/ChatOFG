@@ -39,4 +39,5 @@
     <string name="give_admin">Выдать права администратора</string>
     <string name="kick">Выгнать</string>
     <string name="expand">Раскрыть список</string>
+    <string name="reply">Ответить</string>
 </resources>
