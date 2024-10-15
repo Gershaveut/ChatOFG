@@ -29,6 +29,7 @@ import chatofg.composeapp.generated.resources.app_name
 import chatofg.composeapp.generated.resources.chat_created
 import chatofg.composeapp.generated.resources.members
 import com.gershaveut.chat_ofg.data.*
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource

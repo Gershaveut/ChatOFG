@@ -353,7 +353,7 @@ fun readMessages(chat: Chat) {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun deletedMessages(message: Message, chat: Chat) {
+fun deletedMessage(message: Message, chat: Chat) {
 	info("Delete message ${message.text}")
 	debug("Message: $message")
 	

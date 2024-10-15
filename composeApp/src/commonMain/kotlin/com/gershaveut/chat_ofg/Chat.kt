@@ -37,13 +37,13 @@ enum class PinnedType {
 fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
 	Column {
 		val messagesState = rememberLazyListState()
-		var messages by remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
+		val messages = remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
 		val scope = rememberCoroutineScope()
 		
 		fun scroll() {
 			scope.launch {
-				if (messages.isNotEmpty())
-					messagesState.animateScrollToItem(messages.count() - 1)
+				if (messages.value.isNotEmpty())
+					messagesState.animateScrollToItem(messages.value.count() - 1)
 			}
 		}
 		
@@ -53,9 +53,9 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			messages.addAll(Client.chats.find { it.id == chat.id }!!.messages)
 			 */
 			
-			messages = Client.chats.find { it.id == chat.id }!!.messages
+			messages.value = Client.chats.find { it.id == chat.id }!!.messages
 			
-			if (messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
+			if (messages.value.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
 				readMessages(chat)
 				scroll()
 			}
@@ -202,7 +202,7 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			
 			Scaffold(
 				floatingActionButton = {
-					if (messagesState.firstVisibleItemIndex < messages.count() - 10)
+					if (messagesState.firstVisibleItemIndex < messages.value.count() - 10)
 						FloatingActionButton({
 							scroll()
 						}, modifier = Modifier.padding(bottom = 50.dp)) {
@@ -212,13 +212,13 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			) {
 				Column {
 					LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-						itemsIndexed(messages, { _, it -> it.id }) { index, message ->
+						itemsIndexed(messages.value, { _, it -> it.id }) { index, message -> // TODO: Crash on delete
 							if (message.messageType == MessageType.System) {
 								SystemMessage(message.text)
 							} else {
 								// Message Data
 								val dataLast =
-									messages.findLast { last -> index > messages.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+									messages.value.findLast { last -> index > messages.value.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
 								
 								if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
 									val data = message.sendTime.timeToLocalDateTime().date
@@ -244,8 +244,18 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 					}
 					
 					SendRow { message ->
-						if (pinnedMessage.value == null) {
-							messages = messages.toMutableList().apply { add(message) }
+						if (pinnedMessage.value?.second != PinnedType.Edit) {
+							if (pinnedMessage.value != null) {
+								val replyMessage = pinnedMessage.value!!.first
+								
+								message.apply {
+									reply = replyMessage
+								}
+								
+								pinnedMessage.value = null
+							}
+							
+							messages.value = messages.value.toMutableList().apply { add(message) }
 							
 							sendMessage(message, chat)
 							
@@ -260,21 +270,9 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 									messageStatus = MessageStatus.UnSend
 								}
 								
-								messages[messages.indexOfFirst { it.id == editMessage.id }] = editMessage
+								messages.value[messages.value.indexOfFirst { it.id == editMessage.id }] = editMessage
 								
 								editMessages(editMessage, chat)
-								
-								pinnedMessage.value = null
-							} else {
-								val replyMessage = pinnedMessage.value!!.first
-								
-								message.apply {
-									reply = replyMessage
-								}
-								
-								messages.add(message)
-								
-								sendMessage(message, chat)
 								
 								pinnedMessage.value = null
 							}
@@ -364,7 +362,7 @@ fun SendRow(onSend: (message: Message) -> Unit) {
 fun Message(
 	message: Message,
 	chat: Chat,
-	messages: MutableList<Message>,
+	messages: MutableState<MutableList<Message>>,
 	pinnedMessage: MutableState<Pair<Message, PinnedType>?>,
 	messagesState: LazyListState
 ) {
@@ -378,8 +376,11 @@ fun Message(
 		}
 	
 	var expanded by remember { mutableStateOf(false) }
-	//TODO: Fix
-	Column(horizontalAlignment = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start) {
+	
+	Column(
+		modifier = Modifier.fillMaxWidth(),
+		horizontalAlignment = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start
+	) {
 		DropdownMenu(
 			modifier = Modifier.padding(horizontal = 5.dp),
 			expanded = expanded,
@@ -429,9 +430,9 @@ fun Message(
 					{
 						expanded = false
 						
-						messages.remove(message)
+						messages.value = messages.value.toMutableList().apply { remove(message) }
 						
-						deletedMessages(message, chat)
+						deletedMessage(message, chat)
 					},
 					modifier = Modifier.width(widthButton)
 				) {
@@ -440,87 +441,88 @@ fun Message(
 			}
 		}
 		
-		Row(modifier = Modifier.fillMaxWidth()) {
-			Column(
-				modifier = Modifier.sizeIn(maxWidth = 350.dp).padding(5.dp).padding(top = 0.dp).background(
-					color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
-					shape = MaterialTheme.shapes.medium
-				).clickable {
-					expanded = true
-				},
-				horizontalAlignment = Alignment.CenterHorizontally,
-			) {
-				Column {
-					if (message.reply != null) {
-						val scope = rememberCoroutineScope()
-						val reply = message.reply!!
-						
-						Column(
-							modifier = Modifier.padding(5.dp).background(
-								color = REPLY_MESSAGE,
-								shape = MaterialTheme.shapes.medium
-							).clickable {
-								scope.launch {
-									messagesState.animateScrollToItem(messages.indexOfFirst { it.id == reply.id })
-								}
-							},
-							horizontalAlignment = Alignment.CenterHorizontally,
-						) {
-							Text(
-								reply.creator.displayName,
-								color = MaterialTheme.colors.secondaryVariant,
-								modifier = Modifier
-									.padding(7.dp).align(Alignment.Start)
-							)
-							
-							Text(
-								reply.text, modifier = Modifier
-									.padding(7.dp).align(Alignment.Start)
-							)
-						}
-					}
+		Column(
+			modifier = Modifier.padding(5.dp).padding(top = 0.dp).background(
+				color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
+				shape = MaterialTheme.shapes.medium
+			).clickable {
+				expanded = true
+			},
+			horizontalAlignment = Alignment.CenterHorizontally,
+		) {
+			Column {
+				if (message.reply != null) {
+					val scope = rememberCoroutineScope()
+					val reply = message.reply!!
 					
-					Text(
-						message.creator.displayName,
-						color = MaterialTheme.colors.secondaryVariant,
-						modifier = Modifier
-							.padding(7.dp).align(Alignment.Start)
-					)
-					
-					Text(
-						message.text, modifier = Modifier
-							.padding(
-								top = 10.dp,
-								start = 10.dp,
-								bottom = 5.dp,
-								end = 10.dp
-							).align(Alignment.Start)
-					)
-					
-					Row(
-						Modifier.align(Alignment.End).padding(
-							bottom = 10.dp,
-							end = 10.dp
-						)
+					Column(
+						modifier = Modifier.padding(5.dp).background(
+							color = REPLY_MESSAGE,
+							shape = MaterialTheme.shapes.medium
+						).clickable {
+							scope.launch {
+								val index = messages.value.indexOfFirst { it.id == reply.id }
+								
+								if (index != -1)
+									messagesState.animateScrollToItem(index)
+							}
+						},
+						horizontalAlignment = Alignment.CenterHorizontally,
 					) {
-						if (message.modified)
-							Text(
-								stringResource(Res.string.edited),
-								color = BACKGROUND_VARIANT,
-								fontSize = 10.sp
-							)
+						Text(
+							reply.creator.displayName,
+							color = MaterialTheme.colors.secondaryVariant,
+							modifier = Modifier
+								.padding(7.dp).align(Alignment.Start)
+						)
 						
 						Text(
-							message.sendTime.timeToLocalDateTime().time.toString(),
+							reply.text, modifier = Modifier
+								.padding(7.dp).align(Alignment.Start)
+						)
+					}
+				}
+				
+				Text(
+					message.creator.displayName,
+					color = MaterialTheme.colors.secondaryVariant,
+					modifier = Modifier
+						.padding(7.dp).align(Alignment.Start)
+				)
+				
+				Text(
+					message.text, modifier = Modifier
+						.padding(
+							top = 10.dp,
+							start = 10.dp,
+							bottom = 5.dp,
+							end = 10.dp
+						).align(Alignment.Start)
+				)
+				
+				Row(
+					Modifier.align(Alignment.End).padding(
+						bottom = 10.dp,
+						end = 10.dp
+					)
+				) {
+					if (message.modified)
+						Text(
+							stringResource(Res.string.edited),
 							color = BACKGROUND_VARIANT,
 							fontSize = 10.sp
 						)
-						
-						if (message.creator.name == clientUser.name)
-							Row(modifier = Modifier.padding(horizontal = 5.dp)) {
-								MessageStatusIcon(message.messageStatus)
-							}
-					}
+					
+					Text(
+						message.sendTime.timeToLocalDateTime().time.toString(),
+						color = BACKGROUND_VARIANT,
+						fontSize = 10.sp
+					)
+					
+					if (message.creator.name == clientUser.name)
+						Row(modifier = Modifier.padding(horizontal = 5.dp)) {
+							MessageStatusIcon(message.messageStatus)
+						}
 				}
 			}
 		}
