@@ -141,7 +141,7 @@ fun saveData() {
 
 fun loadData() {
 	try {
-		LOGGER.info("Load data data")
+		LOGGER.info("Load data")
 		
 		users = json.decodeFromString(File(FILE_USERS_NAME).readText())
 		chats = json.decodeFromString(File(FILE_CHATS_NAME).readText())
