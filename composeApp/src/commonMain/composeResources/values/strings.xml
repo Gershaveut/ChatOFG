@@ -49,4 +49,8 @@
     <string name="pinned_reply">Reply Message</string>
     <string name="pinned_forward">Forward Message</string>
     <string name="pinned_message">Pinned Message</string>
+    <string name="given_admin">Given admin to</string>
+    <string name="kicked_member">Kicked member</string>
+    <string name="deleted_chat">Deleted chat</string>
+    <string name="leaved_chat">Leaved chat</string>
 </resources>

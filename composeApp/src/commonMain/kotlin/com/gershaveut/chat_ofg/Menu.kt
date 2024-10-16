@@ -24,10 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import chatofg.composeapp.generated.resources.*
-import chatofg.composeapp.generated.resources.Res
-import chatofg.composeapp.generated.resources.app_name
-import chatofg.composeapp.generated.resources.chat_created
-import chatofg.composeapp.generated.resources.members
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -50,9 +46,10 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 		var users by remember { mutableStateOf(Client.users) }
 		
 		Column {
+			val snackbarHostState = remember { SnackbarHostState() }
+			var createChat by remember { mutableStateOf(false) }
+			
 			if (openChat.value == null) {
-				var createChat by remember { mutableStateOf(false) }
-				
 				TopAppBar(
 					title = { Text(stringResource(Res.string.app_name)) },
 					navigationIcon = {
@@ -63,9 +60,11 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 						}) { Icon(Icons.Filled.Menu, contentDescription = stringResource(Res.string.menu)) }
 					}
 				)
-				
-				Scaffold(
-					floatingActionButton = {
+			}
+			
+			Scaffold(
+				floatingActionButton = {
+					if (openChat.value == null) {
 						FloatingActionButton({
 							refreshUsers {
 								users = Client.users
@@ -75,9 +74,15 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 						}) {
 							Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.create_chat))
 						}
-					},
-					floatingActionButtonPosition = FabPosition.End
-				) {
+					}
+				},
+				floatingActionButtonPosition = FabPosition.End,
+				snackbarHost = {
+					SnackbarHost(snackbarHostState) {
+						Snackbar(snackbarData = it)
+					}
+				}) {
+				if (openChat.value == null) {
 					sync {
 						chats.value = Client.chats
 						
@@ -102,42 +107,42 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 							}
 						}
 					}
-				}
-				
-				if (createChat) {
-					SelectUsers(stringResource(Res.string.create_chat), users, {
-						createChat = false
-					}) { members ->
-						createChat = false
-						
-						if (members.size > 0) {
-							createChat(
-								Chat(
-									members = members.associateWith { false }
-										.toMutableMap()
-										.apply { put(clientUser, true) })
-							) { chat ->
-								openChat.value = chat
+					
+					if (createChat) {
+						SelectUsers(stringResource(Res.string.create_chat), users, {
+							createChat = false
+						}) { members ->
+							createChat = false
+							
+							if (members.size > 0) {
+								createChat(
+									Chat(
+										members = members.associateWith { false }
+											.toMutableMap()
+											.apply { put(clientUser, true) })
+								) { chat ->
+									openChat.value = chat
+								}
 							}
 						}
 					}
-				}
-			} else {
-				OpenChat(openChat.value!!, showInfo, openChat)
-			}
-			
-			if (showInfo.value) {
-				if (openChat.value != null) {
-					ChatDialog(stringResource(Res.string.chat_info), {
-						showInfo.value = false
-					}) {
-						ShowInfo(openChat.value!!)
-					}
 				} else {
-					ChatDialog(stringResource(Res.string.account), {
-						showInfo.value = false
-					}) {
-						ShowInfo(clientUser.name)
+					OpenChat(openChat.value!!, showInfo, openChat, snackbarHostState)
+				}
+				
+				if (showInfo.value) {
+					if (openChat.value != null) {
+						ChatDialog(stringResource(Res.string.chat_info), {
+							showInfo.value = false
+						}) {
+							ShowInfo(openChat.value!!)
+						}
+					} else {
+						ChatDialog(stringResource(Res.string.account), {
+							showInfo.value = false
+						}) {
+							ShowInfo(clientUser.name)
+						}
 					}
 				}
 			}
@@ -284,7 +289,11 @@ fun ShowInfo(name: String, sign: String, description: String?, createTime: Long)
 			}
 		}
 		
-		InfoRow(Icons.Outlined.Info, stringResource(Res.string.description), description ?: stringResource(Res.string.no_description))
+		InfoRow(
+			Icons.Outlined.Info,
+			stringResource(Res.string.description),
+			description ?: stringResource(Res.string.no_description)
+		)
 		
 		InfoRow(
 			Icons.Outlined.Info,

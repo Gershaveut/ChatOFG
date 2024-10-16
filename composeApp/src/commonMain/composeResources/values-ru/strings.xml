@@ -49,4 +49,8 @@
     <string name="pinned_reply">Ответить на</string>
     <string name="pinned_forward">Переслать сообщение</string>
     <string name="pinned_message">Прекреплённое сообщение</string>
+    <string name="given_admin">Права адменистратора были выданы</string>
+    <string name="kicked_member">Исключён пользователь</string>
+    <string name="deleted_chat">Удалён чат</string>
+    <string name="leaved_chat">Покинут чат</string>
 </resources>

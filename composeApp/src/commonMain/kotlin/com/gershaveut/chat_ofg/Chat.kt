@@ -39,7 +39,8 @@ enum class PinnedType(val actionString: StringResource, val icon: ImageVector) {
 fun OpenChat(
 	chat: Chat,
 	showInfo: MutableState<Boolean>,
-	openChat: MutableState<Chat?>
+	openChat: MutableState<Chat?>,
+	snackbarHostState: SnackbarHostState
 ) {
 	Column {
 		val messagesState = rememberLazyListState()
@@ -209,13 +210,21 @@ fun OpenChat(
 								Text(stringResource(Res.string.chat_settings))
 							}
 							
+							val deletedChatText = stringResource(Res.string.deleted_chat)
+							val leavedChatText = stringResource(Res.string.deleted_chat)
+							
 							if (chat.userAccess(clientUser)) {
 								TextButton(
 									{
 										expanded = false
 										
-										deleteChat(openChat.value!!)
+										deleteChat(openChat.value!!) {
+											scope.launch {
+												snackbarHostState.showSnackbar("$deletedChatText ${chat.getNameClient()}")
+											}
+											
 											openChat.value = null
+										}
 									},
 									modifier = Modifier.width(widthButton)
 								) {
@@ -228,8 +237,13 @@ fun OpenChat(
 									{
 										expanded = false
 										
-										leaveChat(openChat.value!!)
+										leaveChat(openChat.value!!) {
+											scope.launch {
+												snackbarHostState.showSnackbar("$leavedChatText ${chat.getNameClient()}")
+											}
+											
 											openChat.value = null
+										}
 									},
 									modifier = Modifier.width(widthButton)
 								) {

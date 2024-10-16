@@ -22,6 +22,7 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.ChatType
 import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.enums.EnumEntries
 
@@ -84,113 +85,136 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 
 @Composable
 fun ChatSettings(openSettings: MutableState<Boolean>, chat: Chat, admin: Boolean) {
-	Settings(openSettings, "${stringResource(Res.string.chat_settings)} " + chat.getNameClient(), {
-		updateChat(chat)
+	val snackbarHostState = remember { SnackbarHostState() }
+	
+	val scope = rememberCoroutineScope()
+	
+	fun snackbar(text: String) {
+		scope.launch {
+			snackbarHostState.showSnackbar(text)
+		}
+	}
+	
+	Scaffold(snackbarHost = {
+		SnackbarHost(snackbarHostState) {
+			Snackbar(snackbarData = it)
+		}
 	}) {
-		LazyColumn {
-			item {
-				Category(stringResource(Res.string.info)) {
-					Filed(
-						stringResource(Res.string.name),
-						chat.getNameClient(),
-						chat.getNameClient(),
-						preview = false,
-						readOnly = !admin || chat.chatType == ChatType.PrivateChat
-					) {
-						chat.setName(it)
-					}
-					
-					if (chat.chatType == ChatType.Group) {
-						FiledNullable(stringResource(Res.string.description), chat.description, readOnly = !admin) {
-							chat.description = it
+		Settings(openSettings, "${stringResource(Res.string.chat_settings)} " + chat.getNameClient(), {
+			updateChat(chat)
+		}) {
+			LazyColumn {
+				item {
+					Category(stringResource(Res.string.info)) {
+						Filed(
+							stringResource(Res.string.name),
+							chat.getNameClient(),
+							chat.getNameClient(),
+							preview = false,
+							readOnly = !admin || chat.chatType == ChatType.PrivateChat
+						) {
+							chat.setName(it)
+						}
+						
+						if (chat.chatType == ChatType.Group) {
+							FiledNullable(stringResource(Res.string.description), chat.description, readOnly = !admin) {
+								chat.description = it
+							}
 						}
 					}
-				}
-				
-				var userInfo by remember { mutableStateOf<UserInfo?>(null) }
-				
-				if (userInfo != null)
-					ChatDialog(stringResource(Res.string.user_info), {
-						userInfo = null
-					}) {
-						ShowInfo(userInfo!!.name)
-					}
-				
-				if (chat.chatType == ChatType.Group) {
-					Category(stringResource(Res.string.members)) {
-						Column {
-							var members by remember { mutableStateOf(chat.members.entries) }
-							
-							sync {
-								members = Client.chats.find { it.id == chat.id }?.members!!.entries
-							}
-							
-							members.forEach { member ->
-								Row(
-									modifier = Modifier.fillMaxWidth(),
-									horizontalArrangement = Arrangement.SpaceBetween,
-									verticalAlignment = Alignment.CenterVertically
-								)
-								{
-									Row(verticalAlignment = Alignment.CenterVertically) {
-										
-										UserRow(member.key)
-										if (member.value)
-											Text(stringResource(Res.string.admin), color = BACKGROUND_VARIANT)
-									}
-									
-									var expanded by remember { mutableStateOf(false) }
-									
-									Column {
-										IconButton({
-											expanded = true
-										}) {
-											Icon(Icons.Filled.MoreVert, stringResource(Res.string.actions))
+					
+					var userInfo by remember { mutableStateOf<UserInfo?>(null) }
+					
+					if (userInfo != null)
+						ChatDialog(stringResource(Res.string.user_info), {
+							userInfo = null
+						}) {
+							ShowInfo(userInfo!!.name)
+						}
+					
+					if (chat.chatType == ChatType.Group) {
+						Category(stringResource(Res.string.members)) {
+							Column {
+								var members by remember { mutableStateOf(chat.members.entries) }
+								
+								sync {
+									members = Client.chats.find { it.id == chat.id }?.members!!.entries
+								}
+								
+								members.forEach { member ->
+									Row(
+										modifier = Modifier.fillMaxWidth(),
+										horizontalArrangement = Arrangement.SpaceBetween,
+										verticalAlignment = Alignment.CenterVertically
+									)
+									{
+										Row(verticalAlignment = Alignment.CenterVertically) {
+											
+											UserRow(member.key)
+											if (member.value)
+												Text(stringResource(Res.string.admin), color = BACKGROUND_VARIANT)
 										}
 										
-										DropdownMenu(
-											modifier = Modifier.padding(horizontal = 5.dp),
-											expanded = expanded,
-											onDismissRequest = { expanded = false }
-										) {
-											val widthButton = 150.dp
-											
-											TextButton(
-												{
-													expanded = false
-													
-													userInfo = member.key
-												},
-												modifier = Modifier.width(widthButton)
-											) {
-												Text(stringResource(Res.string.show))
+										var expanded by remember { mutableStateOf(false) }
+										
+										Column {
+											IconButton({
+												expanded = true
+											}) {
+												Icon(Icons.Filled.MoreVert, stringResource(Res.string.actions))
 											}
 											
-											if (admin) {
-												Divider()
-												
-												if (!member.value) {
-													TextButton(
-														{
-															expanded = false
-															
-															adminChat(member.key.name, chat)
-														},
-														modifier = Modifier.width(widthButton)
-													) {
-														Text(stringResource(Res.string.give_admin))
-													}
-												}
+											DropdownMenu(
+												modifier = Modifier.padding(horizontal = 5.dp),
+												expanded = expanded,
+												onDismissRequest = { expanded = false }
+											) {
+												val widthButton = 150.dp
 												
 												TextButton(
 													{
 														expanded = false
 														
-														kickChat(member.key.name, chat)
+														userInfo = member.key
 													},
 													modifier = Modifier.width(widthButton)
 												) {
-													Text(stringResource(Res.string.kick))
+													Text(stringResource(Res.string.show))
+												}
+												
+												if (admin) {
+													Divider()
+													
+													val giveAdminText = stringResource(Res.string.given_admin)
+													val kickedMemberText = stringResource(Res.string.kicked_member)
+													
+													if (!member.value) {
+														TextButton(
+															{
+																expanded = false
+																
+																adminChat(member.key.name, chat)
+																
+																snackbar("$giveAdminText ${member.key.displayName}")
+															},
+															modifier = Modifier.width(widthButton)
+														) {
+															Text(stringResource(Res.string.give_admin))
+														}
+													}
+													
+													TextButton(
+														{
+															expanded = false
+															
+															kickChat(member.key.name, chat)
+															
+															snackbar("$kickedMemberText ${member.key.displayName}")
+														},
+														modifier = Modifier.width(widthButton)
+													) {
+														Text(stringResource(Res.string.kick))
+													}
 												}
 											}
 										}
