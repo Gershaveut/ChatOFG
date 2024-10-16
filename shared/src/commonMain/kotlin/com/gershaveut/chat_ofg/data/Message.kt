@@ -14,4 +14,5 @@ data class Message(
 	val messageType: MessageType = MessageType.Default,
 	val id: String = uuid4().toString(),
 	var reply: Message? = null,
+	var forwarded: Boolean = false
 )

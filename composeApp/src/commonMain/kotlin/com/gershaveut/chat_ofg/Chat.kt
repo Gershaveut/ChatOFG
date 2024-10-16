@@ -3,10 +3,7 @@ package com.gershaveut.chat_ofg
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,11 +27,16 @@ import org.jetbrains.compose.resources.stringResource
 
 enum class PinnedType {
 	Edit,
-	Reply
+	Reply,
+	Forward
 }
 
 @Composable
-fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState<Chat?>) {
+fun OpenChat(
+	chat: Chat,
+	showInfo: MutableState<Boolean>,
+	openChat: MutableState<Chat?>
+) {
 	Column {
 		val messagesState = rememberLazyListState()
 		val messages = remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
@@ -61,220 +63,286 @@ fun OpenChat(chat: Chat, showInfo: MutableState<Boolean>, openChat: MutableState
 			}
 		}
 		
+		val openChatSettings = remember { mutableStateOf(false) }
+		val forwardChat = remember { mutableStateOf(false) }
+		
 		val pinnedMessage = remember { mutableStateOf<Pair<Message, PinnedType>?>(null) }
 		
-		val openChatSettings = remember { mutableStateOf(false) }
-		
 		if (!openChatSettings.value) {
-			var users by remember { mutableStateOf(Client.users) }
-			
-			TopAppBar(
-				title = {
-					Row(verticalAlignment = Alignment.CenterVertically,
-						modifier = Modifier.fillMaxSize()
-							.clickable { showInfo.value = true }) {
-						Text(
-							chat.getNameClient()
-						)
-					}
+			if (forwardChat.value) {
+				TopAppBar({
+					Text(stringResource(Res.string.chat_selection))
 				},
-				navigationIcon = {
-					IconButton({
-						openChat.value = null
-					}) {
-						Icon(
-							Icons.AutoMirrored.Filled.ArrowBack,
-							contentDescription = stringResource(Res.string.back)
-						)
+					navigationIcon = {
+						IconButton({
+							forwardChat.value = false
+							pinnedMessage.value = null
+						}) {
+							Icon(
+								Icons.AutoMirrored.Filled.ArrowBack,
+								contentDescription = stringResource(Res.string.back)
+							)
+						}
 					}
-				},
-				actions = {
-					var expanded by remember { mutableStateOf(false) }
-					
-					IconButton({
-						expanded = true
-					}) {
-						Icon(Icons.Filled.MoreVert, contentDescription = stringResource(Res.string.actions))
+				)
+				
+				LazyColumn {
+					items(Client.chats, { it.id }) { chat ->
+						Row(
+							modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
+								if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
+									readMessages(chat)
+								
+								forwardChat.value = false
+								
+								openChat.value = chat
+								messages.value = chat.messages
+							}
+						) {
+							ChatRow(chat)
+						}
 					}
-					
-					var selectInvite by remember { mutableStateOf(false) }
-					
-					if (selectInvite) {
-						SelectUsers(
-							stringResource(Res.string.invite),
-							users.apply { removeAll(openChat.value!!.members.keys) },
-							{
+				}
+			} else {
+				var users by remember { mutableStateOf(Client.users) }
+				
+				TopAppBar(
+					title = {
+						Row(verticalAlignment = Alignment.CenterVertically,
+							modifier = Modifier.fillMaxSize()
+								.clickable { showInfo.value = true }) {
+							Text(
+								chat.getNameClient()
+							)
+						}
+					},
+					navigationIcon = {
+						IconButton({
+							openChat.value = null
+						}) {
+							Icon(
+								Icons.AutoMirrored.Filled.ArrowBack,
+								contentDescription = stringResource(Res.string.back)
+							)
+						}
+					},
+					actions = {
+						var expanded by remember { mutableStateOf(false) }
+						
+						IconButton({
+							expanded = true
+						}) {
+							Icon(Icons.Filled.MoreVert, contentDescription = stringResource(Res.string.actions))
+						}
+						
+						var selectInvite by remember { mutableStateOf(false) }
+						
+						if (selectInvite) {
+							SelectUsers(
+								stringResource(Res.string.invite),
+								users.apply { removeAll(openChat.value!!.members.keys) },
+								{
+									selectInvite = false
+								}) { members ->
 								selectInvite = false
-							}) { members ->
-							selectInvite = false
-							
-							members.forEach {
-								inviteChat(it.name, openChat.value!!) {
-									if (chat.chatType == ChatType.PrivateChat)
-										openChat.value = null
+								
+								members.forEach {
+									inviteChat(it.name, openChat.value!!) {
+										if (chat.chatType == ChatType.PrivateChat)
+											openChat.value = null
+									}
 								}
 							}
 						}
-					}
-					
-					DropdownMenu(
-						modifier = Modifier.padding(horizontal = 5.dp),
-						expanded = expanded,
-						onDismissRequest = { expanded = false }
-					) {
-						val widthButton = 150.dp
 						
-						TextButton(
-							{
-								expanded = false
-								
-								showInfo.value = true
-							},
-							modifier = Modifier.width(widthButton)
+						DropdownMenu(
+							modifier = Modifier.padding(horizontal = 5.dp),
+							expanded = expanded,
+							onDismissRequest = { expanded = false }
 						) {
-							Text(stringResource(Res.string.show))
-						}
-						
-						sync {
-							openChat.value = Client.chats.find { it.id == openChat.value!!.id }
-						}
-						
-						TextButton(
-							{
-								expanded = false
-								
-								refreshUsers {
-									users = Client.users
-								}
-								
-								selectInvite = true
-							},
-							modifier = Modifier.width(widthButton)
-						) {
-							Text(stringResource(Res.string.invite))
-						}
-						
-						Divider()
-						
-						TextButton(
-							{
-								expanded = false
-								
-								openChatSettings.value = true
-							},
-							modifier = Modifier.width(widthButton)
-						) {
-							Text(stringResource(Res.string.chat_settings))
-						}
-						
-						if (chat.userAccess(clientUser)) {
+							val widthButton = 150.dp
+							
 							TextButton(
 								{
 									expanded = false
 									
-									deleteChat(openChat.value!!) {
-										openChat.value = null
-									}
+									showInfo.value = true
 								},
 								modifier = Modifier.width(widthButton)
 							) {
-								Text(stringResource(Res.string.delete_chat))
+								Text(stringResource(Res.string.show))
 							}
-						}
-						
-						if (chat.chatType != ChatType.PrivateChat) {
+							
+							sync {
+								openChat.value = Client.chats.find { it.id == openChat.value!!.id }
+							}
+							
 							TextButton(
 								{
 									expanded = false
 									
-									leaveChat(openChat.value!!) {
-										openChat.value = null
+									refreshUsers {
+										users = Client.users
 									}
+									
+									selectInvite = true
 								},
 								modifier = Modifier.width(widthButton)
 							) {
-								Text(stringResource(Res.string.leave_chat))
-							}
-						}
-					}
-				}
-			)
-			
-			Scaffold(
-				floatingActionButton = {
-					if (messagesState.firstVisibleItemIndex < messages.value.count() - 10)
-						FloatingActionButton({
-							scroll()
-						}, modifier = Modifier.padding(bottom = 50.dp)) {
-							Icon(Icons.Filled.KeyboardArrowDown, contentDescription = stringResource(Res.string.scroll))
-						}
-				}
-			) {
-				Column {
-					LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-						itemsIndexed(messages.value, { _, it -> it.id }) { index, message -> // TODO: Crash on delete
-							if (message.messageType == MessageType.System) {
-								SystemMessage(message.text)
-							} else {
-								// Message Data
-								val dataLast =
-									messages.value.findLast { last -> index > messages.value.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
-								
-								if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
-									val data = message.sendTime.timeToLocalDateTime().date
-									
-									val dataText =
-										if (data.year == getCurrentDataTime().year)
-											"${data.dayOfMonth} ${data.month.name}"
-										else
-											data.customToString()
-									
-									SystemMessage(dataText)
-								}
-								
-								Message(message, chat, messages, pinnedMessage, messagesState)
-							}
-						}
-						
-						// TODO: Scroll on open
-					}
-					
-					if (pinnedMessage.value != null) {
-						PinnedMessage(pinnedMessage)
-					}
-					
-					SendRow { message ->
-						if (pinnedMessage.value?.second != PinnedType.Edit) {
-							if (pinnedMessage.value != null) {
-								val replyMessage = pinnedMessage.value!!.first
-								
-								message.apply {
-									reply = replyMessage
-								}
-								
-								pinnedMessage.value = null
+								Text(stringResource(Res.string.invite))
 							}
 							
+							Divider()
+							
+							TextButton(
+								{
+									expanded = false
+									
+									openChatSettings.value = true
+								},
+								modifier = Modifier.width(widthButton)
+							) {
+								Text(stringResource(Res.string.chat_settings))
+							}
+							
+							if (chat.userAccess(clientUser)) {
+								TextButton(
+									{
+										expanded = false
+										
+										deleteChat(openChat.value!!)
+											openChat.value = null
+									},
+									modifier = Modifier.width(widthButton)
+								) {
+									Text(stringResource(Res.string.delete_chat))
+								}
+							}
+							
+							if (chat.chatType != ChatType.PrivateChat) {
+								TextButton(
+									{
+										expanded = false
+										
+										leaveChat(openChat.value!!)
+											openChat.value = null
+									},
+									modifier = Modifier.width(widthButton)
+								) {
+									Text(stringResource(Res.string.leave_chat))
+								}
+							}
+						}
+					}
+				)
+				
+				Scaffold(
+					floatingActionButton = {
+						if (messagesState.firstVisibleItemIndex < messages.value.count() - 10)
+							FloatingActionButton({
+								scroll()
+							}, modifier = Modifier.padding(bottom = 50.dp)) {
+								Icon(
+									Icons.Filled.KeyboardArrowDown,
+									contentDescription = stringResource(Res.string.scroll)
+								)
+							}
+					}
+				) {
+					Column {
+						LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
+							itemsIndexed(
+								messages.value,
+								{ _, it -> it.id }) { index, message -> // TODO: Crash on delete
+								if (message.messageType == MessageType.System) {
+									SystemMessage(message.text)
+								} else {
+									// Message Data
+									val dataLast =
+										messages.value.findLast { last -> index > messages.value.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+									
+									if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
+										val data = message.sendTime.timeToLocalDateTime().date
+										
+										val dataText =
+											if (data.year == getCurrentDataTime().year)
+												"${data.dayOfMonth} ${data.month.name}"
+											else
+												data.customToString()
+										
+										SystemMessage(dataText)
+									}
+									
+									Message(message, chat, messages, pinnedMessage, messagesState, forwardChat)
+								}
+							}
+							
+							// TODO: Scroll on open
+						}
+						
+						if (pinnedMessage.value != null) {
+							PinnedMessage(pinnedMessage)
+						}
+						
+						fun sendMessage(message: Message) {
 							messages.value = messages.value.toMutableList().apply { add(message) }
 							
 							sendMessage(message, chat)
 							
 							scroll()
-						} else {
-							if (pinnedMessage.value!!.second == PinnedType.Edit) {
-								val editMessage = pinnedMessage.value!!.first
-								
-								editMessage.apply {
-									text = message.text
-									modified = true
-									messageStatus = MessageStatus.UnSend
+						}
+						
+						SendRow(pinnedMessage) { message ->
+							when (pinnedMessage.value?.second) {
+								PinnedType.Edit -> {
+									val editMessage = pinnedMessage.value!!.first
+									
+									editMessage.apply {
+										text = message.text
+										modified = true
+										messageStatus = MessageStatus.UnSend
+									}
+									
+									messages.value[messages.value.indexOfFirst { it.id == editMessage.id }] =
+										editMessage
+									
+									editMessages(editMessage, chat)
+									
+									pinnedMessage.value = null
 								}
 								
-								messages.value[messages.value.indexOfFirst { it.id == editMessage.id }] = editMessage
+								PinnedType.Reply -> {
+									val replyMessage = pinnedMessage.value!!.first
+									
+									message.apply {
+										reply = replyMessage
+									}
+									
+									pinnedMessage.value = null
+									
+									sendMessage(message)
+								}
 								
-								editMessages(editMessage, chat)
+								PinnedType.Forward -> {
+									val forwardMessage = pinnedMessage.value!!.first.apply {
+										forwarded = true
+									}
+									
+									pinnedMessage.value = null
+									
+									if (message.text.isEmpty()) {
+										sendMessage(forwardMessage)
+									} else {
+										sendMessage(message.apply {
+											reply = forwardMessage
+											forwarded = true
+										})
+									}
+								}
 								
-								pinnedMessage.value = null
+								else -> {
+									sendMessage(message)
+								}
 							}
 						}
 					}
@@ -322,7 +390,7 @@ fun PinnedMessage(pinnedMessage: MutableState<Pair<Message, PinnedType>?>) {
 }
 
 @Composable
-fun SendRow(onSend: (message: Message) -> Unit) {
+fun SendRow(pinnedMessage: MutableState<Pair<Message, PinnedType>?>, onSend: (message: Message) -> Unit) {
 	Row {
 		var messageText by remember { mutableStateOf("") }
 		
@@ -337,7 +405,7 @@ fun SendRow(onSend: (message: Message) -> Unit) {
 		)
 		IconButton(
 			{
-				if (messageText.isNotEmpty()) {
+				if (messageText.isNotEmpty() || (pinnedMessage.value != null && pinnedMessage.value!!.second == PinnedType.Forward)) {
 					val message =
 						Message(
 							clientUser,
@@ -364,7 +432,8 @@ fun Message(
 	chat: Chat,
 	messages: MutableState<MutableList<Message>>,
 	pinnedMessage: MutableState<Pair<Message, PinnedType>?>,
-	messagesState: LazyListState
+	messagesState: LazyListState,
+	forwardChat: MutableState<Boolean>
 ) {
 	var showInfo by remember { mutableStateOf(false) }
 	
@@ -372,7 +441,10 @@ fun Message(
 		ChatDialog(stringResource(Res.string.user_info), {
 			showInfo = false
 		}) {
-			ShowInfo(message.creator.name)
+			if (message.forwarded && message.reply != null)
+				ShowInfo(message.reply!!.creator.name)
+			else
+				ShowInfo(message.creator.name)
 		}
 	
 	var expanded by remember { mutableStateOf(false) }
@@ -399,10 +471,33 @@ fun Message(
 				Text(stringResource(Res.string.show))
 			}
 			
+			TextButton(
+				{
+					expanded = false
+					
+					forwardChat.value = true
+					pinnedMessage.value = message to PinnedType.Forward
+				},
+				modifier = Modifier.width(widthButton)
+			) {
+				Text(stringResource(Res.string.forward))
+			}
+			
+			TextButton(
+				{
+					expanded = false
+					
+					pinnedMessage.value = message to PinnedType.Reply
+				},
+				modifier = Modifier.width(widthButton)
+			) {
+				Text(stringResource(Res.string.reply))
+			}
+			
 			if (chat.userAccess(clientUser) || message.creator.name == clientUser.name) {
 				Divider()
 				
-				if (message.creator.name == clientUser.name) {
+				if (message.creator.name == clientUser.name && !(message.reply == null && message.forwarded)) {
 					TextButton(
 						{
 							expanded = false
@@ -413,17 +508,6 @@ fun Message(
 					) {
 						Text(stringResource(Res.string.edit_message))
 					}
-				}
-				
-				TextButton(
-					{
-						expanded = false
-						
-						pinnedMessage.value = message to PinnedType.Reply
-					},
-					modifier = Modifier.width(widthButton)
-				) {
-					Text(stringResource(Res.string.reply))
 				}
 				
 				TextButton(
@@ -451,6 +535,12 @@ fun Message(
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
 			Column {
+				if (message.forwarded) {
+					Text("${stringResource(Res.string.forwarded)} ${if (message.reply != null) message.reply!!.creator.displayName else message.creator.displayName}", modifier = Modifier.padding(5.dp).clickable {
+						showInfo = true
+					})
+				}
+				
 				if (message.reply != null) {
 					val scope = rememberCoroutineScope()
 					val reply = message.reply!!
@@ -461,10 +551,14 @@ fun Message(
 							shape = MaterialTheme.shapes.medium
 						).clickable {
 							scope.launch {
-								val index = messages.value.indexOfFirst { it.id == reply.id }
-								
-								if (index != -1)
-									messagesState.animateScrollToItem(index)
+								if (message.forwarded) {
+									showInfo = true
+								} else {
+									val index = messages.value.indexOfFirst { it.id == reply.id }
+									
+									if (index != -1)
+										messagesState.animateScrollToItem(index)
+								}
 							}
 						},
 						horizontalAlignment = Alignment.CenterHorizontally,

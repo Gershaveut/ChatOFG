@@ -75,7 +75,8 @@ fun AppAndroidPreviewChatInfo() {
 		OpenChat(
 			chats[0],
 			mutableStateOf(false),
-			mutableStateOf(null)
+			mutableStateOf(null),
+			pinnedMessage
 		)
 	}
 }

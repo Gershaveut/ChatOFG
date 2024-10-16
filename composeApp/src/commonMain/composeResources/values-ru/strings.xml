@@ -42,4 +42,7 @@
     <string name="expand">Раскрыть список</string>
     <string name="reply">Ответить</string>
     <string name="version">Версия приложения</string>
+    <string name="forward">Переслать</string>
+    <string name="forwarded">Переслано от</string>
+    <string name="chat_selection">Выбор чата</string>
 </resources>

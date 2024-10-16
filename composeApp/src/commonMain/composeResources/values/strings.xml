@@ -42,4 +42,7 @@
     <string name="expand">Expand</string>
     <string name="reply">Reply</string>
     <string name="version">Version</string>
+    <string name="forward">Forward</string>
+    <string name="forwarded">Forwarded from</string>
+    <string name="chat_selection">Chat Selection</string>
 </resources>
