@@ -45,4 +45,8 @@
     <string name="forward">Переслать</string>
     <string name="forwarded">Переслано от</string>
     <string name="chat_selection">Выбор чата</string>
+    <string name="pinned_edit">Редактировать сообщение</string>
+    <string name="pinned_reply">Ответить на</string>
+    <string name="pinned_forward">Переслать сообщение</string>
+    <string name="pinned_message">Прекреплённое сообщение</string>
 </resources>

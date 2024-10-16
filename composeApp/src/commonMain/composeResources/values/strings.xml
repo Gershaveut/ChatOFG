@@ -45,4 +45,8 @@
     <string name="forward">Forward</string>
     <string name="forwarded">Forwarded from</string>
     <string name="chat_selection">Chat Selection</string>
+    <string name="pinned_edit">Edit Message</string>
+    <string name="pinned_reply">Reply Message</string>
+    <string name="pinned_forward">Forward Message</string>
+    <string name="pinned_message">Pinned Message</string>
 </resources>

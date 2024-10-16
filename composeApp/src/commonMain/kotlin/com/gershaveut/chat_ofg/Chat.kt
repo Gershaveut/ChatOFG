@@ -7,8 +7,10 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -17,18 +19,20 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-enum class PinnedType {
-	Edit,
-	Reply,
-	Forward
+enum class PinnedType(val actionString: StringResource, val icon: ImageVector) {
+	Edit(Res.string.pinned_edit, Icons.Filled.Edit),
+	Reply(Res.string.pinned_reply, Icons.AutoMirrored.Filled.ArrowBack),
+	Forward(Res.string.pinned_forward, Icons.AutoMirrored.Filled.ArrowForward);
 }
 
 @Composable
@@ -375,11 +379,19 @@ fun SystemMessage(text: String) {
 @Composable
 fun PinnedMessage(pinnedMessage: MutableState<Pair<Message, PinnedType>?>) {
 	Row(
-		modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 5.dp),
+		modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
 		horizontalArrangement = Arrangement.SpaceBetween,
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Text(pinnedMessage.value!!.first.text)
+		Row (verticalAlignment = Alignment.CenterVertically) {
+			Icon(pinnedMessage.value!!.second.icon, stringResource(Res.string.pinned_message), modifier = Modifier.padding(5.dp))
+			
+			Column {
+				Text(stringResource(pinnedMessage.value!!.second.actionString), color = MaterialTheme.colors.secondaryVariant)
+				
+				Text(pinnedMessage.value!!.first.text, color = BACKGROUND_VARIANT)
+			}
+		}
 		
 		IconButton({
 			pinnedMessage.value = null
