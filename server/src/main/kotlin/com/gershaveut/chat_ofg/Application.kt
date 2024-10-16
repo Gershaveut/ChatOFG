@@ -55,6 +55,7 @@ suspend fun main() = coroutineScope {
 	loadData()
 	
 	val timer = launch {
+		
 		timer(initialDelay = 100000L, period = 100000L) {
 			saveData()
 		}
@@ -63,7 +64,7 @@ suspend fun main() = coroutineScope {
 	embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
 		.start(wait = true)
 	
-	timer.cancel()
+	timer.cancelAndJoin()
 	
 	saveData()
 }
