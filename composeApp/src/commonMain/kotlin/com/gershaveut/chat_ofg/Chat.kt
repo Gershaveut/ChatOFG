@@ -40,12 +40,18 @@ fun OpenChat(
 	chat: Chat,
 	showInfo: MutableState<Boolean>,
 	openChat: MutableState<Chat?>,
-	snackbarHostState: SnackbarHostState
+	onClose: (String?) -> Unit
 ) {
 	Column {
 		val messagesState = rememberLazyListState()
 		val messages = remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
 		val scope = rememberCoroutineScope()
+		
+		fun close(reason: String? = null) {
+			openChat.value = null
+			
+			onClose(reason)
+		}
 		
 		fun scroll() {
 			scope.launch {
@@ -123,7 +129,7 @@ fun OpenChat(
 					},
 					navigationIcon = {
 						IconButton({
-							openChat.value = null
+							close()
 						}) {
 							Icon(
 								Icons.AutoMirrored.Filled.ArrowBack,
@@ -154,7 +160,7 @@ fun OpenChat(
 								members.forEach {
 									inviteChat(it.name, openChat.value!!) {
 										if (chat.chatType == ChatType.PrivateChat)
-											openChat.value = null
+											close()
 									}
 								}
 							}
@@ -211,7 +217,7 @@ fun OpenChat(
 							}
 							
 							val deletedChatText = stringResource(Res.string.deleted_chat)
-							val leavedChatText = stringResource(Res.string.deleted_chat)
+							val leavedChatText = stringResource(Res.string.leaved_chat)
 							
 							if (chat.userAccess(clientUser)) {
 								TextButton(
@@ -219,11 +225,7 @@ fun OpenChat(
 										expanded = false
 										
 										deleteChat(openChat.value!!) {
-											scope.launch {
-												snackbarHostState.showSnackbar("$deletedChatText ${chat.getNameClient()}")
-											}
-											
-											openChat.value = null
+											close("$deletedChatText ${chat.getNameClient()}")
 										}
 									},
 									modifier = Modifier.width(widthButton)
@@ -238,11 +240,7 @@ fun OpenChat(
 										expanded = false
 										
 										leaveChat(openChat.value!!) {
-											scope.launch {
-												snackbarHostState.showSnackbar("$leavedChatText ${chat.getNameClient()}")
-											}
-											
-											openChat.value = null
+											close("$leavedChatText ${chat.getNameClient()}")
 										}
 									},
 									modifier = Modifier.width(widthButton)

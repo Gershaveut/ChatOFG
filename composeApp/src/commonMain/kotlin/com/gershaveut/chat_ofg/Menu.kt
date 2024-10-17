@@ -50,99 +50,104 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 			var createChat by remember { mutableStateOf(false) }
 			
 			if (openChat.value == null) {
-				TopAppBar(
-					title = { Text(stringResource(Res.string.app_name)) },
-					navigationIcon = {
-						IconButton({
-							scope.launch {
-								drawerState.open()
+				Scaffold(
+					snackbarHost = {
+						SnackbarHost(snackbarHostState) {
+							Snackbar(snackbarData = it)
+						}
+					}) {
+					Scaffold(
+						floatingActionButton = {
+							FloatingActionButton({
+								refreshUsers {
+									users = Client.users
+								}
+								
+								createChat = true
+							}) {
+								Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.create_chat))
 							}
-						}) { Icon(Icons.Filled.Menu, contentDescription = stringResource(Res.string.menu)) }
+						},
+						floatingActionButtonPosition = FabPosition.End
+					) {
+						Column {
+							TopAppBar(
+								title = { Text(stringResource(Res.string.app_name)) },
+								navigationIcon = {
+									IconButton({
+										scope.launch {
+											drawerState.open()
+										}
+									}) { Icon(Icons.Filled.Menu, contentDescription = stringResource(Res.string.menu)) }
+								}
+							)
+							
+							sync {
+								chats.value = Client.chats
+								
+								// Close chat if deleted TODO: Repair
+								if (openChat.value != null) {
+									if (!Client.chats.any { it.id == openChat.value!!.id })
+										openChat.value = null
+								}
+							}
+							
+							LazyColumn {
+								items(chats.value, { it.id }) { chat ->
+									Row(
+										modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
+											if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
+												readMessages(chat)
+											
+											openChat.value = chat
+										}
+									) {
+										ChatRow(chat)
+									}
+								}
+							}
+							
+							if (createChat) {
+								SelectUsers(stringResource(Res.string.create_chat), users, {
+									createChat = false
+								}) { members ->
+									createChat = false
+									
+									if (members.size > 0) {
+										createChat(
+											Chat(
+												members = members.associateWith { false }
+													.toMutableMap()
+													.apply { put(clientUser, true) })
+										) { chat ->
+											openChat.value = chat
+										}
+									}
+								}
+							}
+						}
 					}
-				)
+				}
+			} else {
+				OpenChat(openChat.value!!, showInfo, openChat) { reason ->
+					scope.launch {
+						reason?.let { snackbarHostState.showSnackbar(it) }
+					}
+				}
 			}
 			
-			Scaffold(
-				floatingActionButton = {
-					if (openChat.value == null) {
-						FloatingActionButton({
-							refreshUsers {
-								users = Client.users
-							}
-							
-							createChat = true
-						}) {
-							Icon(Icons.Filled.Add, contentDescription = stringResource(Res.string.create_chat))
-						}
-					}
-				},
-				floatingActionButtonPosition = FabPosition.End,
-				snackbarHost = {
-					SnackbarHost(snackbarHostState) {
-						Snackbar(snackbarData = it)
-					}
-				}) {
-				if (openChat.value == null) {
-					sync {
-						chats.value = Client.chats
-						
-						// Close chat if deleted TODO: Repair
-						if (openChat.value != null) {
-							if (!Client.chats.any { it.id == openChat.value!!.id })
-								openChat.value = null
-						}
-					}
-					
-					LazyColumn {
-						items(chats.value, { it.id }) { chat ->
-							Row(
-								modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-									if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
-										readMessages(chat)
-									
-									openChat.value = chat
-								}
-							) {
-								ChatRow(chat)
-							}
-						}
-					}
-					
-					if (createChat) {
-						SelectUsers(stringResource(Res.string.create_chat), users, {
-							createChat = false
-						}) { members ->
-							createChat = false
-							
-							if (members.size > 0) {
-								createChat(
-									Chat(
-										members = members.associateWith { false }
-											.toMutableMap()
-											.apply { put(clientUser, true) })
-								) { chat ->
-									openChat.value = chat
-								}
-							}
-						}
+			if (showInfo.value) {
+				if (openChat.value != null) {
+					ChatDialog(stringResource(Res.string.chat_info), {
+						showInfo.value = false
+					}) {
+						ShowInfo(openChat.value!!)
 					}
 				} else {
-					OpenChat(openChat.value!!, showInfo, openChat, snackbarHostState)
-				}
-				
-				if (showInfo.value) {
-					if (openChat.value != null) {
-						ChatDialog(stringResource(Res.string.chat_info), {
-							showInfo.value = false
-						}) {
-							ShowInfo(openChat.value!!)
-						}
-					} else {
-						ChatDialog(stringResource(Res.string.account), {
-							showInfo.value = false
-						}) {
-							ShowInfo(clientUser.name)
-						}
+					ChatDialog(stringResource(Res.string.account), {
+						showInfo.value = false
+					}) {
+						ShowInfo(clientUser.name)
 					}
 				}
 			}
