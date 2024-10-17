@@ -107,11 +107,9 @@ fun Application.module() {
 					}
 				}
 				
-				while (true) {
-					for (frame in incoming) {
-						frame as? Frame.Text ?: continue
-						frame.readText()
-					}
+				for (frame in incoming) {
+					frame as? Frame.Text ?: continue
+					frame.readText()
 				}
 			}
 			
@@ -124,6 +122,10 @@ fun Application.module() {
 			chat()
 		}
 	}
+}
+
+suspend fun sync(userName: String) {
+	messageResponseFlow.emit(userName)
 }
 
 private val json = Json { allowStructuredMapKeys = true }

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
+import com.benasher44.uuid.uuid4
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -59,16 +60,19 @@ fun OpenChat(
 		}
 	}
 	
-	Column {
-		sync {
-			messages.value = Client.chats.find { it.id == chat.id }!!.messages
-			
-			if (messages.value.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
-				readMessages(chat)
-				scroll()
-			}
-		}
+	sync {
+		val updatedChat = Client.chats.find { it.id == chat.id }!!
 		
+		messages.value = updatedChat.messages
+		openChat.value = updatedChat
+		
+		if (messages.value.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
+			readMessages(chat)
+			scroll()
+		}
+	}
+	
+	Column {
 		val openChatSettings = remember { mutableStateOf(false) }
 		val forwardChat = remember { mutableStateOf(false) }
 		
@@ -177,10 +181,6 @@ fun OpenChat(
 								modifier = Modifier.width(widthButton)
 							) {
 								Text(stringResource(Res.string.show))
-							}
-							
-							sync {
-								openChat.value = Client.chats.find { it.id == openChat.value!!.id }
 							}
 							
 							TextButton(
@@ -340,7 +340,9 @@ fun OpenChat(
 									pinnedMessage.value = null
 									
 									if (message.text.isEmpty()) {
-										sendMessage(forwardMessage)
+										sendMessage(forwardMessage.apply {
+											id = uuid4().toString()
+										})
 									} else {
 										sendMessage(message.apply {
 											reply = forwardMessage
@@ -481,7 +483,7 @@ fun Message(
 			},
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
-			DropdownMenu( // TODO: Alignment bug
+			DropdownMenu(
 				modifier = Modifier.padding(horizontal = 5.dp),
 				expanded = expanded,
 				onDismissRequest = { expanded = false }

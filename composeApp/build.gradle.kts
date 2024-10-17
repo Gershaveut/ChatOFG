@@ -59,6 +59,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation("dev.chrisbanes.material3:material3-window-size-class-multiplatform:0.5.0")
             implementation(libs.napier)
+            implementation(libs.uuid)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -21,33 +21,22 @@ import com.gershaveut.chat_ofg.data.UserInfo
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
-val syncResponseFlow = MutableSharedFlow<String>()
-val sharedFlow = syncResponseFlow.asSharedFlow()
-
 val clientUser get() = Client.user!!
 
-lateinit var onAction: (String) -> Unit
+var onAction: ((String) -> Unit)? = null
+var handleConnection: Job? = null
 
 @Composable
 fun App() {
 	Napier.base(DebugAntilog())
 	
 	scope = rememberCoroutineScope()
-	
-	Client.onSync = {
-		debug("Sync")
-		
-		scope.launch {
-			syncResponseFlow.emit("")
-		}
-	}
 	
 	MaterialTheme {
 		val openSettings = remember { mutableStateOf(false) }
@@ -80,6 +69,18 @@ fun App() {
 							}, modifier) {
 								Text("Create test user")
 							}
+							
+							Button({
+								scope.launch {
+									for (i in 1..10) {
+										Client.chats.forEach {
+											Client.sendMessage(Message(Client.user!!, "Spam"), it)
+										}
+									}
+								}
+							}, modifier) {
+								Text("Spam messages")
+							}
 						}
 					}
 					
@@ -107,7 +108,7 @@ fun App() {
 						Auth(stringResource(Res.string.auth), openSettings) {
 							user.value = Client.user
 							
-							scope.launch {
+							handleConnection = scope.launch {
 								Client.handleConnection {
 									if (it) {
 										info("Connected")
@@ -154,15 +155,17 @@ fun debug(text: String) {
 
 fun info(text: String) {
 	Napier.i(text, tag = CLIENT_TAG)
-	onAction(text)
+	onAction?.invoke(text)
 }
 
 fun error(text: String) {
 	Napier.e(text, tag = CLIENT_TAG)
-	onAction(text)
+	onAction?.invoke(text)
 }
 
 fun exit() {
+	handleConnection?.cancel()
+	
 	Client.user = null
 	
 	Client.users.clear()
@@ -371,13 +374,11 @@ fun editMessages(message: Message, chat: Chat) {
 }
 
 fun sync(onSync: () -> Unit) {
-	tryScopeLaunch {
-		sharedFlow.collect {
-			try {
-				onSync()
-			} catch (_: Exception) {
-			
-			}
+	Client.onSync = {
+		try {
+			onSync()
+		} catch (e: Exception) {
+			error(e)
 		}
 	}
 }

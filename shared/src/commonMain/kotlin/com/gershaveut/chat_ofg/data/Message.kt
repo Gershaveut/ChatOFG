@@ -12,7 +12,7 @@ data class Message(
 	var messageStatus: MessageStatus = MessageStatus.UnRead,
 	var modified: Boolean = false,
 	val messageType: MessageType = MessageType.Default,
-	val id: String = uuid4().toString(),
+	var id: String = uuid4().toString(),
 	var reply: Message? = null,
 	var forwarded: Boolean = false
 )

@@ -68,7 +68,11 @@ object Client {
 					
 					if (userName.readText() == user!!.name)
 						sync()
+					else
+						close()
 				}
+				
+				close()
 			}
 		} catch (_: Exception) {
 			onConnection(false)

@@ -12,7 +12,7 @@ fun LocalDate.customToString() = this.toString().replace('-', '.')
 
 fun Long.timeToLocalDateTime(): LocalDateTime =
 	Instant.fromEpochSeconds(this).toLocalDateTime(TimeZone.currentSystemDefault())
-		.also { return LocalDateTime(it.year, it.month, it.dayOfMonth, it.hour, 0) }
+		.also { return LocalDateTime(it.year, it.month, it.dayOfMonth, it.hour, it.minute) }
 
 fun getCurrentDataTime(): LocalDateTime =
 	Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

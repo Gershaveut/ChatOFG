@@ -7,10 +7,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-suspend fun sync(userName: String) {
-	messageResponseFlow.emit(userName)
-}
-
 fun Route.auth() {
 	get("/") {
 		call.respond(userInfo())
