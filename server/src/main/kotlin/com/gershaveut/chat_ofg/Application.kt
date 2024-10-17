@@ -1,6 +1,8 @@
 package com.gershaveut.chat_ofg
 
-import com.gershaveut.chat_ofg.data.*
+import com.gershaveut.chat_ofg.data.Chat
+import com.gershaveut.chat_ofg.data.User
+import com.gershaveut.chat_ofg.data.UserInfo
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -8,14 +10,12 @@ import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.util.logging.*
 import io.ktor.util.pipeline.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -54,16 +54,14 @@ suspend fun main() = coroutineScope {
 	
 	loadData()
 	
-	val timer = launch {
-		timer(initialDelay = 100000L, period = 100000L) {
-			saveData()
-		}
+	val timer = timer(initialDelay = 100000L, period = 100000L) {
+		saveData()
 	}
 	
 	embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::module)
 		.start(wait = true)
 	
-	timer.cancelAndJoin()
+	timer.cancel()
 	
 	saveData()
 }
@@ -158,7 +156,8 @@ fun PipelineContext<Unit, ApplicationCall>.userName() = call.principal<UserIdPri
 fun PipelineContext<Unit, ApplicationCall>.user() = users.find { it.name == call.principal<UserIdPrincipal>()!!.name }!!
 fun PipelineContext<Unit, ApplicationCall>.userInfo() = user().toUserInfo()
 
-fun PipelineContext<Unit, ApplicationCall>.findChat() = chats.find { it.id == user().chats.find { it == call.parameters["chatId"].toString() }!! }!!
+fun PipelineContext<Unit, ApplicationCall>.findChat() =
+	chats.find { chats -> chats.id == user().chats.find { it == call.parameters["chatId"].toString() }!! }!!
 
 suspend fun PipelineContext<Unit, ApplicationCall>.chatAccessAdmin(onAccept: suspend () -> Unit) {
 	if (findChat().members.mapKeys { it.key.name }[userName()]!!)

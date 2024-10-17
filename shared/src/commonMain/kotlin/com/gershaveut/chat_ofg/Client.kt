@@ -73,7 +73,7 @@ object Client {
 		} catch (_: Exception) {
 			onConnection(false)
 			
-			delay(1000)
+			delay(5000)
 			handleConnection(onConnection)
 		}
 	}

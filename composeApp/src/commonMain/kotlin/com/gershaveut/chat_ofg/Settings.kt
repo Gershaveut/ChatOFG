@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
@@ -362,7 +361,10 @@ open class SettingsScope {
 						}) {
 							enumEntries.forEach {
 								DropdownMenuItem({
+									save = true
+									
 									closeValue = it
+									expanded = false
 									
 									onValueChanged(it)
 								}) {

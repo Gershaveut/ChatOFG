@@ -42,30 +42,25 @@ fun OpenChat(
 	openChat: MutableState<Chat?>,
 	onClose: (String?) -> Unit
 ) {
+	val messagesState = rememberLazyListState()
+	val messages = remember { mutableStateOf(chat.messages) }
+	val scope = rememberCoroutineScope()
+	
+	fun close(reason: String? = null) {
+		openChat.value = null
+		
+		onClose(reason)
+	}
+	
+	fun scroll() {
+		scope.launch {
+			if (messages.value.isNotEmpty())
+				messagesState.animateScrollToItem(messages.value.count() - 1)
+		}
+	}
+	
 	Column {
-		val messagesState = rememberLazyListState()
-		val messages = remember { mutableStateOf(chat.messages) } //TODO: Update bug on add or edit
-		val scope = rememberCoroutineScope()
-		
-		fun close(reason: String? = null) {
-			openChat.value = null
-			
-			onClose(reason)
-		}
-		
-		fun scroll() {
-			scope.launch {
-				if (messages.value.isNotEmpty())
-					messagesState.animateScrollToItem(messages.value.count() - 1)
-			}
-		}
-		
 		sync {
-			/* Code duplicate list bug
-			messages.clear()
-			messages.addAll(Client.chats.find { it.id == chat.id }!!.messages)
-			 */
-			
 			messages.value = Client.chats.find { it.id == chat.id }!!.messages
 			
 			if (messages.value.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
@@ -269,7 +264,7 @@ fun OpenChat(
 						LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
 							itemsIndexed(
 								messages.value,
-								{ _, it -> it.id }) { index, message -> // TODO: Crash on delete
+								{ _, it -> it.id }) { index, message ->
 								if (message.messageType == MessageType.System) {
 									SystemMessage(message.text)
 								} else {
@@ -292,8 +287,6 @@ fun OpenChat(
 									Message(message, chat, messages, pinnedMessage, messagesState, forwardChat)
 								}
 							}
-							
-							// TODO: Scroll on open
 						}
 						
 						if (pinnedMessage.value != null) {
@@ -368,6 +361,8 @@ fun OpenChat(
 			ChatSettings(openChatSettings, chat, chat.userAccess(clientUser))
 		}
 	}
+	
+	scroll()
 }
 
 @Composable
@@ -475,80 +470,8 @@ fun Message(
 	
 	Column(
 		modifier = Modifier.fillMaxWidth(),
-		horizontalAlignment = if (calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start
+		horizontalAlignment = if (clientUser.name == message.creator.name && calculateWindowSizeClass().widthSizeClass == WindowWidthSizeClass.Compact) Alignment.End else Alignment.Start
 	) {
-		DropdownMenu(
-			modifier = Modifier.padding(horizontal = 5.dp),
-			expanded = expanded,
-			onDismissRequest = { expanded = false }
-		) {
-			val widthButton = 150.dp
-			
-			TextButton(
-				{
-					expanded = false
-					
-					showInfo = true
-				},
-				modifier = Modifier.width(widthButton)
-			) {
-				Text(stringResource(Res.string.show))
-			}
-			
-			TextButton(
-				{
-					expanded = false
-					
-					forwardChat.value = true
-					pinnedMessage.value = message to PinnedType.Forward
-				},
-				modifier = Modifier.width(widthButton)
-			) {
-				Text(stringResource(Res.string.forward))
-			}
-			
-			TextButton(
-				{
-					expanded = false
-					
-					pinnedMessage.value = message to PinnedType.Reply
-				},
-				modifier = Modifier.width(widthButton)
-			) {
-				Text(stringResource(Res.string.reply))
-			}
-			
-			if (chat.userAccess(clientUser) || message.creator.name == clientUser.name) {
-				Divider()
-				
-				if (message.creator.name == clientUser.name && !(message.reply == null && message.forwarded)) {
-					TextButton(
-						{
-							expanded = false
-							
-							pinnedMessage.value = message to PinnedType.Edit
-						},
-						modifier = Modifier.width(widthButton)
-					) {
-						Text(stringResource(Res.string.edit_message))
-					}
-				}
-				
-				TextButton(
-					{
-						expanded = false
-						
-						messages.value = messages.value.toMutableList().apply { remove(message) }
-						
-						deletedMessage(message, chat)
-					},
-					modifier = Modifier.width(widthButton)
-				) {
-					Text(stringResource(Res.string.delete_message))
-				}
-			}
-		}
-		
 		Column(
 			modifier = Modifier.padding(5.dp).padding(top = 0.dp).background(
 				color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
@@ -558,6 +481,78 @@ fun Message(
 			},
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
+			DropdownMenu( // TODO: Alignment bug
+				modifier = Modifier.padding(horizontal = 5.dp),
+				expanded = expanded,
+				onDismissRequest = { expanded = false }
+			) {
+				val widthButton = 150.dp
+				
+				TextButton(
+					{
+						expanded = false
+						
+						showInfo = true
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text(stringResource(Res.string.show))
+				}
+				
+				TextButton(
+					{
+						expanded = false
+						
+						forwardChat.value = true
+						pinnedMessage.value = message to PinnedType.Forward
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text(stringResource(Res.string.forward))
+				}
+				
+				TextButton(
+					{
+						expanded = false
+						
+						pinnedMessage.value = message to PinnedType.Reply
+					},
+					modifier = Modifier.width(widthButton)
+				) {
+					Text(stringResource(Res.string.reply))
+				}
+				
+				if (chat.userAccess(clientUser) || message.creator.name == clientUser.name) {
+					Divider()
+					
+					if (message.creator.name == clientUser.name && !(message.reply == null && message.forwarded)) {
+						TextButton(
+							{
+								expanded = false
+								
+								pinnedMessage.value = message to PinnedType.Edit
+							},
+							modifier = Modifier.width(widthButton)
+						) {
+							Text(stringResource(Res.string.edit_message))
+						}
+					}
+					
+					TextButton(
+						{
+							expanded = false
+							
+							messages.value = messages.value.toMutableList().apply { remove(message) }
+							
+							deletedMessage(message, chat)
+						},
+						modifier = Modifier.width(widthButton)
+					) {
+						Text(stringResource(Res.string.delete_message))
+					}
+				}
+			}
+			
 			Column {
 				if (message.forwarded) {
 					Text("${stringResource(Res.string.forwarded)} ${if (message.reply != null) message.reply!!.creator.displayName else message.creator.displayName}", modifier = Modifier.padding(5.dp).clickable {

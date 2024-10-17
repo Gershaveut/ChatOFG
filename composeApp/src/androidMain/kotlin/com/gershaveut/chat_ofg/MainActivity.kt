@@ -50,6 +50,7 @@ fun Preview(content: @Composable () -> Unit) {
 	}
 }
 
+/*
 @Preview
 @Composable
 fun AppAndroidPreview() {
@@ -76,7 +77,7 @@ fun AppAndroidPreviewChatInfo() {
 			chats[0],
 			mutableStateOf(false),
 			mutableStateOf(null),
-			pinnedMessage
 		)
 	}
 }
+ */

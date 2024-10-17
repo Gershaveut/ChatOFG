@@ -36,20 +36,20 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 	
 	val scope = rememberCoroutineScope()
 	
-	ModalDrawer(
-		{
-			NavigationMenu(scope, drawerState, showInfo, user, openSettings)
-		},
-		drawerState = drawerState
-	) {
-		val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
-		var users by remember { mutableStateOf(Client.users) }
+	val openChat: MutableState<Chat?> = remember { mutableStateOf(null) }
+	var users by remember { mutableStateOf(Client.users) }
+	
+	Column {
+		val snackbarHostState = remember { SnackbarHostState() }
+		var createChat by remember { mutableStateOf(false) }
 		
-		Column {
-			val snackbarHostState = remember { SnackbarHostState() }
-			var createChat by remember { mutableStateOf(false) }
-			
-			if (openChat.value == null) {
+		if (openChat.value == null) {
+			ModalDrawer(
+				{
+					NavigationMenu(scope, drawerState, showInfo, user, openSettings)
+				},
+				drawerState = drawerState
+			) {
 				Scaffold(
 					snackbarHost = {
 						SnackbarHost(snackbarHostState) {
@@ -85,7 +85,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 							sync {
 								chats.value = Client.chats
 								
-								// Close chat if deleted TODO: Repair
+								// Close chat if deleted
 								if (openChat.value != null) {
 									if (!Client.chats.any { it.id == openChat.value!!.id })
 										openChat.value = null
@@ -128,27 +128,31 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 						}
 					}
 				}
-			} else {
-				OpenChat(openChat.value!!, showInfo, openChat) { reason ->
-					scope.launch {
-						reason?.let { snackbarHostState.showSnackbar(it) }
-					}
-				}
 			}
 			
-			if (showInfo.value) {
-				if (openChat.value != null) {
-					ChatDialog(stringResource(Res.string.chat_info), {
-						showInfo.value = false
-					}) {
-						ShowInfo(openChat.value!!)
-					}
-				} else {
-					ChatDialog(stringResource(Res.string.account), {
-						showInfo.value = false
-					}) {
-						ShowInfo(clientUser.name)
-					}
+			refreshChats {
+				chats.value = Client.chats
+			}
+		} else {
+			OpenChat(openChat.value!!, showInfo, openChat) { reason ->
+				scope.launch {
+					reason?.let { snackbarHostState.showSnackbar(it) }
+				}
+			}
+		}
+		
+		if (showInfo.value) {
+			if (openChat.value != null) {
+				ChatDialog(stringResource(Res.string.chat_info), {
+					showInfo.value = false
+				}) {
+					ShowInfo(openChat.value!!)
+				}
+			} else {
+				ChatDialog(stringResource(Res.string.account), {
+					showInfo.value = false
+				}) {
+					ShowInfo(clientUser.name)
 				}
 			}
 		}
@@ -174,9 +178,9 @@ fun NavigationMenu(
 					
 					showInfo.value = true
 				}) {
-				UserAvatar(clientUser.name, 60.dp)
+				UserAvatar(clientUser.displayName, 60.dp)
 				
-				Text(clientUser.name, modifier = Modifier.padding(start = 5.dp))
+				Text(clientUser.displayName, modifier = Modifier.padding(start = 5.dp))
 			}
 			
 			Column {

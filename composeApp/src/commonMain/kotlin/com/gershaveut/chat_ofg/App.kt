@@ -3,22 +3,24 @@ package com.gershaveut.chat_ofg
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import chatofg.composeapp.generated.resources.*
 import chatofg.composeapp.generated.resources.Res
 import chatofg.composeapp.generated.resources.auth
+import chatofg.composeapp.generated.resources.lost
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.UserInfo
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
@@ -33,10 +35,11 @@ val clientUser get() = Client.user!!
 
 lateinit var onAction: (String) -> Unit
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun App() {
 	Napier.base(DebugAntilog())
+	
+	scope = rememberCoroutineScope()
 	
 	Client.onSync = {
 		debug("Sync")
@@ -54,7 +57,11 @@ fun App() {
 		
 		Column {
 			if (DEBUG) {
-				Row(Modifier.background(color = Color.Gray).fillMaxWidth().padding(5.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+				Row(
+					Modifier.background(color = Color.Gray).fillMaxWidth().padding(5.dp),
+					horizontalArrangement = Arrangement.SpaceBetween,
+					verticalAlignment = Alignment.CenterVertically
+				) {
 					LazyRow {
 						item {
 							val modifier = Modifier.padding(5.dp)
@@ -104,10 +111,6 @@ fun App() {
 								Client.handleConnection {
 									if (it) {
 										info("Connected")
-										
-										refreshChats {
-											chats.value = Client.chats
-										}
 									} else
 										warning("Connection lost")
 									
@@ -166,54 +169,58 @@ fun exit() {
 	Client.chats.clear()
 }
 
-@OptIn(DelicateCoroutinesApi::class)
-val scope = GlobalScope
+lateinit var scope: CoroutineScope
 
-@OptIn(DelicateCoroutinesApi::class)
-fun sync() {
+fun tryScopeLaunch(block: suspend CoroutineScope.() -> Unit) {
 	scope.launch {
+		try {
+			block()
+		} catch (e: Exception) {
+			error(e.toString())
+		}
+	}
+}
+
+fun sync() {
+	tryScopeLaunch {
 		Client.sync()
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun auth(name: String, password: String, onAuth: () -> Unit) {
 	info("Auth")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.auth(name, password)
 		
 		onAuth()
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun refreshChats(onRefresh: () -> Unit) {
 	info("Refresh Chats")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.chats = Client.getChats()
 		
 		onRefresh()
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun refreshUsers(onRefresh: () -> Unit) {
 	info("Refresh users")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.users = Client.getUsers()
 		
 		onRefresh()
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun getUser(name: String, onGet: (UserInfo) -> Unit) {
 	info("Get user $name")
 	
-	scope.launch {
+	tryScopeLaunch {
 		val user = Client.getUser(name)
 		
 		debug("UserInfo: $user")
@@ -222,163 +229,149 @@ fun getUser(name: String, onGet: (UserInfo) -> Unit) {
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun updateUser() {
 	info("Update user")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.updateUser {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun sendMessage(message: Message, chat: Chat, onCreated: ((Message) -> Unit)? = null) {
 	info("Send message to ${chat.getNameClient()}")
 	debug("Message: $message\n Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.sendMessage(message, chat, onCreated) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun createChat(chat: Chat, onCreated: ((Chat) -> Unit)? = null) {
 	info("Create chat ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.createChat(chat, onCreated) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun updateChat(chat: Chat) {
 	info("Update chat")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.updateChat(chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun inviteChat(userName: String, chat: Chat, onCreatedGroup: (() -> Unit)? = null) {
 	info("Invite $userName to ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.inviteChat(userName, chat, onCreatedGroup) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun updatePassword(password: String) {
 	info("Update password")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.updatePassword(password) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun deleteChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 	info("Delete chat ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.deleteChat(chat, onDeleted) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun leaveChat(chat: Chat, onDeleted: ((Chat) -> Unit)? = null) {
 	info("Leave chat ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.leaveChat(chat, onDeleted) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun kickChat(userName: String, chat: Chat) {
 	info("Kick $userName in ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.kickChat(userName, chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun adminChat(userName: String, chat: Chat) {
 	info("Give admin $userName in ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.adminChat(userName, chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun readMessages(chat: Chat) {
 	info("Read messages in ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.readMessages(chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun deletedMessage(message: Message, chat: Chat) {
 	info("Delete message ${message.text}")
 	debug("Message: $message")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.deleteMessage(message, chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun editMessages(message: Message, chat: Chat) {
 	info("Edit message ${message.text}")
 	debug("Message: $message")
 	
-	scope.launch {
+	tryScopeLaunch {
 		Client.editMessage(message.text, message, chat) {
 			error(it)
 		}
 	}
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 fun sync(onSync: () -> Unit) {
-	scope.launch {
+	tryScopeLaunch {
 		sharedFlow.collect {
 			try {
 				onSync()
