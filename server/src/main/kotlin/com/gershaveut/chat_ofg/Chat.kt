@@ -27,25 +27,20 @@ fun Route.chat() {
 		val chat = call.receive<Chat>()
 		
 		if (chat.members.size > 1) {
-			if (!chats.any { it.id == chat.id }) {
-				val newChat = Chat(
-					id = chat.id,
-					members = chat.members,
-					messages = mutableListOf(Message(userInfo(), "Chat Created", messageType = MessageType.System))
-				)
-				
-				chats.add(newChat)
-				
-				chat.forEachMembers { user ->
-					users.find { it.name == user.name }?.chats?.add(newChat.id)
-				}
-				
-				chat.syncChat()
-				
-				call.respondText("Created chat", status = HttpStatusCode.Created)
-			} else {
-				call.respondText("This chat already exists", status = HttpStatusCode.NotAcceptable)
+			val newChat = Chat(
+				members = chat.members,
+				messages = mutableListOf(Message(userInfo(), "Chat Created", messageType = MessageType.System))
+			)
+			
+			chats.add(newChat)
+			
+			chat.forEachMembers { user ->
+				users.find { it.name == user.name }?.chats?.add(newChat.id)
 			}
+			
+			chat.syncChat()
+			
+			call.respondText("Created chat", status = HttpStatusCode.Created)
 		} else {
 			call.respondText("There are less than two participants in the chat", status = HttpStatusCode.NotAcceptable)
 		}

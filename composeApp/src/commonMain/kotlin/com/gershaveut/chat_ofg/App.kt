@@ -86,7 +86,7 @@ fun App() {
 					
 					var lastAction by remember { mutableStateOf("") }
 					
-					Text(lastAction)
+					Text(lastAction, maxLines = 1)
 					
 					onAction = {
 						lastAction = it

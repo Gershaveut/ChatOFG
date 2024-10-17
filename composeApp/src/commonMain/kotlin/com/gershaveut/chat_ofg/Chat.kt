@@ -342,6 +342,7 @@ fun OpenChat(
 									if (message.text.isEmpty()) {
 										sendMessage(forwardMessage.apply {
 											id = uuid4().toString()
+											messageStatus = MessageStatus.UnSend
 										})
 									} else {
 										sendMessage(message.apply {

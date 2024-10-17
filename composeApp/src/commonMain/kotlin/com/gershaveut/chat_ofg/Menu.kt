@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -407,7 +408,7 @@ fun ChatRow(chat: Chat) {
 				verticalAlignment = Alignment.CenterVertically,
 				horizontalArrangement = Arrangement.SpaceBetween
 			) {
-				Text(chatName, textAlign = TextAlign.Start)
+				Text(chatName, textAlign = TextAlign.Start, maxLines = 1, overflow = TextOverflow.Ellipsis)
 				
 				Row {
 					if (lastMessage.creator.name == clientUser.name)
@@ -417,7 +418,8 @@ fun ChatRow(chat: Chat) {
 						lastMessage.sendTime.timeToLocalDateTime().customToString(),
 						fontSize = 10.sp,
 						color = BACKGROUND_VARIANT,
-						modifier = Modifier.padding(start = 5.dp)
+						modifier = Modifier.padding(start = 5.dp),
+						maxLines = 1
 					)
 				}
 			}
@@ -432,7 +434,9 @@ fun ChatRow(chat: Chat) {
 					lastMessage.text,
 					textAlign = TextAlign.Start,
 					fontSize = 12.sp,
-					color = BACKGROUND_VARIANT
+					color = BACKGROUND_VARIANT,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis
 				)
 				
 				val unread =
