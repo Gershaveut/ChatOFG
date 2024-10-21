@@ -19,6 +19,7 @@ kotlinxDatetime = "0.6.1"
 ktor = "2.3.12"
 ktorServerAuth = "2.1.2"
 logback = "1.5.7"
+multiplatformSettingsNoArg = "1.2.0"
 napier = "2.7.1"
 uuid = "0.8.4"
 
@@ -49,6 +50,7 @@ logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-server-tests = { module = "io.ktor:ktor-server-tests-jvm", version.ref = "ktor" }
+multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettingsNoArg" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 uuid = { module = "com.benasher44:uuid", version.ref = "uuid" }
 

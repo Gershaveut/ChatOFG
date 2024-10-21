@@ -19,6 +19,7 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
 import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
+import com.russhwolf.settings.set
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +34,8 @@ val clientUser get() = Client.user!!
 var onAction: ((String) -> Unit)? = null
 var handleConnection: Job? = null
 
+val settings = com.russhwolf.settings.Settings()
+
 @Composable
 fun App() {
 	Napier.base(DebugAntilog())
@@ -40,10 +43,39 @@ fun App() {
 	scope = rememberCoroutineScope()
 	
 	MaterialTheme {
+		val initial = remember { mutableStateOf(true) }
+		
 		val openSettings = remember { mutableStateOf(false) }
 		val user = remember { mutableStateOf(Client.user) }
 		
 		var connection by remember { mutableStateOf(true) }
+		
+		fun auth() {
+			user.value = Client.user
+			
+			handleConnection = scope.launch {
+				Client.handleConnection {
+					if (it)
+						info("Connected")
+					else
+						warning("Connection lost")
+					
+					connection = it
+				}
+			}
+		}
+		
+		if (initial.value) {
+			Client.host = settings.getString(KEY_HOST, Client.host)
+			
+			if (settings.getString(KEY_NAME, "").isNotEmpty()) {
+				initial.value = false
+				
+				auth(settings.getString(KEY_NAME, ""), settings.getString(KEY_PASSWORD, "")) {
+					auth()
+				}
+			}
+		}
 		
 		Column {
 			if (DEBUG) {
@@ -107,18 +139,7 @@ fun App() {
 					
 					if (user.value == null) {
 						Auth(stringResource(Res.string.auth), openSettings) {
-							user.value = Client.user
-							
-							handleConnection = scope.launch {
-								Client.handleConnection {
-									if (it) {
-										info("Connected")
-									} else
-										warning("Connection lost")
-									
-									connection = it
-								}
-							}
+							auth()
 						}
 					} else {
 						Menu(user, openSettings, chats)
@@ -197,6 +218,8 @@ fun auth(name: String, password: String, onAuth: () -> Unit) {
 	tryScopeLaunch {
 		Client.auth(name, password)
 		
+		settings[KEY_NAME] = name
+		settings[KEY_PASSWORD] = password
 		onAuth()
 	}
 }

@@ -21,6 +21,7 @@ import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.ChatType
 import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
+import com.russhwolf.settings.set
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.enums.EnumEntries
@@ -31,6 +32,8 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 	
 	Settings(openSettings, stringResource(Res.string.settings), {
 		if (Client.user != null) {
+			settings[KEY_HOST] = Client.host
+			
 			updateUser()
 			
 			if (password != null)
