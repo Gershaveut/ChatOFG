@@ -438,8 +438,7 @@ fun ChatRow(chat: Chat) {
 					overflow = TextOverflow.Ellipsis
 				)
 				
-				val unread =
-					chat.messages.count { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }
+				val unread = chat.unreadMessagesCountClient()
 				
 				if (unread > 0) {
 					Text(

@@ -50,4 +50,6 @@ data class Chat(
 		
 		return false
 	}
+	
+	fun unreadMessagesCount(user: UserInfo) = messages.count { it.creator.name != user.name && it.messageStatus == MessageStatus.UnRead }
 }

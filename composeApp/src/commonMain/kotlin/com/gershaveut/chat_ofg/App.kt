@@ -162,7 +162,8 @@ fun ConnectLost() {
 	}
 }
 
-fun Chat.getNameClient() = this.getName(Client.user)
+fun Chat.getNameClient() = this.getName(clientUser)
+fun Chat.unreadMessagesCountClient() = this.unreadMessagesCount(clientUser)
 
 const val CLIENT_TAG = "Client"
 

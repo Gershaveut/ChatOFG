@@ -19,6 +19,7 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -251,15 +252,24 @@ fun OpenChat(
 				Scaffold(
 					floatingActionButton = {
 						if (showScroll)
-							FloatingActionButton({
-								scroll()
+							Column {
+								Row(modifier = Modifier.background(
+									MaterialTheme.colors.secondaryVariant,
+									MaterialTheme.shapes.large
+								)) {
+									Text(chat.unreadMessagesCountClient().toString())
+								}
 								
-								readMessages(chat)
-							}, modifier = Modifier.padding(bottom = 50.dp)) {
-								Icon(
-									Icons.Filled.KeyboardArrowDown,
-									contentDescription = stringResource(Res.string.scroll)
-								)
+								FloatingActionButton({
+									scroll()
+									
+									readMessages(chat)
+								}, modifier = Modifier.padding(bottom = 50.dp)) {
+									Icon(
+										Icons.Filled.KeyboardArrowDown,
+										contentDescription = stringResource(Res.string.scroll)
+									)
+								}
 							}
 					}
 				) {
