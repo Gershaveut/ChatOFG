@@ -19,8 +19,8 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
@@ -57,11 +57,11 @@ fun OpenChat(
 	fun scroll() {
 		scope.launch {
 			if (messages.value.isNotEmpty())
-				messagesState.animateScrollToItem(messages.value.count() - 1)
+				messagesState.animateScrollToItem(0)
 		}
 	}
 	
-	val showScroll = messagesState.firstVisibleItemIndex < messages.value.count() - 10
+	val showScroll = messagesState.firstVisibleItemIndex > 3
 	
 	sync {
 		val updatedChat = Client.chats.find { it.id == chat.id }!!
@@ -252,19 +252,25 @@ fun OpenChat(
 				Scaffold(
 					floatingActionButton = {
 						if (showScroll)
-							Column {
-								Row(modifier = Modifier.background(
-									MaterialTheme.colors.secondaryVariant,
-									MaterialTheme.shapes.large
-								)) {
-									Text(chat.unreadMessagesCountClient().toString())
+							Column(horizontalAlignment = Alignment.CenterHorizontally) {
+								val unread = chat.unreadMessagesCountClient()
+								
+								if (unread > 0) {
+									Text(
+										unread.toString(),
+										textAlign = TextAlign.Center,
+										modifier = Modifier.background(
+											color = MaterialTheme.colors.secondary,
+											shape = MaterialTheme.shapes.small
+										).size(25.dp)
+									)
 								}
 								
 								FloatingActionButton({
 									scroll()
 									
 									readMessages(chat)
-								}, modifier = Modifier.padding(bottom = 50.dp)) {
+								}, modifier = Modifier.padding(bottom = 50.dp, top = 5.dp)) {
 									Icon(
 										Icons.Filled.KeyboardArrowDown,
 										contentDescription = stringResource(Res.string.scroll)
@@ -274,16 +280,18 @@ fun OpenChat(
 					}
 				) {
 					Column {
-						LazyColumn(modifier = Modifier.weight(15f), state = messagesState) {
-							itemsIndexed(
-								messages.value,
-								{ _, it -> it.id }) { index, message ->
+						val messagesReversed = messages.value.reversed()
+						
+						LazyColumn(modifier = Modifier.weight(15f), state = messagesState, reverseLayout = true) {
+							itemsIndexed(messagesReversed, { _, it -> it.id }) { index, message ->
 								if (message.messageType == MessageType.System) {
 									SystemMessage(message.text)
 								} else {
 									// Message Data
 									val dataLast =
-										messages.value.findLast { last -> index > messages.value.indexOfLast { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+										messagesReversed.find { last -> index < messagesReversed.indexOfFirst { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+									
+									Message(message, chat, messages, pinnedMessage, messagesState, forwardChat)
 									
 									if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
 										val data = message.sendTime.timeToLocalDateTime().date
@@ -296,8 +304,6 @@ fun OpenChat(
 										
 										SystemMessage(dataText)
 									}
-									
-									Message(message, chat, messages, pinnedMessage, messagesState, forwardChat)
 								}
 							}
 						}
@@ -377,8 +383,6 @@ fun OpenChat(
 			ChatSettings(openChatSettings, chat, chat.userAccess(clientUser))
 		}
 	}
-	
-	scroll()
 }
 
 @Composable

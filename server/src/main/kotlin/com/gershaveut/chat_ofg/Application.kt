@@ -35,8 +35,8 @@ val usersInfo: List<UserInfo>
 			it.name,
 			it.displayName,
 			it.description,
-			it.createTime,
-			it.lastLoginTime
+			it.lastLoginTime,
+			it.createTime
 		)
 	}
 
