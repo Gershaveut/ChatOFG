@@ -60,16 +60,18 @@ fun OpenChat(
 		}
 	}
 	
+	val showScroll = messagesState.firstVisibleItemIndex < messages.value.count() - 10
+	
 	sync {
 		val updatedChat = Client.chats.find { it.id == chat.id }!!
 		
 		messages.value = updatedChat.messages
 		openChat.value = updatedChat
 		
-		if (messages.value.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
-			readMessages(chat)
-			scroll()
-		}
+		if (!showScroll)
+			readMessages(chat) {
+				scroll()
+			}
 	}
 	
 	Column {
@@ -100,8 +102,7 @@ fun OpenChat(
 					items(Client.chats, { it.id }) { chat ->
 						Row(
 							modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-								if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
-									readMessages(chat)
+								readMessages(chat)
 								
 								forwardChat.value = false
 								
@@ -249,9 +250,11 @@ fun OpenChat(
 				
 				Scaffold(
 					floatingActionButton = {
-						if (messagesState.firstVisibleItemIndex < messages.value.count() - 10)
+						if (showScroll)
 							FloatingActionButton({
 								scroll()
+								
+								readMessages(chat)
 							}, modifier = Modifier.padding(bottom = 50.dp)) {
 								Icon(
 									Icons.Filled.KeyboardArrowDown,
@@ -393,11 +396,18 @@ fun PinnedMessage(pinnedMessage: MutableState<Pair<Message, PinnedType>?>) {
 		horizontalArrangement = Arrangement.SpaceBetween,
 		verticalAlignment = Alignment.CenterVertically
 	) {
-		Row (verticalAlignment = Alignment.CenterVertically) {
-			Icon(pinnedMessage.value!!.second.icon, stringResource(Res.string.pinned_message), modifier = Modifier.padding(5.dp))
+		Row(verticalAlignment = Alignment.CenterVertically) {
+			Icon(
+				pinnedMessage.value!!.second.icon,
+				stringResource(Res.string.pinned_message),
+				modifier = Modifier.padding(5.dp)
+			)
 			
 			Column {
-				Text(stringResource(pinnedMessage.value!!.second.actionString), color = MaterialTheme.colors.secondaryVariant)
+				Text(
+					stringResource(pinnedMessage.value!!.second.actionString),
+					color = MaterialTheme.colors.secondaryVariant
+				)
 				
 				Text(pinnedMessage.value!!.first.text, color = BACKGROUND_VARIANT)
 			}
@@ -558,9 +568,11 @@ fun Message(
 			
 			Column {
 				if (message.forwarded) {
-					Text("${stringResource(Res.string.forwarded)} ${if (message.reply != null) message.reply!!.creator.displayName else message.creator.displayName}", modifier = Modifier.padding(5.dp).clickable {
-						showInfo = true
-					})
+					Text(
+						"${stringResource(Res.string.forwarded)} ${if (message.reply != null) message.reply!!.creator.displayName else message.creator.displayName}",
+						modifier = Modifier.padding(5.dp).clickable {
+							showInfo = true
+						})
 				}
 				
 				if (message.reply != null) {

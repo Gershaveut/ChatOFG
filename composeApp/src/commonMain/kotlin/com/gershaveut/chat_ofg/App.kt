@@ -17,6 +17,7 @@ import chatofg.composeapp.generated.resources.auth
 import chatofg.composeapp.generated.resources.lost
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.Message
+import com.gershaveut.chat_ofg.data.MessageStatus
 import com.gershaveut.chat_ofg.data.UserInfo
 import io.github.aakira.napier.DebugAntilog
 import io.github.aakira.napier.Napier
@@ -340,13 +341,15 @@ fun adminChat(userName: String, chat: Chat) {
 	}
 }
 
-fun readMessages(chat: Chat) {
+fun readMessages(chat: Chat, onRead: (() -> Unit)? = null) {
 	info("Read messages in ${chat.getNameClient()}")
 	debug("Chat: $chat")
 	
 	tryScopeLaunch {
-		Client.readMessages(chat) {
-			error(it)
+		if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead }) {
+			Client.readMessages(chat, onRead) {
+				error(it)
+			}
 		}
 	}
 }

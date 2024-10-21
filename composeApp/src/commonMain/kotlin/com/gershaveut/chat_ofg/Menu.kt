@@ -97,8 +97,7 @@ fun Menu(user: MutableState<UserInfo?>, openSettings: MutableState<Boolean>, cha
 								items(chats.value, { it.id }) { chat ->
 									Row(
 										modifier = Modifier.fillMaxWidth().padding(1.dp).clickable {
-											if (chat.messages.any { it.creator.name != clientUser.name && it.messageStatus == MessageStatus.UnRead })
-												readMessages(chat)
+											readMessages(chat)
 											
 											openChat.value = chat
 										}
