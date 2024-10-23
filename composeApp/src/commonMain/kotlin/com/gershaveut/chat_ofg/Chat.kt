@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -26,7 +27,6 @@ import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
 import com.benasher44.uuid.uuid4
 import com.gershaveut.chat_ofg.data.*
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.StringResource
@@ -34,6 +34,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.properties.Delegates
 
 var messageTextSize by Delegates.notNull<Float>()
+var messageCorners by Delegates.notNull<Float>()
 
 enum class PinnedType(val actionString: StringResource, val icon: ImageVector) {
 	Edit(Res.string.pinned_edit, Icons.Filled.Edit),
@@ -288,7 +289,7 @@ fun OpenChat(
 						
 						LazyColumn(state = messagesState, reverseLayout = true) {
 							itemsIndexed(messagesReversed, { _, it -> it.id }) { index, message ->
-								MessageRow(message, messageTextSize, messagesReversed, index, false, chat, messages, pinnedMessage, messagesState, forwardChat)
+								MessageRow(message, messageTextSize, messageCorners, messagesReversed, index, false, chat, messages, pinnedMessage, messagesState, forwardChat)
 							}
 						}
 						
@@ -373,6 +374,7 @@ fun OpenChat(
 fun MessageRow(
 	message: Message,
 	messageTextSize: Float,
+	messageCorners: Float,
 	messagesReversed: List<Message>,
 	index: Int,
 	preview: Boolean = false,
@@ -389,7 +391,7 @@ fun MessageRow(
 		val dataLast =
 			messagesReversed.find { last -> index < messagesReversed.indexOfFirst { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
 		
-		Message(message, preview, messageTextSize, chat, messages, pinnedMessage, messagesState, forwardChat)
+		Message(message, preview, messageTextSize, messageCorners, chat, messages, pinnedMessage, messagesState, forwardChat)
 		
 		if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
 			val data = message.sendTime.timeToLocalDateTime().date
@@ -497,6 +499,7 @@ fun Message(
 	message: Message,
 	preview: Boolean,
 	messageTextSize: Float,
+	messageCorners: Float,
 	chat: Chat? = null,
 	messages: MutableState<MutableList<Message>>? = null,
 	pinnedMessage: MutableState<Pair<Message, PinnedType>?>? = null,
@@ -524,7 +527,7 @@ fun Message(
 		Column(
 			modifier = Modifier.padding(5.dp).padding(top = 0.dp).background(
 				color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
-				shape = MaterialTheme.shapes.medium
+				shape = RoundedCornerShape(messageCorners.dp)
 			).clickable {
 				expanded = true && !preview
 			},

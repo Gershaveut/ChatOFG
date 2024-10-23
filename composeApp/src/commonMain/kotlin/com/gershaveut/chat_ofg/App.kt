@@ -69,6 +69,7 @@ fun App() {
 			Client.host = settings.getString(KEY_HOST, Client.host)
 			
 			messageTextSize = settings.getFloat(KEY_MESSAGE_TEXT_SIZE, 15F)
+			messageCorners = settings.getFloat(KEY_MESSAGE_TEXT_SIZE, 10F)
 			
 			if (settings.getString(KEY_NAME, "").isNotEmpty()) {
 				initial.value = false

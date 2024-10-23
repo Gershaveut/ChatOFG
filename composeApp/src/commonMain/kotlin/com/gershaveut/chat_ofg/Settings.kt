@@ -42,6 +42,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 		}
 		
 		settings[KEY_MESSAGE_TEXT_SIZE] = messageTextSize
+		settings[KEY_MESSAGE_CORNERS] = messageCorners
 	}, chatSettings to stringResource(Res.string.chat_settings)) {
 		LazyColumn {
 			item {
@@ -96,10 +97,16 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 					// Chat Settings
 					Category(stringResource(Res.string.message_settings)) {
 						var messageTextSizePreview by remember { mutableStateOf(messageTextSize) }
+						var messageCornersPreview by remember { mutableStateOf(messageTextSize) }
 						
 						SliderRange(stringResource(Res.string.message_text_size), messageTextSize, 10f..20f, 7) {
 							messageTextSize = it
 							messageTextSizePreview = it
+						}
+						
+						SliderRange(stringResource(Res.string.message_corners), messageCorners, 0f..17f, 0) {
+							messageCorners = it
+							messageCornersPreview = it
 						}
 						
 						Divider()
@@ -121,7 +128,7 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 							}
 							
 							chat.messages.forEachIndexed { index, message ->
-								MessageRow(message, messageTextSizePreview, chat.messages, index, true)
+								MessageRow(message, messageTextSizePreview, messageCornersPreview, chat.messages, index, true)
 							}
 						}
 						
@@ -300,13 +307,9 @@ fun Settings(
 			},
 			navigationIcon = {
 				IconButton({
-					if (subSettings.isNotEmpty()) {
-						if (subSettings.any { it?.first?.value == true }) {
-							subSettings.forEach {
-								it!!.first.value = false
-							}
-						} else {
-							openSettings.value = false
+					if (subSettings.any { it?.first?.value == true }) {
+						subSettings.forEach {
+							it!!.first.value = false
 						}
 					} else {
 						openSettings.value = false
@@ -492,6 +495,27 @@ open class SettingsScope {
 					
 					onValueChanged(sliderValue)
 				})
+		}
+	}
+	
+	@Composable
+	fun SwitchCheck(
+		name: String,
+		value: Boolean,
+		description: String? = null,
+		readOnly: Boolean = false,
+		onValueChanged: (value: Boolean) -> Unit,
+	) {
+		var checked by remember { mutableStateOf(value) }
+		
+		SettingsRow {
+			SettingInfo(name, description)
+			
+			Switch(checked, {
+				onValueChanged(it)
+				
+				checked = it
+			}, enabled = !readOnly)
 		}
 	}
 	
