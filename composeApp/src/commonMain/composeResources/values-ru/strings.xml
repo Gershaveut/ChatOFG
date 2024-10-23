@@ -53,4 +53,7 @@
     <string name="kicked_member">Исключён пользователь</string>
     <string name="deleted_chat">Удалён чат</string>
     <string name="leaved_chat">Покинут чат</string>
+    <string name="go">Перейти</string>
+    <string name="message_text_size">Размер текста сообщения</string>
+    <string name="message_settings">Настройки сообщений</string>
 </resources>

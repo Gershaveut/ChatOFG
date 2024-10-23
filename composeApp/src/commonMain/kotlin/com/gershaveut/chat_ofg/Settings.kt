@@ -1,5 +1,7 @@
 package com.gershaveut.chat_ofg
 
+import androidx.annotation.IntRange
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -7,16 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
-import chatofg.composeapp.generated.resources.Res
-import chatofg.composeapp.generated.resources.actions
-import chatofg.composeapp.generated.resources.chat_settings
-import chatofg.composeapp.generated.resources.info
 import com.gershaveut.chat_ofg.data.Chat
 import com.gershaveut.chat_ofg.data.ChatType
 import com.gershaveut.chat_ofg.data.MessageStatus
@@ -30,6 +29,8 @@ import kotlin.enums.EnumEntries
 fun AppSettings(openSettings: MutableState<Boolean>) {
 	var password: String? = null
 	
+	val chatSettings = remember { mutableStateOf(false) }
+	
 	Settings(openSettings, stringResource(Res.string.settings), {
 		if (Client.user != null) {
 			settings[KEY_HOST] = Client.host
@@ -39,44 +40,63 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 			if (password != null)
 				updatePassword(password!!)
 		}
-	}) {
 		
+		settings[KEY_MESSAGE_TEXT_SIZE] = messageTextSize
+	}, chatSettings to stringResource(Res.string.chat_settings)) {
 		LazyColumn {
 			item {
-				if (Client.user != null) {
-					Category(stringResource(Res.string.account)) {
-						Filed(stringResource(Res.string.display_name), clientUser.displayName, clientUser.name) {
-							clientUser.displayName = it
-						}
-						
-						FiledNullable(stringResource(Res.string.description), clientUser.description) {
-							clientUser.description = it
-						}
-						
-						FiledNullable(stringResource(Res.string.password)) {
-							password = it
+				if (!chatSettings.value) {
+					if (Client.user != null) {
+						Category(stringResource(Res.string.account)) {
+							Filed(stringResource(Res.string.display_name), clientUser.displayName, clientUser.name) {
+								clientUser.displayName = it
+							}
+							
+							FiledNullable(stringResource(Res.string.description), clientUser.description) {
+								clientUser.description = it
+							}
+							
+							FiledNullable(stringResource(Res.string.password)) {
+								password = it
+							}
 						}
 					}
-				}
-				
-				Category(stringResource(Res.string.application)) {
-					Filed(stringResource(Res.string.server), Client.host, HOST_DEFAULT, stringResource(Res.string.server_host)) {
-						Client.host = it
+					
+					Category(stringResource(Res.string.application)) {
+						Filed(
+							stringResource(Res.string.server),
+							Client.host,
+							HOST_DEFAULT,
+							stringResource(Res.string.server_host)
+						) {
+							Client.host = it
+						}
+						
+						Button(stringResource(Res.string.chat_settings)) {
+							chatSettings.value = true
+						}
 					}
-				}
-				
-				if (DEBUG) {
-					Category("DEBUG") {
-						FiledNullable("Filed Nullable", null) {
-						
+					
+					if (DEBUG) {
+						Category("DEBUG") {
+							FiledNullable("Filed Nullable", null) {
+							
+							}
+							
+							Filed("Filed", null, "null") {
+							
+							}
+							
+							Dropdown(MessageStatus.entries, "Dropdown", MessageStatus.UnSend) {
+							
+							}
 						}
-						
-						Filed("Filed", null, "null") {
-						
-						}
-						
-						Dropdown(MessageStatus.entries, "Dropdown", MessageStatus.UnSend) {
-						
+					}
+				} else {
+					// Chat Settings
+					Category(stringResource(Res.string.message_settings)) {
+						SliderRange(stringResource(Res.string.message_text_size), messageTextSize, 10f..20f, 7) {
+							messageTextSize = it
 						}
 					}
 				}
@@ -236,20 +256,37 @@ fun Settings(
 	openSettings: MutableState<Boolean>,
 	text: String,
 	onClose: () -> Unit,
+	vararg subSettings: Pair<MutableState<Boolean>, String>?,
 	content: @Composable SettingsScope.() -> Unit
 ) {
 	Column {
 		TopAppBar(
 			title = {
-				Text(text)
+				val titleText = if (subSettings.isNotEmpty()) {
+					subSettings.find { it?.first?.value == true }?.second ?: text
+				} else {
+					text
+				}
+				
+				Text(titleText)
 			},
 			navigationIcon = {
 				IconButton({
-					openSettings.value = false
-					
-					if (InstanceSettingsScope.save) {
-						onClose()
-						InstanceSettingsScope.save = false
+					if (subSettings.isNotEmpty()) {
+						if (subSettings.any { it?.first?.value == true }) {
+							subSettings.forEach {
+								it!!.first.value = false
+							}
+						} else {
+							openSettings.value = false
+						}
+					} else {
+						openSettings.value = false
+						
+						if (InstanceSettingsScope.save) {
+							onClose()
+							InstanceSettingsScope.save = false
+						}
 					}
 				}) {
 					Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(Res.string.back))
@@ -280,6 +317,21 @@ open class SettingsScope {
 			Divider()
 			
 			content()
+		}
+	}
+	
+	@Composable
+	fun Button(
+		name: String,
+		description: String? = null,
+		onClick: () -> Unit,
+	) {
+		SettingsRow(Modifier.fillMaxWidth().clickable {
+			onClick()
+		}, Arrangement.SpaceBetween) {
+			SettingInfo(name, description)
+			
+			Icon(Icons.Filled.PlayArrow, stringResource(Res.string.go))
 		}
 	}
 	
@@ -348,7 +400,11 @@ open class SettingsScope {
 		SettingsRow {
 			SettingInfo(name, description)
 			
-			Row( horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically, modifier = Modifier.size(150.dp, 50.dp) ) {
+			Row(
+				horizontalArrangement = Arrangement.SpaceBetween,
+				verticalAlignment = Alignment.CenterVertically,
+				modifier = Modifier.size(150.dp, 50.dp)
+			) {
 				Text(closeValue.name)
 				
 				if (!readOnly) {
@@ -382,6 +438,36 @@ open class SettingsScope {
 	}
 	
 	@Composable
+	fun SliderRange(
+		name: String,
+		value: Float,
+		valueRange: ClosedFloatingPointRange<Float>,
+		@IntRange steps: Int,
+		description: String? = null,
+		readOnly: Boolean = false,
+		onValueChanged: (value: Float) -> Unit,
+	) {
+		var sliderValue by remember { mutableStateOf(value) }
+		
+		SettingsRow {
+			SettingInfo(name, description)
+			
+			Slider(
+				sliderValue,
+				{ sliderValue = it },
+				valueRange = valueRange,
+				steps = steps,
+				enabled = !readOnly,
+				modifier = Modifier.fillMaxWidth(),
+				onValueChangeFinished = {
+					save = true
+					
+					onValueChanged(sliderValue)
+				})
+		}
+	}
+	
+	@Composable
 	fun SettingInfo(name: String, description: String? = null) {
 		Column(
 			verticalArrangement = Arrangement.Center,
@@ -395,8 +481,16 @@ open class SettingsScope {
 	}
 	
 	@Composable
-	fun SettingsRow(content: @Composable () -> Unit) {
-		Row(modifier = Modifier.padding(5.dp)) {
+	fun SettingsRow(
+		modifier: Modifier = Modifier,
+		horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
+		content: @Composable () -> Unit
+	) {
+		Row(
+			modifier = modifier.padding(5.dp),
+			horizontalArrangement = horizontalArrangement,
+			verticalAlignment = Alignment.CenterVertically
+		) {
 			content()
 		}
 	}

@@ -53,4 +53,7 @@
     <string name="kicked_member">Kicked member</string>
     <string name="deleted_chat">Deleted chat</string>
     <string name="leaved_chat">Leaved chat</string>
+    <string name="go">Go</string>
+    <string name="message_text_size">Message text size</string>
+    <string name="message_settings">Message Settings</string>
 </resources>

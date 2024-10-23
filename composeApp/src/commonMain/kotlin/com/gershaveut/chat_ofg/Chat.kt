@@ -30,6 +30,9 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.properties.Delegates
+
+var messageTextSize by Delegates.notNull<Float>()
 
 enum class PinnedType(val actionString: StringResource, val icon: ImageVector) {
 	Edit(Res.string.pinned_edit, Icons.Filled.Edit),
@@ -633,7 +636,7 @@ fun Message(
 				)
 				
 				Text(
-					message.text, modifier = Modifier
+					message.text, fontSize = messageTextSize.sp, modifier = Modifier
 						.padding(
 							top = 10.dp,
 							start = 10.dp,
