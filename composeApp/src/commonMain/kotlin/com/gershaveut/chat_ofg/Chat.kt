@@ -287,7 +287,7 @@ fun OpenChat(
 					Column {
 						val messagesReversed = messages.value.reversed()
 						
-						LazyColumn(state = messagesState, reverseLayout = true) {
+						LazyColumn(modifier = Modifier.weight(17F), state = messagesState, reverseLayout = true) {
 							itemsIndexed(messagesReversed, { _, it -> it.id }) { index, message ->
 								MessageRow(message, messageTextSize, messageCorners, messagesReversed, index, false, chat, messages, pinnedMessage, messagesState, forwardChat)
 							}
@@ -385,7 +385,7 @@ fun MessageRow(
 	forwardChat: MutableState<Boolean>? = null
 ) {
 	if (message.messageType == MessageType.System) {
-		SystemMessage(message.text)
+		SystemMessage(message.text, messageTextSize, messageCorners)
 	} else {
 		// Message Data
 		val dataLast =
@@ -402,13 +402,13 @@ fun MessageRow(
 				else
 					data.customToString()
 			
-			SystemMessage(dataText)
+			SystemMessage(dataText, messageTextSize, messageCorners)
 		}
 	}
 }
 
 @Composable
-fun SystemMessage(text: String) {
+fun SystemMessage(text: String, messageTextSize: Float, messageCorners: Float) {
 	Row(
 		horizontalArrangement = Arrangement.Center,
 		modifier = Modifier.fillMaxWidth()
@@ -417,10 +417,10 @@ fun SystemMessage(text: String) {
 			modifier = Modifier.padding(5.dp).padding(top = 0.dp)
 				.background(
 					color = BACKGROUND_SECONDARY,
-					shape = MaterialTheme.shapes.medium
+					shape = RoundedCornerShape(messageCorners)
 				)
 		) {
-			Text(text, modifier = Modifier.padding(10.dp, 5.dp))
+			Text(text, modifier = Modifier.padding(10.dp, 5.dp), fontSize = messageTextSize.sp)
 		}
 	}
 }
@@ -527,7 +527,7 @@ fun Message(
 		Column(
 			modifier = Modifier.padding(5.dp).padding(top = 0.dp).background(
 				color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
-				shape = RoundedCornerShape(messageCorners.dp)
+				shape = RoundedCornerShape(messageCorners)
 			).clickable {
 				expanded = true && !preview
 			},
