@@ -95,9 +95,37 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 				} else {
 					// Chat Settings
 					Category(stringResource(Res.string.message_settings)) {
+						var messageTextSizePreview by remember { mutableStateOf(messageTextSize) }
+						
 						SliderRange(stringResource(Res.string.message_text_size), messageTextSize, 10f..20f, 7) {
 							messageTextSize = it
+							messageTextSizePreview = it
 						}
+						
+						Divider()
+						
+						Column {
+							val settingUser = UserInfo("User")
+							
+							val chat = Chat(clientUser, settingUser).apply {
+								messages = mutableListOf(
+									com.gershaveut.chat_ofg.data.Message(
+										settingUser,
+										stringResource(Res.string.setting_user_message)
+									),
+									com.gershaveut.chat_ofg.data.Message(
+										clientUser,
+										stringResource(Res.string.setting_client_message)
+									)
+								)
+							}
+							
+							chat.messages.forEachIndexed { index, message ->
+								MessageRow(message, messageTextSizePreview, chat.messages, index, true)
+							}
+						}
+						
+						Divider()
 					}
 				}
 			}

@@ -56,4 +56,6 @@
     <string name="go">Go</string>
     <string name="message_text_size">Message text size</string>
     <string name="message_settings">Message Settings</string>
+    <string name="setting_user_message">I forgive you</string>
+    <string name="setting_client_message">What?</string>
 </resources>

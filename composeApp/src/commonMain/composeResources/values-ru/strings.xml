@@ -56,4 +56,6 @@
     <string name="go">Перейти</string>
     <string name="message_text_size">Размер текста сообщения</string>
     <string name="message_settings">Настройки сообщений</string>
+    <string name="setting_user_message">Я прощаю тебя</string>
+    <string name="setting_client_message">Что?</string>
 </resources>

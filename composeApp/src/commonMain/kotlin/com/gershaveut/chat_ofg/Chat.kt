@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
 import com.benasher44.uuid.uuid4
 import com.gershaveut.chat_ofg.data.*
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import org.jetbrains.compose.resources.StringResource
@@ -285,29 +286,9 @@ fun OpenChat(
 					Column {
 						val messagesReversed = messages.value.reversed()
 						
-						LazyColumn(modifier = Modifier.weight(15f), state = messagesState, reverseLayout = true) {
+						LazyColumn(state = messagesState, reverseLayout = true) {
 							itemsIndexed(messagesReversed, { _, it -> it.id }) { index, message ->
-								if (message.messageType == MessageType.System) {
-									SystemMessage(message.text)
-								} else {
-									// Message Data
-									val dataLast =
-										messagesReversed.find { last -> index < messagesReversed.indexOfFirst { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
-									
-									Message(message, chat, messages, pinnedMessage, messagesState, forwardChat)
-									
-									if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
-										val data = message.sendTime.timeToLocalDateTime().date
-										
-										val dataText =
-											if (data.year == getCurrentDataTime().year)
-												"${data.dayOfMonth} ${data.month.name}"
-											else
-												data.customToString()
-										
-										SystemMessage(dataText)
-									}
-								}
+								MessageRow(message, messageTextSize, messagesReversed, index, false, chat, messages, pinnedMessage, messagesState, forwardChat)
 							}
 						}
 						
@@ -384,6 +365,42 @@ fun OpenChat(
 			}
 		} else {
 			ChatSettings(openChatSettings, chat, chat.userAccess(clientUser))
+		}
+	}
+}
+
+@Composable
+fun MessageRow(
+	message: Message,
+	messageTextSize: Float,
+	messagesReversed: List<Message>,
+	index: Int,
+	preview: Boolean = false,
+	chat: Chat? = null,
+	messages: MutableState<MutableList<Message>>? = null,
+	pinnedMessage: MutableState<Pair<Message, PinnedType>?>? = null,
+	messagesState: LazyListState? = null,
+	forwardChat: MutableState<Boolean>? = null
+) {
+	if (message.messageType == MessageType.System) {
+		SystemMessage(message.text)
+	} else {
+		// Message Data
+		val dataLast =
+			messagesReversed.find { last -> index < messagesReversed.indexOfFirst { last.id == it.id } && last.messageType == MessageType.Default && last.id != message.id }?.sendTime?.timeToLocalDateTime()?.date
+		
+		Message(message, preview, messageTextSize, chat, messages, pinnedMessage, messagesState, forwardChat)
+		
+		if ((dataLast == null && message.messageType != MessageType.System) || message.sendTime.timeToLocalDateTime().date != dataLast!!) {
+			val data = message.sendTime.timeToLocalDateTime().date
+			
+			val dataText =
+				if (data.year == getCurrentDataTime().year)
+					"${data.dayOfMonth} ${data.month.name}"
+				else
+					data.customToString()
+			
+			SystemMessage(dataText)
 		}
 	}
 }
@@ -478,11 +495,13 @@ fun SendRow(pinnedMessage: MutableState<Pair<Message, PinnedType>?>, onSend: (me
 @Composable
 fun Message(
 	message: Message,
-	chat: Chat,
-	messages: MutableState<MutableList<Message>>,
-	pinnedMessage: MutableState<Pair<Message, PinnedType>?>,
-	messagesState: LazyListState,
-	forwardChat: MutableState<Boolean>
+	preview: Boolean,
+	messageTextSize: Float,
+	chat: Chat? = null,
+	messages: MutableState<MutableList<Message>>? = null,
+	pinnedMessage: MutableState<Pair<Message, PinnedType>?>? = null,
+	messagesState: LazyListState? = null,
+	forwardChat: MutableState<Boolean>? = null,
 ) {
 	var showInfo by remember { mutableStateOf(false) }
 	
@@ -507,7 +526,7 @@ fun Message(
 				color = if (clientUser.name == message.creator.name) MY_MESSAGE else OTHERS_MESSAGE,
 				shape = MaterialTheme.shapes.medium
 			).clickable {
-				expanded = true
+				expanded = true && !preview
 			},
 			horizontalAlignment = Alignment.CenterHorizontally,
 		) {
@@ -533,8 +552,8 @@ fun Message(
 					{
 						expanded = false
 						
-						forwardChat.value = true
-						pinnedMessage.value = message to PinnedType.Forward
+						forwardChat!!.value = true
+						pinnedMessage!!.value = message to PinnedType.Forward
 					},
 					modifier = Modifier.width(widthButton)
 				) {
@@ -545,14 +564,14 @@ fun Message(
 					{
 						expanded = false
 						
-						pinnedMessage.value = message to PinnedType.Reply
+						pinnedMessage!!.value = message to PinnedType.Reply
 					},
 					modifier = Modifier.width(widthButton)
 				) {
 					Text(stringResource(Res.string.reply))
 				}
 				
-				if (chat.userAccess(clientUser) || message.creator.name == clientUser.name) {
+				if (chat!!.userAccess(clientUser) || message.creator.name == clientUser.name) {
 					Divider()
 					
 					if (message.creator.name == clientUser.name && !(message.reply == null && message.forwarded)) {
@@ -560,7 +579,7 @@ fun Message(
 							{
 								expanded = false
 								
-								pinnedMessage.value = message to PinnedType.Edit
+								pinnedMessage!!.value = message to PinnedType.Edit
 							},
 							modifier = Modifier.width(widthButton)
 						) {
@@ -572,7 +591,7 @@ fun Message(
 						{
 							expanded = false
 							
-							messages.value = messages.value.toMutableList().apply { remove(message) }
+							messages!!.value = messages.value.toMutableList().apply { remove(message) }
 							
 							deletedMessage(message, chat)
 						},
@@ -588,7 +607,7 @@ fun Message(
 					Text(
 						"${stringResource(Res.string.forwarded)} ${if (message.reply != null) message.reply!!.creator.displayName else message.creator.displayName}",
 						modifier = Modifier.padding(5.dp).clickable {
-							showInfo = true
+							showInfo = true && !preview
 						})
 				}
 				
@@ -602,13 +621,15 @@ fun Message(
 							shape = MaterialTheme.shapes.medium
 						).clickable {
 							scope.launch {
-								if (message.forwarded) {
-									showInfo = true
-								} else {
-									val index = messages.value.indexOfFirst { it.id == reply.id }
-									
-									if (index != -1)
-										messagesState.animateScrollToItem(index)
+								if (!preview) {
+									if (message.forwarded) {
+										showInfo = true
+									} else {
+										val index = messages!!.value.indexOfFirst { it.id == reply.id }
+										
+										if (index != -1)
+											messagesState!!.animateScrollToItem(index)
+									}
 								}
 							}
 						},
