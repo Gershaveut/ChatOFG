@@ -25,7 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import chatofg.composeapp.generated.resources.*
-import com.benasher44.uuid.uuid4
 import com.gershaveut.chat_ofg.data.*
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -337,21 +336,20 @@ fun OpenChat(
 								}
 								
 								PinnedType.Forward -> {
-									val forwardMessage = pinnedMessage.value!!.first.apply {
-										forwarded = true
-									}
+									val forwardMessage = pinnedMessage.value!!.first
 									
 									pinnedMessage.value = null
 									
 									if (message.text.isEmpty()) {
-										sendMessage(forwardMessage.apply {
-											id = uuid4().toString()
-											messageStatus = MessageStatus.UnSend
+										sendMessage(message.apply {
+											forwarded = true
+											text = forwardMessage.text
+											creator = forwardMessage.creator
 										})
 									} else {
 										sendMessage(message.apply {
-											reply = forwardMessage
 											forwarded = true
+											reply = forwardMessage
 										})
 									}
 								}
