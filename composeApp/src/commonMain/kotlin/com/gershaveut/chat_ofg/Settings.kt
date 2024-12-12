@@ -72,10 +72,11 @@ fun AppSettings(openSettings: MutableState<Boolean>) {
 						) {
 							Client.host = it
 						}
-						
-						Button(stringResource(Res.string.chat_settings)) {
-							chatSettings.value = true
-						}
+
+						if (Client.user != null)
+							Button(stringResource(Res.string.chat_settings)) {
+								chatSettings.value = true
+							}
 					}
 					
 					if (DEBUG) {
