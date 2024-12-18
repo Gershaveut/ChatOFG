@@ -1,9 +1,6 @@
 package com.gershaveut.chat_ofg
 
-import com.gershaveut.chat_ofg.data.Chat
-import com.gershaveut.chat_ofg.data.Message
-import com.gershaveut.chat_ofg.data.MessageStatus
-import com.gershaveut.chat_ofg.data.UserInfo
+import com.gershaveut.chat_ofg.data.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*

@@ -1,6 +1,7 @@
 package com.gershaveut.chat_ofg
 
 import com.gershaveut.chat_ofg.data.User
+import com.gershaveut.chat_ofg.data.UserInfo
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -27,10 +28,10 @@ fun Route.user() {
 	}
 	
 	post("$path/update") {
-		val user = call.receive<User>()
+		val userInfo = call.receive<UserInfo>()
 		
-		if (user.name == userName()) {
-			users[users.indexOf(user())] = user
+		if (userInfo.name == userName()) {
+			users[users.indexOf(user())].setFromUserInfo(userInfo)
 			
 			call.respondText("User updated", status = HttpStatusCode.Accepted)
 		} else {
