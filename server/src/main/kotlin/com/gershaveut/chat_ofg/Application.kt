@@ -75,23 +75,26 @@ fun Application.module() {
 		basic("auth-basic") {
 			realm = "User Access"
 			validate { credentials ->
-				users.find { it.name == credentials.name }?.let {
-					if (it.password == credentials.password) {
+				val name = credentials.name.trim()
+				val password = credentials.password
+
+				users.find { it.name == name }?.let {
+					if (it.password == password) {
 						it.lastLoginTime = Clock.System.now().epochSeconds
 						
-						return@validate UserIdPrincipal(credentials.name)
+						return@validate UserIdPrincipal(name)
 					} else {
 						return@validate null
 					}
 				}
-				
+
 				users.add(
 					User(
-						name = credentials.name,
-						password = credentials.password
+						name = name,
+						password = password
 					)
 				)
-				return@validate UserIdPrincipal(credentials.name)
+				return@validate UserIdPrincipal(name)
 			}
 		}
 	}
